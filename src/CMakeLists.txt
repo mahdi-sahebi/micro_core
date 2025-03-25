@@ -1,11 +1,14 @@
-# Variables
-set(LIB micro_core)
-set(HEADERS )
-set(SOURCES )
+# Subdirectory
+add_subdirectory(dsa)
 
-# Binray
-add_library(${LIB} STATIC ${SOURCES} ${HEADERS})
+# # Variables
+# set(LIB micro_core)
+# set(HEADERS )
+# set(SOURCES )
 
-# Include
+# # Binray
+# add_library(${LIB} STATIC ${SOURCES} ${HEADERS})
 
-# Linking
+# # Include
+
+# # Linking
