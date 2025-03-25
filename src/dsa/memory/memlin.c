@@ -41,7 +41,7 @@ typedef struct
     char    data[0];
 }meta_08;
 
-typedef struct
+typedef struct __attribute__((packed))
 {
     uint8_t  word_size : 2;
     uint8_t  __pad     : 6;
@@ -50,7 +50,7 @@ typedef struct
     char     data[0];
 }meta_16;
 
-typedef struct
+typedef struct __attribute__((packed))
 {
     uint8_t  word_size : 2;
     uint8_t  __pad     : 6;
@@ -235,6 +235,7 @@ mc_result_ptr mc_memlin_create(const mc_span buffer)
 
     mc_memlin* const memory = (mc_memlin*)buffer.data;// remove
     const word_type word = get_word_type(buffer.size);
+    memory->word_size = word;
     inits[word](memory, buffer.size);
 
     return mc_result_ptr(memory, MC_SUCCESS);
