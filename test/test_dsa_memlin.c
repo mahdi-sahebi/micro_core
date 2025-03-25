@@ -20,7 +20,7 @@ static int create_8()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_08_BIT);
 
-  const mc_error_ptr result = mc_memlin_create(buffer);
+  const mc_result_ptr result = mc_memlin_create(buffer);
   if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
     return result.result;
   }
@@ -32,7 +32,7 @@ static int create_16()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_16_BIT);
 
-  const mc_error_ptr result = mc_memlin_create(buffer);
+  const mc_result_ptr result = mc_memlin_create(buffer);
   if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
     return result.result;
   }
@@ -44,7 +44,7 @@ static int create_32()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_32_BIT);
 
-  const mc_error_ptr result = mc_memlin_create(buffer);
+  const mc_result_ptr result = mc_memlin_create(buffer);
   if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
     return result.result;
   }
@@ -56,7 +56,7 @@ static int create_invalid()
 {
   const mc_span buffer = mc_span(NULL, SIZE_08_BIT);
 
-  const mc_error_ptr result = mc_memlin_create(buffer);
+  const mc_result_ptr result = mc_memlin_create(buffer);
   if ((MC_ERR_BAD_ALLOC != result.result) || (NULL != result.data)) {
     return result.result;
   }
@@ -105,7 +105,7 @@ static int get_size_8()
   const mc_span buffer = mc_span(Buffer, SIZE_08_BIT);
   mc_memlin* const memory = mc_memlin_create(buffer).data;
 
-  const mc_error_u32 result = mc_memlin_get_size(memory);
+  const mc_result_u32 result = mc_memlin_get_size(memory);
   if ((MC_SUCCESS != result.result) || (0 != result.value)) {
     return result.result;
   }
@@ -118,7 +118,7 @@ static int get_size_16()
   const mc_span buffer = mc_span(Buffer, SIZE_16_BIT);
   mc_memlin* const memory = mc_memlin_create(buffer).data;
 
-  const mc_error_u32 result = mc_memlin_get_size(memory);
+  const mc_result_u32 result = mc_memlin_get_size(memory);
   if ((MC_SUCCESS != result.result) || (0 != result.value)) {
     return result.result;
   }
@@ -131,7 +131,7 @@ static int get_size_32()
   const mc_span buffer = mc_span(Buffer, SIZE_32_BIT);
   mc_memlin* const memory = mc_memlin_create(buffer).data;
 
-  const mc_error_u32 result = mc_memlin_get_size(memory);
+  const mc_result_u32 result = mc_memlin_get_size(memory);
   if ((MC_SUCCESS != result.result) || (0 != result.value)) {
     return result.result;
   }
@@ -142,7 +142,7 @@ static int get_size_32()
 static int destroy()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_08_BIT);
-  mc_error_ptr result;
+  mc_result_ptr result;
 
   result = mc_memlin_create(buffer);
   if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
@@ -160,7 +160,7 @@ static int destroy()
 
 int main()
 {
-  mc_error result = MC_SUCCESS;
+  mc_result result = MC_SUCCESS;
 
   result = create_8();
   if (MC_SUCCESS != result) {
