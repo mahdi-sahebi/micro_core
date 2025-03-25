@@ -20,9 +20,14 @@ static int create_8()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_08_BIT);
 
-  const mc_result_ptr result = mc_memlin_create(buffer);
-  if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
-    return result.result;
+  const mc_result_ptr result_1 = mc_memlin_create(buffer);
+  if ((MC_SUCCESS != result_1.result) || (NULL == result_1.data)) {
+    return result_1.result;
+  }
+
+  const mc_result_u32 result_2 = mc_memlin_get_meta_size(result_1.data);
+  if ((MC_SUCCESS != result_2.result) || (3 != result_2.value)) {
+    return MC_ERR_BAD_ALLOC;
   }
 
   return MC_SUCCESS;
@@ -32,9 +37,14 @@ static int create_16()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_16_BIT);
 
-  const mc_result_ptr result = mc_memlin_create(buffer);
-  if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
-    return result.result;
+  const mc_result_ptr result_1 = mc_memlin_create(buffer);
+  if ((MC_SUCCESS != result_1.result) || (NULL == result_1.data)) {
+    return result_1.result;
+  }
+
+  const mc_result_u32 result_2 = mc_memlin_get_meta_size(result_1.data);
+  if ((MC_SUCCESS != result_2.result) || (5 != result_2.value)) {
+    return MC_ERR_BAD_ALLOC;
   }
 
   return MC_SUCCESS;
@@ -44,9 +54,14 @@ static int create_32()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_32_BIT);
 
-  const mc_result_ptr result = mc_memlin_create(buffer);
-  if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
-    return result.result;
+  const mc_result_ptr result_1 = mc_memlin_create(buffer);
+  if ((MC_SUCCESS != result_1.result) || (NULL == result_1.data)) {
+    return result_1.result;
+  }
+
+  const mc_result_u32 result_2 = mc_memlin_get_meta_size(result_1.data);
+  if ((MC_SUCCESS != result_2.result) || (9 != result_2.value)) {
+    return MC_ERR_BAD_ALLOC;
   }
 
   return MC_SUCCESS;
@@ -67,9 +82,14 @@ static int create_invalid()
 static int get_capacity_8()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_08_BIT);
-  // TODO(MN): get paylod_size/get reserved size. to comapreable
   const mc_memlin* const memory = mc_memlin_create(buffer).data;
-  if (buffer.size >= mc_memlin_get_capacity(memory).value) {
+  
+  const mc_result_u32 result = mc_memlin_get_capacity(memory); 
+  if ((MC_SUCCESS != result.result) || (0 == result.value)) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  if ((buffer.size - mc_memlin_get_meta_size(memory).value) != result.value) {
     return MC_ERR_BAD_ALLOC;
   }
   
