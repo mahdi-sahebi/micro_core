@@ -135,7 +135,7 @@ static int span_fill_2()
 
 int main()
 {
-    printf("[MICRO CORE - DSA - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
+    printf("[MICRO CORE - DSA - SPAN - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
 
     mc_result result = MC_SUCCESS;
 
@@ -169,5 +169,6 @@ int main()
         return result;
     }
     
-    return MC_SUCCESS; 
+   printf("passed\n");
+   return MC_SUCCESS; 
 }
