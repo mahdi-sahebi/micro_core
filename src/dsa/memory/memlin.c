@@ -311,3 +311,20 @@ mc_result_u32 mc_memlin_get_size(const mc_memlin* this)
 
     return mc_result_u32(get_size(this), MC_SUCCESS);
 }
+
+mc_result_u32 mc_memlin_get_meta_size(const mc_memlin* this)
+{
+    if (NULL == this) {
+        return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    }
+
+    const struct _mc_memlin* const obj = (struct _mc_memlin*)this;
+
+    const uint8_t META_SIZES[] = {
+        [WORD_08_BITS] = sizeof(meta_08),
+        [WORD_16_BITS] = sizeof(meta_16),
+        [WORD_32_BITS] = sizeof(meta_32),
+    };
+
+    return mc_result_u32(META_SIZES[obj->word_size], MC_SUCCESS);
+}
