@@ -2,6 +2,7 @@
 // TODO(MN): check all bytes pattern after making full. for capacity 1,2,4,8 bytes 
 
 #include <stdio.h>
+#include "core/version.h"
 #include "dsa/memory/memlin.h"
 
 
@@ -99,9 +100,14 @@ static int get_capacity_8()
 static int get_capacity_16()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_16_BIT);
-
   const mc_memlin* const memory = mc_memlin_create(buffer).data;
-  if (buffer.size >= mc_memlin_get_capacity(memory).value) {
+
+  const mc_result_u32 result = mc_memlin_get_capacity(memory); 
+  if ((MC_SUCCESS != result.result) || (0 == result.value)) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  if ((buffer.size - mc_memlin_get_meta_size(memory).value) != result.value) {
     return MC_ERR_BAD_ALLOC;
   }
   
@@ -111,9 +117,14 @@ static int get_capacity_16()
 static int get_capacity_32()
 {
   const mc_span buffer = mc_span(Buffer, SIZE_32_BIT);
-
   const mc_memlin* const memory = mc_memlin_create(buffer).data;
-  if (buffer.size >= mc_memlin_get_capacity(memory).value) {
+
+  const mc_result_u32 result = mc_memlin_get_capacity(memory);  
+  if ((MC_SUCCESS != result.result) || (0 == result.value)) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  if ((buffer.size - mc_memlin_get_meta_size(memory).value) != result.value) {
     return MC_ERR_BAD_ALLOC;
   }
   
@@ -180,6 +191,8 @@ static int destroy()
 
 int main()
 {
+  printf("[MICRO CORE - DSA - MEMLIN - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
+
   mc_result result = MC_SUCCESS;
 
   result = create_8();
@@ -242,13 +255,13 @@ int main()
     return result;
   }
 
-
   result = destroy();
   if (MC_SUCCESS != result) {
     printf("[FAILED]: destroy - %u\n", result);
     return result;
   }
 
+  printf("passed\n");
   return result;
 }
 
