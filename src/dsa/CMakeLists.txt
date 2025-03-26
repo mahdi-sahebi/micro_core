@@ -6,10 +6,12 @@ set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS 
     ${INCLUDE_DIRS}/dsa/span.h
     ${INCLUDE_DIRS}/dsa/memory/memlin.h
+    ${INCLUDE_DIRS}/dsa/memory/mempool.h
 )
 set(SOURCES 
     span.c
     memory/memlin.c
+    memory/mempool.c
 )
 
 # Binray
