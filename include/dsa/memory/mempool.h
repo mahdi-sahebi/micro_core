@@ -1,12 +1,14 @@
 #ifndef MC_MEMORY_POOL_H_
 #define MC_MEMORY_POOL_H_
 
+/** Memory Pool
+ * 
+ */
 
 #include <core/error.h>
 #include <dsa/span.h>
 
 
-// Memory Pool
 typedef struct _mc_mempool mc_mempool;
 
 // create on memlin
