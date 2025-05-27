@@ -1,6 +1,11 @@
 # Options
-option(TEST_IO_MESSAGE "To compile tests" ON)
-if (NOT TEST_IO_MESSAGE)
+option(BUILD_TEST_IO_MESSAGE "To compile tests" ON)
+if (NOT BUILD_TEST_IO_MESSAGE)
+  exit()
+endif()
+
+if (NOT UNIX)
+  message(ERROR "Platform not supported. Only linux is suppported")
   exit()
 endif()
 
@@ -21,5 +26,5 @@ target_include_directories(test_message_udp PRIVATE ${INCLUDE_DIRS})
 
 
 # Linking
-target_link_libraries(test_message_udp PRIVATE micro_io_message)
+# target_link_libraries(test_message_udp PRIVATE micro_io_message)
 
