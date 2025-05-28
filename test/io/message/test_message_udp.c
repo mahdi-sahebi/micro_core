@@ -16,7 +16,7 @@
 #define SERVER_PORT       9000
 #define CLIENT_PORT       9001
 #define COMPLETE_COUNT    1000
-#define DATA_SIZE         10
+#define DATA_LEN          10
 
 static int ServerSocket = -1;
 static int ClientSocket = -1;
@@ -118,15 +118,15 @@ void client_close()
 
 static void update_data(uint32_t* const buffer, uint32_t packet_id)
 {
-  for (uint32_t index = 0; index < DATA_SIZE; index++) {
-      buffer[index] = (packet_id * DATA_SIZE) + index;
+  for (uint32_t index = 0; index < DATA_LEN; index++) {
+      buffer[index] = (packet_id * DATA_LEN) + index;
   }
 }
 
-static bool verify_data(uint32_t* const buffer, uint32_t packet_id) 
+static bool verify_data(const uint32_t* const buffer, uint32_t packet_id) 
 {
-  for (uint32_t index = 0; index < DATA_SIZE; index++) {
-    const uint32_t expected = (packet_id * DATA_SIZE) + index;
+  for (uint32_t index = 0; index < DATA_LEN; index++) {
+    const uint32_t expected = (packet_id * DATA_LEN) + index;
     if (expected != buffer[index]) {
         printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
         return false;
@@ -138,10 +138,10 @@ static bool verify_data(uint32_t* const buffer, uint32_t packet_id)
 
 static void* sender(void* data)
 {
-  uint32_t buffer[DATA_SIZE];
+  uint32_t buffer[DATA_LEN];
   uint32_t counter = 0;
-
   client_create();
+  mc_msg_t* const message = mc_msg_new(server_write, server_read, sizeof(buffer), 3, NULL);
   update_data(buffer, counter);
   counter++;
 
@@ -149,7 +149,7 @@ static void* sender(void* data)
   usleep(200000);
 
   while (counter < COMPLETE_COUNT) {
-    if (sizeof(buffer) != client_write(buffer, sizeof(buffer))) {
+    if (sizeof(buffer) != mc_msg_write(message, buffer, sizeof(buffer))) {
       continue;
     }
 
@@ -158,33 +158,46 @@ static void* sender(void* data)
     usleep(10000);
   }
 
+  mc_msg_write_finish(message);
+  mc_msg_free(message);
   client_close();
   return NULL;
 }
 
-static void* receiver(void* data)
+static uint32_t ReceiveCounter = 0;
+
+static void on_receive(void* const data, uint32_t size)
 {
-  /* TODO(MN): Repetitive packet, invalid header, incomplete packet, miss packet pointer
-   */
-  uint32_t buffer[DATA_SIZE];
-  uint32_t counter = 0;
-  Error = false;
-
-  server_create();
-
-  while (counter < COMPLETE_COUNT - 1) {
-    if (sizeof(buffer) != server_read(buffer, sizeof(buffer))) {
-      continue;
-    }
-
-    if (!verify_data(buffer, counter)) {
-      Error = true;
-      break;
-    }
-
-    counter++;
+  if ((DATA_LEN * sizeof(uint32_t)) != size) {
+    Error = true;
+    return;
   }
 
+  const uint32_t* const buffer = (uint32_t*)data;
+
+  if (!verify_data(buffer, ReceiveCounter)) {
+    Error = true;
+    return;
+  }
+
+  ReceiveCounter++;
+}
+
+static void* receiver(void* data)
+{
+  /* TODO(MN): Repetitive packet, invalid header, incomplete packet, miss packet pointer, use zero copy
+   */
+  ReceiveCounter = 0;
+  Error = false;
+  server_create();
+  mc_msg_t* const message = mc_msg_new(client_write, client_read, sizeof(buffer), 3, on_receive);
+
+  while (ReceiveCounter < (COMPLETE_COUNT - 1)) {
+    mc_msg_read(message);
+  }
+
+  mc_msg_read_finish(message);
+  mc_msg_free(message);
   server_close();
   return NULL;
 }
@@ -194,12 +207,12 @@ static int full()
   pthread_t task_sender;
   pthread_t task_receiver;
 
-  if (pthread_create(&task_sender, NULL, sender, NULL) || 
+  if (pthread_create(&task_sender,   NULL, sender,   NULL) || 
       pthread_create(&task_receiver, NULL, receiver, NULL)) {
     MC_ERR_BAD_ALLOC;
   }
 
-  if (pthread_join(task_sender, NULL) || 
+  if (pthread_join(task_sender,   NULL) || 
       pthread_join(task_receiver, NULL)) {
     return MC_ERR_RUNTIME;
   }
