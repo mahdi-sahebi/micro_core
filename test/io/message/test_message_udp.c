@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -11,11 +13,14 @@
 #include "core/version.h"
 
 
-#define SERVER_PORT 9000
-#define CLIENT_PORT 9001
+#define SERVER_PORT       9000
+#define CLIENT_PORT       9001
+#define COMPLETE_COUNT    1000
+#define DATA_SIZE         10
 
-int ServerSocket = -1;
-int ClientSocket = -1;
+static int ServerSocket = -1;
+static int ClientSocket = -1;
+static volatile bool Error = false;
 
 
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
@@ -63,7 +68,7 @@ void server_create()
   addr_in.sin_addr.s_addr = INADDR_ANY;
   bind(ServerSocket, (struct sockaddr*)&addr_in, sizeof(addr_in));
 
-  struct timeval timeout = {0, 100000};
+  struct timeval timeout = {0, 10000};
   setsockopt(ServerSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 }
 
@@ -92,7 +97,7 @@ void client_create()
     addr_in.sin_port = htons(CLIENT_PORT);
     inet_aton("127.0.0.1", &addr_in.sin_addr);
 
-    struct timeval timeout = {0, 100000};
+    struct timeval timeout = {0, 10000};
     setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 }
 
@@ -111,15 +116,76 @@ void client_close()
   close(ClientSocket);
 }
 
+static void update_data(uint32_t* const buffer, uint32_t packet_id)
+{
+  for (uint32_t index = 0; index < DATA_SIZE; index++) {
+      buffer[index] = (packet_id * DATA_SIZE) + index;
+  }
+}
 
+static bool verify_data(uint32_t* const buffer, uint32_t packet_id) 
+{
+  for (uint32_t index = 0; index < DATA_SIZE; index++) {
+    const uint32_t expected = (packet_id * DATA_SIZE) + index;
+    if (expected != buffer[index]) {
+        printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
+        return false;
+    }
+  }
+
+  return true;
+}
 
 static void* sender(void* data)
 {
+  uint32_t buffer[DATA_SIZE];
+  uint32_t counter = 0;
+
+  client_create();
+  update_data(buffer, counter);
+  counter++;
+
+  /* Let receiver not to miss any packet */
+  usleep(200000);
+
+  while (counter < COMPLETE_COUNT) {
+    if (sizeof(buffer) != client_write(buffer, sizeof(buffer))) {
+      continue;
+    }
+
+    update_data(buffer, counter);
+    counter++;
+    usleep(10000);
+  }
+
+  client_close();
   return NULL;
 }
 
 static void* receiver(void* data)
 {
+  /* TODO(MN): Repetitive packet, invalid header, incomplete packet, miss packet pointer
+   */
+  uint32_t buffer[DATA_SIZE];
+  uint32_t counter = 0;
+  Error = false;
+
+  server_create();
+
+  while (counter < COMPLETE_COUNT - 1) {
+    if (sizeof(buffer) != server_read(buffer, sizeof(buffer))) {
+      continue;
+    }
+
+    if (!verify_data(buffer, counter)) {
+      Error = true;
+      break;
+    }
+
+    counter++;
+  }
+
+  server_close();
   return NULL;
 }
 
@@ -138,7 +204,7 @@ static int full()
     return MC_ERR_RUNTIME;
   }
 
-  return MC_SUCCESS;
+  return Error ? MC_ERR_RUNTIME : MC_SUCCESS;
 }
 
 int main()
@@ -154,6 +220,5 @@ int main()
   }
   printf("[PASSED]\n");
 
-  printf("passed\n");
   return MC_SUCCESS;
 }
