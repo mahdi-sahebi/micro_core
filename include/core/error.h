@@ -13,6 +13,8 @@ typedef enum __attribute__((packed))
     MC_ERR_INVALID_ARGUMENT,
     MC_ERR_MEMORY_FULL,
     MC_ERR_MEMORY_OUT_OF_RANGE,
+    MC_ERR_TIMEOUT,
+    MC_ERR_RUNTIME
 }mc_result;
 
 
