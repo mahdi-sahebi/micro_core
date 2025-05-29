@@ -52,10 +52,15 @@ static int invalid_creation()
 
 static int valid_creation()
 {
+  const uint32_t capcity = 3;
   mc_msg_t* message = NULL;
   
-  message = mc_msg_new(read_api, write_api, 5 * sizeof(uint32_t), 3, NULL);
+  message = mc_msg_new(read_api, write_api, 5 * sizeof(uint32_t), capcity, NULL);
   if (NULL == message) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  if (capcity != mc_msg_get_capacity(message)) {
     return MC_ERR_BAD_ALLOC;
   }
 
@@ -67,7 +72,59 @@ static int valid_creation()
   return MC_SUCCESS;
 }
 
-static int hulf_duplex()
+static int get_status()
+{
+  uint32_t data[5];
+  mc_msg_t* message = NULL;
+  
+  message = mc_msg_new(read_api, write_api, sizeof(data), 3, NULL);
+  if (NULL == message) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  /* Empty state */
+  if (!mc_msg_is_empty(message)) {
+    return MC_ERR_RUNTIME;
+  }
+  if (mc_msg_is_full(message)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  /* Adding */
+  const uint32_t capacity = mc_msg_get_capacity(message);
+  for (uint32_t index = 0; index < capacity; index++) {
+    if (mc_msg_write(message, data, sizeof(data)) != sizeof(data)) {
+      return MC_ERR_INCOMPLETE;
+    }
+
+    if (mc_msg_get_count(message) != (index + 1)) {
+      return MC_ERR_MEMORY_OUT_OF_RANGE;
+    }
+  }
+
+  /* Full state */
+  if (mc_msg_is_empty(message)) {
+    return MC_ERR_RUNTIME;
+  }
+  if (!mc_msg_is_full(message)) {
+    return MC_ERR_RUNTIME;
+  }
+
+
+  mc_msg_free(&message);
+  if (NULL != message) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  return MC_SUCCESS;
+}
+
+static int clear()
+{
+  return MC_ERR_RUNTIME;
+}
+
+static int singly_direction()
 {
   pthread_t task_snd;
   pthread_t task_rcv;
@@ -94,6 +151,26 @@ static int hulf_duplex()
   return MC_SUCCESS;
 }
 
+static int small_write()
+{
+  return MC_ERR_RUNTIME;
+}
+
+static int large_write()
+{
+  return MC_ERR_RUNTIME;
+}
+
+static int hulf_duplex()
+{
+  return MC_ERR_RUNTIME;
+}
+
+static int full_duplex()
+{
+  return MC_ERR_RUNTIME;
+}
+
 int main()
 {
   printf("[MICRO CORE %u.%u.%u - IO - MESSAGE]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
@@ -103,25 +180,81 @@ int main()
   result = invalid_creation();
   if (MC_SUCCESS != result) {
     printf("[FAILED]: %u\n", result);
-    return result;
+  } else {
+    printf("[PASSED]\n");
   }
-  printf("[PASSED]\n");
+
 
   printf("[valid_creation]\n");
   result = valid_creation();
   if (MC_SUCCESS != result) {
     printf("[FAILED]: %u\n", result);
-    return result;
+  } else {
+    printf("[PASSED]\n");
   }
-  printf("[PASSED]\n");
+
+
+  printf("[get_status]\n");
+  result = get_status();
+  if (MC_SUCCESS != result) {
+    printf("[FAILED]: %u\n", result);
+  } else {
+    printf("[PASSED]\n");
+  }
+
+
+  printf("[clear]\n");
+  result = clear();
+  if (MC_SUCCESS != result) {
+    printf("[FAILED]: %u\n", result);
+  } else {
+    printf("[PASSED]\n");
+  }
+
+
+  printf("[singly_direction]\n");
+  result = singly_direction();
+  if (MC_SUCCESS != result) {
+    printf("[FAILED]: %u\n", result);
+  } else {
+    printf("[PASSED]\n");
+  }
+
+
+  printf("[small_write]\n");
+  result = small_write();
+  if (MC_SUCCESS != result) {
+    printf("[FAILED]: %u\n", result);
+  } else {
+    printf("[PASSED]\n");
+  }
+
+
+  printf("[large_write]\n");
+  result = large_write();
+  if (MC_SUCCESS != result) {
+    printf("[FAILED]: %u\n", result);
+  } else {
+    printf("[PASSED]\n");
+  }
+
 
   printf("[hulf_duplex]\n");
   result = hulf_duplex();
   if (MC_SUCCESS != result) {
     printf("[FAILED]: %u\n", result);
-    return result;
+  } else {
+    printf("[PASSED]\n");
   }
-  printf("[PASSED]\n");
+
+
+  printf("[full_duplex]\n");
+  result = full_duplex();
+  if (MC_SUCCESS != result) {
+    printf("[FAILED]: %u\n", result);
+  } else {
+    printf("[PASSED]\n");
+  }
 
   return MC_SUCCESS;
 }
