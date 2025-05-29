@@ -15,7 +15,7 @@
 
 enum def
 {
-  INVALID_ID = -1
+  INVALID_ID = -1,
 };
 
 typedef struct {
@@ -25,7 +25,10 @@ typedef struct {
 }packet_t;
 
 typedef struct {
+  mc_msg_read_fn  read;
+  mc_msg_write_fn write;
   packet_t packet;
+  uint16_t send_count;
 }window_t;
 
 struct _mc_msg_t
@@ -40,6 +43,35 @@ struct _mc_msg_t
   uint32_t count;
   uint32_t capacity;
 };
+
+
+
+static uint32_t write_window(mc_msg_t* const msg, uint32_t window_index) 
+{
+  window_t* const window = &msg->windows[window_index];
+  const uint32_t sent_size = msg->write(&window->packet, sizeof(window->packet));
+
+  if (0 != sent_size) {
+    window->send_count++;
+  }
+
+  return sent_size;
+}
+
+static void advance_end_window(mc_msg_t* const msg)
+{
+  msg->next_window_id++;
+  msg->end_index = (msg->end_index + 1) % msg->capacity;
+  msg->count++;
+}
+
+static void push_back(mc_msg_t* const msg, void* data, uint32_t size)
+{
+  window_t* const window = &msg->windows[msg->end_index];
+  window->packet.id = msg->next_window_id;
+  window->send_count = 0;  
+  memcpy(window->packet.data, data, size);
+}
 
 mc_msg_t* mc_msg_new(mc_msg_read_fn read_fn, mc_msg_write_fn write_fn, uint32_t window_size, uint32_t window_capacity, mc_msg_on_receive_fn on_receive)
 {
@@ -84,7 +116,12 @@ uint32_t mc_msg_read_finish(mc_msg_t* const msg, uint32_t timeout_us)
 
 uint32_t mc_msg_write(mc_msg_t* const msg, void* data, uint32_t size)
 {
-  return 0;
+  // TODO(MN): Check is not full
+  push_back(msg, data, size);
+  write_window(msg, msg->end_index);
+  advance_end_window(msg);
+
+  return size;
 }
 
 uint32_t mc_msg_write_finish(mc_msg_t* const msg, uint32_t timeout_us)
@@ -99,7 +136,7 @@ uint32_t mc_msg_get_capacity(mc_msg_t* const msg)
 
 uint32_t mc_msg_get_count(mc_msg_t* const msg)
 {
-  return 0;
+  return msg->count;
 }
 
 bool mc_msg_is_empty(mc_msg_t* const msg)
