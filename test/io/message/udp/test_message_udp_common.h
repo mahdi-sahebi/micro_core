@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define SERVER_PORT       9000
 #define CLIENT_PORT       9001
