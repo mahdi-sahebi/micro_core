@@ -19,6 +19,7 @@ add_library(${LIB} INTERFACE)
 # Linking
 target_link_libraries(${LIB} 
   INTERFACE
-  micro_core_io_message
+  micro_core_io
 )
+
 

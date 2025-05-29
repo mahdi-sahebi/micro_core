@@ -2,7 +2,7 @@
 
 
 # Variables
-set(LIB micro_core_io_message)
+set(LIB micro_core_io)
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS 
     ${INCLUDE_DIRS}/io/message/message.h

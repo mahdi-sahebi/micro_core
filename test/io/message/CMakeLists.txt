@@ -12,13 +12,14 @@ endif()
 
 # Variables
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
+set(TEST test_message_udp)
 
 
 # Subdirectory
 
 
 # Binray
-add_executable(test_message_udp 
+add_executable(${TEST} 
   udp/test_message_udp_common.c   udp/test_message_udp_common.h
   udp/test_message_udp_sender.c   udp/test_message_udp_sender.h
   udp/test_message_udp_receiver.c udp/test_message_udp_receiver.h
@@ -27,9 +28,9 @@ add_executable(test_message_udp
 
 
 # Include
-target_include_directories(test_message_udp PRIVATE ${INCLUDE_DIRS})
+target_include_directories(${TEST} PRIVATE ${INCLUDE_DIRS})
 
 
 # Linking
-# target_link_libraries(test_message_udp PRIVATE micro_io_message)
+target_link_libraries(${TEST} PRIVATE micro_core_io)
 
