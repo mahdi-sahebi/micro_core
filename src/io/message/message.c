@@ -67,6 +67,50 @@ void mc_msg_free(mc_msg_t** const msg)
   *msg = NULL;
 }
 
+void mc_msg_clear(mc_msg_t* const msg)
+{
+
+}
+
+uint32_t mc_msg_read(mc_msg_t* const msg)
+{
+  return 0;
+}
+
+uint32_t mc_msg_read_finish(mc_msg_t* const msg, uint32_t timeout_us)
+{
+  return 0;
+}
+
+uint32_t mc_msg_write(mc_msg_t* const msg, void* data, uint32_t size)
+{
+  return 0;
+}
+
+uint32_t mc_msg_write_finish(mc_msg_t* const msg, uint32_t timeout_us)
+{
+  return 0;
+}
+
+uint32_t mc_msg_get_capacity(mc_msg_t* const msg)
+{
+  return msg->capacity;
+}
+
+uint32_t mc_msg_get_count(mc_msg_t* const msg)
+{
+  return 0;
+}
+
+bool mc_msg_is_empty(mc_msg_t* const msg)
+{
+  return (0 == msg->count);
+}
+
+bool mc_msg_is_full(mc_msg_t* const msg)
+{
+  return (msg->count == msg->capacity);
+}
 
 
 #undef WINDOW_LEN
