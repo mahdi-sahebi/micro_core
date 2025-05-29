@@ -18,7 +18,12 @@ set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 
 
 # Binray
-add_executable(test_message_udp test_message_udp.c)
+add_executable(test_message_udp 
+  udp/test_message_udp_common.c   udp/test_message_udp_common.h
+  udp/test_message_udp_sender.c   udp/test_message_udp_sender.h
+  udp/test_message_udp_receiver.c udp/test_message_udp_receiver.h
+  udp/test_message_udp.c
+)
 
 
 # Include
