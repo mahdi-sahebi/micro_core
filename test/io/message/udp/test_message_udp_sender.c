@@ -59,7 +59,7 @@ void* snd_start(void* data)
   *Result = MC_SUCCESS;
 
   client_create();
-  mc_msg_t* const message = mc_msg_new(client_read, client_write, DATA_LEN * sizeof(uint32_t), 3, NULL);
+  mc_msg_t* message = mc_msg_new(client_read, client_write, DATA_LEN * sizeof(uint32_t), 3, NULL);
 
   update_data(buffer, counter);
   counter++;
@@ -85,7 +85,7 @@ void* snd_start(void* data)
   }
 
   mc_msg_write_finish(message, 0);
-  mc_msg_free(message);
+  mc_msg_free(&message);
   client_close();
   return NULL;
 }
