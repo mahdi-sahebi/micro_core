@@ -179,81 +179,81 @@ int main()
   printf("[invalid_creation]\n");
   result = invalid_creation();
   if (MC_SUCCESS != result) {
-    printf("[FAILED]: %u\n", result);
+    printf("FAILED: %u\n\n", result);
   } else {
-    printf("[PASSED]\n");
+    printf("PASSED\n\n");
   }
 
 
   printf("[valid_creation]\n");
   result = valid_creation();
   if (MC_SUCCESS != result) {
-    printf("[FAILED]: %u\n", result);
+    printf("FAILED: %u\n\n", result);
   } else {
-    printf("[PASSED]\n");
+    printf("PASSED\n\n");
   }
 
 
   printf("[get_status]\n");
   result = get_status();
   if (MC_SUCCESS != result) {
-    printf("[FAILED]: %u\n", result);
+    printf("FAILED: %u\n\n", result);
   } else {
-    printf("[PASSED]\n");
+    printf("PASSED\n\n");
   }
 
 
   printf("[clear]\n");
   result = clear();
   if (MC_SUCCESS != result) {
-    printf("[FAILED]: %u\n", result);
+    printf("FAILED: %u\n\n", result);
   } else {
-    printf("[PASSED]\n");
+    printf("PASSED\n\n");
   }
 
 
   printf("[singly_direction]\n");
   result = singly_direction();
   if (MC_SUCCESS != result) {
-    printf("[FAILED]: %u\n", result);
+    printf("FAILED: %u\n\n", result);
   } else {
-    printf("[PASSED]\n");
+    printf("PASSED\n\n");
   }
 
 
   printf("[small_write]\n");
   result = small_write();
   if (MC_SUCCESS != result) {
-    printf("[FAILED]: %u\n", result);
+    printf("FAILED: %u\n\n", result);
   } else {
-    printf("[PASSED]\n");
+    printf("PASSED\n\n");
   }
 
 
   printf("[large_write]\n");
   result = large_write();
   if (MC_SUCCESS != result) {
-    printf("[FAILED]: %u\n", result);
+    printf("FAILED: %u\n\n", result);
   } else {
-    printf("[PASSED]\n");
+    printf("PASSED\n\n");
   }
 
 
   printf("[hulf_duplex]\n");
   result = hulf_duplex();
   if (MC_SUCCESS != result) {
-    printf("[FAILED]: %u\n", result);
+    printf("FAILED: %u\n\n", result);
   } else {
-    printf("[PASSED]\n");
+    printf("PASSED\n\n");
   }
 
 
   printf("[full_duplex]\n");
   result = full_duplex();
   if (MC_SUCCESS != result) {
-    printf("[FAILED]: %u\n", result);
+    printf("FAILED: %u\n\n", result);
   } else {
-    printf("[PASSED]\n");
+    printf("PASSED\n\n");
   }
 
   return MC_SUCCESS;
