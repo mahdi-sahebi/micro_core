@@ -86,7 +86,7 @@ void* rcv_start(void* data)
   *Result = MC_SUCCESS;
 
   server_create();
-  mc_msg_t* const message = mc_msg_new(server_read, server_write, DATA_LEN * sizeof(uint32_t), 3, on_receive);
+  mc_msg_t* message = mc_msg_new(server_read, server_write, DATA_LEN * sizeof(uint32_t), 3, on_receive);
 
   ReceiveCounter = 0;
   LastTickUS = TimeNowU();
@@ -100,7 +100,7 @@ void* rcv_start(void* data)
   }
 
   mc_msg_read_finish(message, 0);
-  mc_msg_free(message);
+  mc_msg_free(&message);
   server_close();
   return NULL;
 }
