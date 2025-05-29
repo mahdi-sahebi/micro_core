@@ -13,6 +13,9 @@
 
 static int ServerSocket = -1;
 static uint32_t ReceiveCounter = 0;
+static uint32_t LastTickUS = 0;
+static uint32_t* Result = NULL;
+
 
 static void server_create()
 {
@@ -60,30 +63,39 @@ static bool verify_data(const uint32_t* const buffer, uint32_t packet_id)
 static void on_receive(const void* const data, uint32_t size)
 {
   if ((DATA_LEN * sizeof(uint32_t)) != size) {
-    Error = true;
+    *Result = MC_ERR_RUNTIME;
     return;
   }
 
   const uint32_t* const buffer = (uint32_t*)data;
 
   if (!verify_data(buffer, ReceiveCounter)) {
-    Error = true;
+    *Result = MC_ERR_RUNTIME;
     return;
   }
 
   ReceiveCounter++;
+  LastTickUS = TimeNowU();
 }
 
 void* rcv_start(void* data)
 {
   /* TODO(MN): Repetitive packet, invalid header, incomplete packet, miss packet pointer, use zero copy
    */
-  ReceiveCounter = 0;
-  Error = false;
+  Result = (uint32_t*)data;
+  *Result = MC_SUCCESS;
+
   server_create();
   mc_msg_t* const message = mc_msg_new(server_read, server_write, DATA_LEN * sizeof(uint32_t), 3, on_receive);
 
+  ReceiveCounter = 0;
+  LastTickUS = TimeNowU();
+
   while (ReceiveCounter < (COMPLETE_COUNT - 1)) {
+    if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
+      *Result = MC_ERR_TIMEOUT;
+      break;
+    }
     mc_msg_read(message);
   }
 

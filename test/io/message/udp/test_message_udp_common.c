@@ -1,9 +1,7 @@
 #include <string.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 #include "test_message_udp_common.h"
-
-
-volatile bool Error = false;
 
 
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
@@ -39,4 +37,12 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size)
   }
   
   return read_size;
+}
+
+uint32_t TimeNowU()
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+
+    return (now.tv_sec * 1000000) + now.tv_usec;
 }

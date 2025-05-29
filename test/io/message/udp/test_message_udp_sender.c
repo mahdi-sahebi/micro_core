@@ -10,6 +10,8 @@
 
 
 static int ClientSocket = -1;
+static uint32_t LastTickUS = 0;
+static uint32_t* Result = NULL;
 
 
 static void client_create()
@@ -52,16 +54,28 @@ void* snd_start(void* data)
 {
   uint32_t buffer[DATA_LEN];
   uint32_t counter = 0;
+
+  Result = (uint32_t*)data;
+  *Result = MC_SUCCESS;
+
   client_create();
   mc_msg_t* const message = mc_msg_new(client_read, client_write, DATA_LEN * sizeof(uint32_t), 3, NULL);
+
   update_data(buffer, counter);
   counter++;
 
   /* Let receiver not to miss any packet */
   usleep(200000);
+  LastTickUS = TimeNowU();
 
   while (counter < COMPLETE_COUNT) {
     if (sizeof(buffer) != mc_msg_write(message, buffer, sizeof(buffer))) {
+      if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
+        *Result = MC_ERR_TIMEOUT;
+        break;
+      }
+
+      LastTickUS = TimeNowU();
       continue;
     }
 
