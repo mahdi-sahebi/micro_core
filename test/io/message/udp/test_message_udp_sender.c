@@ -75,12 +75,12 @@ void* snd_start(void* data)
         break;
       }
 
-      LastTickUS = TimeNowU();
       continue;
     }
 
     update_data(buffer, counter);
     counter++;
+      LastTickUS = TimeNowU();
     usleep(10000);
   }
 
