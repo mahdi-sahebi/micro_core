@@ -94,6 +94,10 @@ void* rcv_start(void* data)
   while (ReceiveCounter < (COMPLETE_COUNT - 1)) {
     // TODO(MN): Check size
     const uint32_t size = mc_msg_read(message);
+    if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
+      *Result = MC_ERR_TIMEOUT;
+      break;
+    }
   }
 
   mc_msg_read_finish(message, 0);
