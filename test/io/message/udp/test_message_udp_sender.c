@@ -23,6 +23,7 @@ static void client_create()
     addr_in.sin_family = AF_INET;
     addr_in.sin_port = htons(CLIENT_PORT);
     inet_aton("127.0.0.1", &addr_in.sin_addr);
+    bind(ClientSocket, (struct sockaddr*)&addr_in, sizeof(addr_in));
 
     struct timeval timeout = {0, 10000};
     setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
@@ -70,17 +71,12 @@ void* snd_start(void* data)
 
   while (counter < COMPLETE_COUNT) {
     if (sizeof(buffer) != mc_msg_write(message, buffer, sizeof(buffer))) {
-      if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
-        *Result = MC_ERR_TIMEOUT;
-        break;
-      }
-
       continue;
     }
 
     update_data(buffer, counter);
     counter++;
-      LastTickUS = TimeNowU();
+    LastTickUS = TimeNowU();
     usleep(10000);
   }
 

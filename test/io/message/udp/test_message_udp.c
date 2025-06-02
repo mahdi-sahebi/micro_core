@@ -15,12 +15,12 @@
 
 static uint32_t read_api(void* const data, uint32_t size)
 {
-    return 0;
+  return 0;
 }
 
 static uint32_t write_api(const void* const data, uint32_t size)
 {
-    return 0;
+  return 0;
 }
 
 static int invalid_creation()
