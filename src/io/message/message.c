@@ -44,6 +44,7 @@ struct _mc_msg_t
 { 
   mc_msg_read_fn  read;
   mc_msg_write_fn write;
+  mc_msg_on_receive_fn on_receive;
   window_t windows[WINDOW_LEN];
   uint32_t begin_window_id;
   uint32_t next_window_id;
@@ -77,12 +78,16 @@ static void advance_end_window(mc_msg_t* const msg)
 static void push_back(mc_msg_t* const msg, void* data, uint32_t size)
 {
   window_t* const window = &msg->windows[msg->end_index];
-  window->packet.id = msg->next_window_id;
-  window->send_count = 0;  
+  window->packet.header  = HEADER;
+  window->packet.type    = PKT_DATA;
+  window->is_acked       = false;
+  window->packet.size    = size;
+  window->packet.id      = msg->next_window_id;
+  window->send_count     = 0;
   memcpy(window->packet.data, data, size);
 }
 
-static void clear_acked_windows(mc_msg_t* const this)
+static void clear_sending_acked_windows(mc_msg_t* const this)
 {
   while (this->windows[this->begin_index].is_acked && (INVALID_ID != this->windows[this->begin_index].packet.id)) {
     window_t* const window = &this->windows[this->begin_index];
@@ -161,6 +166,7 @@ mc_msg_t* mc_msg_new(mc_msg_read_fn read_fn, mc_msg_write_fn write_fn, uint32_t 
 
   msg->read            = read_fn;
   msg->write           = write_fn;
+  msg->on_receive      = on_receive;
   msg->begin_window_id = 0;
   msg->next_window_id  = 0;
   msg->begin_index     = 0;
