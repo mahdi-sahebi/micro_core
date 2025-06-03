@@ -218,19 +218,15 @@ mc_msg_t* mc_msg_new(
     return NULL;//MC_ERR_MEMORY_OUT_OF_RANGE;
   }
   
-  mc_msg_t* this = malloc(sizeof(mc_msg_t) + (capacity * (sizeof(window_t) + window_size)));
+  mc_msg_t* const this = malloc(sizeof(mc_msg_t) + (capacity * (sizeof(window_t) + window_size)));
 
   this->read            = read_fn;
   this->write           = write_fn;
   this->on_receive      = on_receive;
-  this->begin_window_id = 0;
-  this->next_window_id  = 0;
-  this->begin_index     = 0;
-  this->end_index       = 0;
-  this->count           = 0;
   this->window_size     = window_size;
   this->data_size       = window_size - sizeof(packet_t);
   this->capacity        = capacity;
+  mc_msg_clear(this);
 
   for (uint32_t index = 0; index < this->capacity; index++) {
     get_window(this, index)->packet.id = INVALID_ID;
@@ -245,9 +241,19 @@ void mc_msg_free(mc_msg_t** const this)
   *this = NULL;
 }
 
-void mc_msg_clear(mc_msg_t* const this)
+mc_result mc_msg_clear(mc_msg_t* const this)
 {
-// TODO(MN): Implement
+  if (NULL == this) {
+    return MC_ERR_INVALID_ARGUMENT;
+  }
+
+  this->begin_window_id = 0;
+  this->next_window_id  = 0;
+  this->begin_index     = 0;
+  this->end_index       = 0;
+  this->count           = 0;
+
+  return MC_SUCCESS;
 }
 
 uint32_t mc_msg_read(mc_msg_t* const this)
