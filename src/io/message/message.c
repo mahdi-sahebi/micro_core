@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "core/error.h"
 #include "io/message/message.h"
 
 
@@ -208,6 +209,15 @@ mc_msg_t* mc_msg_new(
   mc_msg_on_receive_fn on_receive)
 {
   // TODO(MN): Input checking. the minimum size of window_size
+  if ((NULL == read_fn) || (NULL == write_fn) || 
+      (0 == window_size) || (0 == capacity)) {
+      return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
+  }
+
+  if (window_size < (sizeof(packet_t) + 1)) {
+    return NULL;//MC_ERR_MEMORY_OUT_OF_RANGE;
+  }
+  
   mc_msg_t* this = malloc(sizeof(mc_msg_t) + (capacity * (sizeof(window_t) + window_size)));
 
   this->read            = read_fn;
