@@ -283,6 +283,11 @@ uint32_t mc_msg_get_count(mc_msg_t* const this)
   return this->count;
 }
 
+uint32_t  mc_msg_get_window_size(mc_msg_t* const this)
+{
+  return this->window_size;// TODO(MN): Test
+}
+
 bool mc_msg_is_empty(mc_msg_t* const this)
 {
   return (0 == this->count);

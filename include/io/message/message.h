@@ -14,6 +14,7 @@ void      mc_msg_free(mc_msg_t** const msg);
 void      mc_msg_clear(mc_msg_t* const msg);
 uint32_t  mc_msg_get_capacity(mc_msg_t* const msg);
 uint32_t  mc_msg_get_count(mc_msg_t* const msg);
+uint32_t  mc_msg_get_window_size(mc_msg_t* const msg);
 bool      mc_msg_is_empty(mc_msg_t* const msg);
 bool      mc_msg_is_full(mc_msg_t* const msg);
 uint32_t  mc_msg_read(mc_msg_t* const msg);
