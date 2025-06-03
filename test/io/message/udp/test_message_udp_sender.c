@@ -10,24 +10,27 @@
 
 
 static int ClientSocket = -1;
+static mc_msg_t* message = NULL;
 static uint32_t SendCounter = 0;
 static uint32_t LastTickUS = 0;
 static uint32_t* Result = NULL;
+static uint32_t buffer[DATA_LEN];
+
 
 
 static void client_create()
 {
-    ClientSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    
-    struct sockaddr_in addr_in;
-    memset(&addr_in, 0, sizeof(addr_in));
-    addr_in.sin_family = AF_INET;
-    addr_in.sin_port = htons(CLIENT_PORT);
-    inet_aton("127.0.0.1", &addr_in.sin_addr);
-    bind(ClientSocket, (struct sockaddr*)&addr_in, sizeof(addr_in));
+  ClientSocket = socket(AF_INET, SOCK_DGRAM, 0);
+  
+  struct sockaddr_in addr_in;
+  memset(&addr_in, 0, sizeof(addr_in));
+  addr_in.sin_family = AF_INET;
+  addr_in.sin_port = htons(CLIENT_PORT);
+  inet_aton("127.0.0.1", &addr_in.sin_addr);
+  bind(ClientSocket, (struct sockaddr*)&addr_in, sizeof(addr_in));
 
-    struct timeval timeout = {0, 10000};
-    setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+  struct timeval timeout = {0, 10000};
+  setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 }
 
 static uint32_t client_write(const void* const data, uint32_t size)
@@ -60,20 +63,30 @@ static void update_data(uint32_t* const buffer)
   SendCounter++;
 }
 
-void* snd_start(void* data)
+static void init(void* data)
 {
-  uint32_t buffer[DATA_LEN];
-
   Result = (uint32_t*)data;
   *Result = MC_SUCCESS;
-
+  
   client_create();
-  mc_msg_t* message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL);
-
-  update_data(buffer);
-
   let_server_start();
+
+  message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL);
+
   LastTickUS = TimeNowU();
+}
+
+static void deinit()
+{
+  mc_msg_write_finish(message, 0);
+  mc_msg_free(&message);
+  client_close();
+}
+
+void* snd_start(void* data)
+{
+  init(data);
+  update_data(buffer);
 
   while (SendCounter < COMPLETE_COUNT) {
     if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
@@ -87,12 +100,10 @@ void* snd_start(void* data)
 
     update_data(buffer);
     LastTickUS = TimeNowU();
-    usleep(10000);
+    usleep(100);
   }
 
-  mc_msg_write_finish(message, 0);
-  mc_msg_free(&message);
-  client_close();
+  deinit();
   return NULL;
 }
 

@@ -15,6 +15,7 @@ static int ServerSocket = -1;
 static uint32_t ReceiveCounter = 0;
 static uint32_t LastTickUS = 0;
 static uint32_t* Result = NULL;
+static mc_msg_t* message = NULL;
 
 
 static void server_create()
@@ -41,7 +42,6 @@ static uint32_t server_read(void* const data, uint32_t size)
 {
   return socket_read(ServerSocket, data, size);
 }
-
 static void server_close()
 {
   close(ServerSocket);
@@ -86,7 +86,7 @@ static void on_receive(const void* const data, uint32_t size)
   LastTickUS = TimeNowU();
 }
 
-void* rcv_start(void* data)
+static void init(void* data)
 {
   /* TODO(MN): Repetitive packet, invalid header, incomplete packet, miss packet pointer, use zero copy
    */
@@ -95,10 +95,23 @@ void* rcv_start(void* data)
 
   server_create();
   flush_receive_buffer();
-  mc_msg_t* message = mc_msg_new(server_read, server_write, 16 + DATA_LEN * sizeof(uint32_t), 3, on_receive);
+
+  message = mc_msg_new(server_read, server_write, 16 + DATA_LEN * sizeof(uint32_t), 3, on_receive);
 
   ReceiveCounter = 0;
   LastTickUS = TimeNowU();
+}
+
+static void deinit()
+{
+  mc_msg_read_finish(message, 0);
+  mc_msg_free(&message);
+  server_close();  
+}
+
+void* rcv_start(void* data)
+{
+  init(data);
 
   while (ReceiveCounter < (COMPLETE_COUNT - 1)) {
     if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
@@ -110,8 +123,6 @@ void* rcv_start(void* data)
     const uint32_t size = mc_msg_read(message);
   }
 
-  mc_msg_read_finish(message, 0);
-  mc_msg_free(&message);
-  server_close();
+  deinit();
   return NULL;
 }
