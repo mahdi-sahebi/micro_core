@@ -70,12 +70,12 @@ void* snd_start(void* data)
   LastTickUS = TimeNowU();
 
   while (counter < COMPLETE_COUNT) {
+    if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
+      *Result = MC_ERR_TIMEOUT;
+      break;
+    }
+    
     if (sizeof(buffer) != mc_msg_write(message, buffer, sizeof(buffer))) {
-      if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
-        *Result = MC_ERR_TIMEOUT;
-        break;
-      }
-
       continue;
     }
 
