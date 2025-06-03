@@ -47,6 +47,14 @@ static void server_close()
   close(ServerSocket);
 }
 
+static void flush_receive_buffer()
+{
+  char temp[100];
+  for (uint32_t index = 0; index < 10; index++) {
+    server_read(temp, sizeof(temp));
+  }
+}
+
 static bool verify_data(const uint32_t* const buffer, uint32_t packet_id) 
 {
   for (uint32_t index = 0; index < DATA_LEN; index++) {
@@ -86,7 +94,8 @@ void* rcv_start(void* data)
   *Result = MC_SUCCESS;
 
   server_create();
-  mc_msg_t* message = mc_msg_new(server_read, server_write, DATA_LEN * sizeof(uint32_t), 3, on_receive);
+  flush_receive_buffer();
+  mc_msg_t* message = mc_msg_new(server_read, server_write, 16 + DATA_LEN * sizeof(uint32_t), 3, on_receive);
 
   ReceiveCounter = 0;
   LastTickUS = TimeNowU();
