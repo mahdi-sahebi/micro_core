@@ -4,6 +4,9 @@ option(BUILD_TESTS "To compile tests" ON)
 # Variables
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 
+# Subdirectory
+add_subdirectory(io)
+
 # Binray
 add_executable(test_dsa_span test_dsa_span.c)
 add_executable(test_dsa_memlin test_dsa_memlin.c)
