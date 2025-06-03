@@ -77,7 +77,7 @@ static int get_status()
   uint32_t data[5];
   mc_msg_t* message = NULL;
   
-  message = mc_msg_new(read_api, write_api, sizeof(data), 3, NULL);
+  message = mc_msg_new(read_api, write_api, 36, 3, NULL);
   if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }

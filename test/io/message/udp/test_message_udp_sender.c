@@ -10,6 +10,7 @@
 
 
 static int ClientSocket = -1;
+static uint32_t SendCounter = 0;
 static uint32_t LastTickUS = 0;
 static uint32_t* Result = NULL;
 
@@ -44,32 +45,37 @@ static void client_close()
   close(ClientSocket);
 }
 
-static void update_data(uint32_t* const buffer, uint32_t packet_id)
+static void let_server_start()
+{
+  /* Let receiver not to miss any packet */
+  usleep(200000);
+}
+
+static void update_data(uint32_t* const buffer)
 {
   for (uint32_t index = 0; index < DATA_LEN; index++) {
-      buffer[index] = (packet_id * DATA_LEN) + index;
+      buffer[index] = (SendCounter * DATA_LEN) + index;
   }
+
+  SendCounter++;
 }
 
 void* snd_start(void* data)
 {
   uint32_t buffer[DATA_LEN];
-  uint32_t counter = 0;
 
   Result = (uint32_t*)data;
   *Result = MC_SUCCESS;
 
   client_create();
-  mc_msg_t* message = mc_msg_new(client_read, client_write, DATA_LEN * sizeof(uint32_t), 3, NULL);
+  mc_msg_t* message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL);
 
-  update_data(buffer, counter);
-  counter++;
+  update_data(buffer);
 
-  /* Let receiver not to miss any packet */
-  usleep(200000);
+  let_server_start();
   LastTickUS = TimeNowU();
 
-  while (counter < COMPLETE_COUNT) {
+  while (SendCounter < COMPLETE_COUNT) {
     if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
       *Result = MC_ERR_TIMEOUT;
       break;
@@ -79,8 +85,7 @@ void* snd_start(void* data)
       continue;
     }
 
-    update_data(buffer, counter);
-    counter++;
+    update_data(buffer);
     LastTickUS = TimeNowU();
     usleep(10000);
   }
