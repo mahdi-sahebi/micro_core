@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "core/error.h"
 #include "io/message/message.h"
 
 
@@ -208,19 +209,24 @@ mc_msg_t* mc_msg_new(
   mc_msg_on_receive_fn on_receive)
 {
   // TODO(MN): Input checking. the minimum size of window_size
-  mc_msg_t* this = malloc(sizeof(mc_msg_t) + (capacity * (sizeof(window_t) + window_size)));
+  if ((NULL == read_fn) || (NULL == write_fn) || 
+      (0 == window_size) || (0 == capacity)) {
+      return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
+  }
+
+  if (window_size < (sizeof(packet_t) + 1)) {
+    return NULL;//MC_ERR_MEMORY_OUT_OF_RANGE;
+  }
+  
+  mc_msg_t* const this = malloc(sizeof(mc_msg_t) + (capacity * (sizeof(window_t) + window_size)));
 
   this->read            = read_fn;
   this->write           = write_fn;
   this->on_receive      = on_receive;
-  this->begin_window_id = 0;
-  this->next_window_id  = 0;
-  this->begin_index     = 0;
-  this->end_index       = 0;
-  this->count           = 0;
   this->window_size     = window_size;
   this->data_size       = window_size - sizeof(packet_t);
   this->capacity        = capacity;
+  mc_msg_clear(this);
 
   for (uint32_t index = 0; index < this->capacity; index++) {
     get_window(this, index)->packet.id = INVALID_ID;
@@ -235,9 +241,19 @@ void mc_msg_free(mc_msg_t** const this)
   *this = NULL;
 }
 
-void mc_msg_clear(mc_msg_t* const this)
+mc_result mc_msg_clear(mc_msg_t* const this)
 {
-// TODO(MN): Implement
+  if (NULL == this) {
+    return MC_ERR_INVALID_ARGUMENT;
+  }
+
+  this->begin_window_id = 0;
+  this->next_window_id  = 0;
+  this->begin_index     = 0;
+  this->end_index       = 0;
+  this->count           = 0;
+
+  return MC_SUCCESS;
 }
 
 uint32_t mc_msg_read(mc_msg_t* const this)

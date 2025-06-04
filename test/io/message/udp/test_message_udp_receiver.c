@@ -109,12 +109,17 @@ static void deinit()
   server_close();  
 }
 
+static bool timed_out()
+{
+  return ((TimeNowU() - LastTickUS) > TEST_TIMEOUT);
+}
+
 void* rcv_start(void* data)
 {
   init(data);
 
   while (ReceiveCounter < (COMPLETE_COUNT - 1)) {
-    if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
+    if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
     }
