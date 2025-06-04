@@ -61,6 +61,8 @@ static void update_data(uint32_t* const buffer)
   }
 
   SendCounter++;
+  LastTickUS = TimeNowU();
+  usleep(100);
 }
 
 static void init(void* data)
@@ -72,8 +74,6 @@ static void init(void* data)
   let_server_start();
 
   message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL);
-
-  LastTickUS = TimeNowU();
 }
 
 static void deinit()
@@ -83,13 +83,18 @@ static void deinit()
   client_close();
 }
 
+static bool timed_out()
+{
+  return ((TimeNowU() - LastTickUS) > TEST_TIMEOUT);
+}
+
 void* snd_start(void* data)
 {
   init(data);
   update_data(buffer);
 
   while (SendCounter < COMPLETE_COUNT) {
-    if ((TimeNowU() - LastTickUS) > TEST_TIMEOUT) {
+    if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
     }
@@ -99,8 +104,6 @@ void* snd_start(void* data)
     }
 
     update_data(buffer);
-    LastTickUS = TimeNowU();
-    usleep(100);
   }
 
   deinit();

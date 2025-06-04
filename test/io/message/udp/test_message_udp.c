@@ -47,6 +47,11 @@ static int invalid_creation()
     return MC_ERR_BAD_ALLOC;
   }
 
+  message = mc_msg_new(read_api, write_api, 1, 3, NULL);
+  if (NULL != message) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
   return MC_SUCCESS;
 }
 
@@ -75,9 +80,7 @@ static int valid_creation()
 static int get_status()
 {
   uint32_t data[5];
-  mc_msg_t* message = NULL;
-  
-  message = mc_msg_new(read_api, write_api, 36, 3, NULL);
+  mc_msg_t* message = mc_msg_new(read_api, write_api, 36, 3, NULL);
   if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -121,7 +124,46 @@ static int get_status()
 
 static int clear()
 {
-  return MC_ERR_RUNTIME;
+  uint32_t data[5];
+  mc_msg_t* message = mc_msg_new(read_api, write_api, 36, 3, NULL);
+
+  mc_result result = mc_msg_clear(NULL);
+  if (MC_ERR_INVALID_ARGUMENT != result) {
+    return result;
+  }
+
+  result = mc_msg_clear(message);
+  if (MC_SUCCESS != result) {
+    return result;
+  }
+
+  if (!mc_msg_is_empty(message)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  for (uint32_t index = 0; index < mc_msg_get_capacity(message); index++) {
+    mc_msg_write(message, data, sizeof(data)) != sizeof(data);
+  }
+
+  if (mc_msg_is_empty(message) || !mc_msg_is_full(message)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  result = mc_msg_clear(message);
+  if (MC_SUCCESS != result) {
+    return result;
+  }
+
+  if (!mc_msg_is_empty(message) || mc_msg_is_full(message)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  mc_msg_free(&message);
+  if (NULL != message) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  return MC_SUCCESS;
 }
 
 static int singly_direction()
