@@ -43,6 +43,10 @@ struct _mc_msg_t
   mc_msg_read_fn  read;
   mc_msg_write_fn write;
   mc_msg_on_receive_fn on_receive;
+
+  // Receive
+  uint32_t rcv_last_id;
+
   uint32_t begin_window_id;
   uint32_t next_window_id;
   uint32_t begin_index;
@@ -160,6 +164,11 @@ static uint32_t read_data(mc_msg_t* const this)
       return 0; // [INVALID] Bad header/type received
   }
 
+  if (pkt->id == this->rcv_last_id) {
+    return 0;
+  }
+  this->rcv_last_id = pkt->id;
+
   // TODO(MN): Handle if header not valid. search for header to lock.
   // TODO(MN): Handle if read_size is not equal to a packet.
   if (PKT_ACK == pkt->type) {
@@ -246,6 +255,8 @@ mc_result mc_msg_clear(mc_msg_t* const this)
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;
   }
+
+  this->rcv_last_id = -1;
 
   this->begin_window_id = 0;
   this->next_window_id  = 0;
