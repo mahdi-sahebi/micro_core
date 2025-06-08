@@ -198,30 +198,25 @@ static int singly_direction()
 static int singly_repetitive()
 {
   cfg_set_repetitive_send(true);
-  
-  pthread_t task_snd;
-  pthread_t task_rcv;
-  uint32_t snd_error = MC_SUCCESS;
-  uint32_t rcv_error = MC_SUCCESS;
+  const int result = singly_direction();
+  cfg_set_repetitive_send(true);
+  return result;
+}
 
-  if (pthread_create(&task_snd, NULL, snd_start, &snd_error) || 
-      pthread_create(&task_rcv, NULL, rcv_start, &rcv_error)) {
-    MC_ERR_BAD_ALLOC;
-  }
+static int singly_low_lossy()
+{
+  cfg_set_loss_rate(10);
+  const int result = singly_direction();
+  cfg_set_loss_rate(0);
+  return result;
+}
 
-  if (pthread_join(task_snd, NULL) || 
-      pthread_join(task_rcv, NULL)) {
-    return MC_ERR_RUNTIME;
-  }
-
-  if (snd_error) {
-    return snd_error;
-  }
-  if (rcv_error) {
-    return rcv_error;
-  }
-  
-  return MC_SUCCESS;
+static int singly_high_lossy()
+{
+  cfg_set_loss_rate(70);
+  const int result = singly_direction();
+  cfg_set_loss_rate(0);
+  return result;
 }
 
 static int small_write()
@@ -287,6 +282,33 @@ int main()
 
   printf("[singly_direction]\n");
   result = singly_direction();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
+
+
+  printf("[singly_repetitive]\n");
+  result = singly_repetitive();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
+
+  
+  printf("[singly_low_lossy]\n");
+  result = singly_low_lossy();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
+
+  
+  printf("[singly_high_lossy]\n");
+  result = singly_high_lossy();
   if (MC_SUCCESS != result) {
     printf("FAILED: %u\n\n", result);
   } else {

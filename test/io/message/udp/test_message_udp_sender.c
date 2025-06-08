@@ -70,6 +70,7 @@ static void init(void* data)
   Result = (uint32_t*)data;
   *Result = MC_SUCCESS;
   
+  SendCounter = 0;
   client_create();
   let_server_start();
 
