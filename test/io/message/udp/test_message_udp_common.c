@@ -4,8 +4,14 @@
 #include "test_message_udp_common.h"
 
 
+static bool RepetitiveSendEnable = false;
+// TODO(MN): Loss rate
+
+
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {
+  uint8_t count = RepetitiveSendEnable ? 2 : 1;
+
   struct sockaddr_in addr_in;
   memset(&addr_in, 0, sizeof(addr_in));
   addr_in.sin_family = AF_INET;
@@ -13,10 +19,17 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
   addr_in.sin_addr.s_addr = inet_addr(dst_ip);
 
   socklen_t addr_len = sizeof(addr_in);
-  uint32_t sent_size = sendto(socket_fd, data, size, 0, (struct sockaddr*)&addr_in, addr_len);
 
-  if (-1 == sent_size) {
-    sent_size = 0;
+  uint32_t sent_size = 0;
+  while (count) {
+    sent_size = sendto(socket_fd, data, size, 0, (struct sockaddr*)&addr_in, addr_len);
+
+    if (-1 == sent_size) {
+      sent_size = 0;
+    }
+    if (sent_size == size) {
+      count--;
+    }
   }
 
   return sent_size;
@@ -45,4 +58,9 @@ uint32_t TimeNowU()
     gettimeofday(&now, NULL);
 
     return (now.tv_sec * 1000000) + now.tv_usec;
+}
+
+void cfg_set_repetitive_send(bool enable)
+{
+  RepetitiveSendEnable = enable;
 }
