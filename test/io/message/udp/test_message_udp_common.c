@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
@@ -5,11 +6,19 @@
 
 
 static bool RepetitiveSendEnable = false;
-// TODO(MN): Loss rate
+static uint8_t LossRate = 0;
 
+
+static bool simulate_loss() {
+  return (rand() % 100) < LossRate;
+}
 
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {
+  if (simulate_loss()) {
+    return 0;
+  }
+
   uint8_t count = RepetitiveSendEnable ? 2 : 1;
 
   struct sockaddr_in addr_in;
@@ -37,6 +46,10 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
 
 uint32_t socket_read(int socket_fd, void* data, uint32_t size)
 {
+  if (simulate_loss()) {
+    return 0;
+  }
+  
   struct sockaddr_in addr_in;
   socklen_t addr_len = sizeof(addr_in);
   uint32_t read_size = recvfrom(socket_fd, data, size, 0, (struct sockaddr*)&addr_in, &addr_len);
@@ -63,4 +76,9 @@ uint32_t TimeNowU()
 void cfg_set_repetitive_send(bool enable)
 {
   RepetitiveSendEnable = enable;
+}
+
+void cfg_set_loss_rate(uint8_t rate)
+{
+  LossRate = rate;
 }
