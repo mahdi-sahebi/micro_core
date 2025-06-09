@@ -38,6 +38,20 @@ typedef struct {
   packet_t packet;
 }window_t;
 
+typedef struct
+{
+  uint32_t begin_window_id;
+  uint32_t next_window_id;
+  uint32_t begin_index;
+  uint32_t end_index;
+  uint32_t count;
+  uint32_t window_size;
+  uint32_t data_size;
+  uint32_t capacity;
+  char temp_window[0];
+  window_t* windows;// TODO(MN): Use window_t*
+}controller_t;
+
 struct _mc_msg_t
 { 
   mc_msg_read_fn  read;
@@ -47,21 +61,14 @@ struct _mc_msg_t
   // Receive
   uint32_t rcv_last_id;
 
-  uint32_t begin_window_id;
-  uint32_t next_window_id;
-  uint32_t begin_index;
-  uint32_t end_index;
-  uint32_t count;
-  uint32_t window_size;
-  uint32_t data_size;
-  uint32_t capacity;
-  char windows[0];
+  controller_t* rcv;
+  controller_t* snd;  
 };
 
 
-static inline window_t* get_window(const mc_msg_t* const this, uint16_t index)
+static inline window_t* get_window(const controller_t* const this, uint16_t index)
 {
-  return (window_t*)(this->windows + (index * (sizeof(window_t) + this->data_size)));
+  return (window_t*)((char*)(this->windows) + (index * (sizeof(window_t) + this->data_size)));// TODO(MN): Rcv/snd
 }
 
 // static inline uint16_t get_window_size(const window_t* const window)
@@ -71,8 +78,8 @@ static inline window_t* get_window(const mc_msg_t* const this, uint16_t index)
 
 static uint32_t write_window(mc_msg_t* const this, uint32_t window_index) 
 {
-  window_t* const window = get_window(this, window_index);
-  const uint32_t sent_size = this->write(&window->packet, this->window_size);
+  window_t* const window = get_window(this->snd, window_index);
+  const uint32_t sent_size = this->write(&window->packet, this->snd->window_size);
 
   if (0 != sent_size) {
     window->send_count++;
@@ -83,46 +90,46 @@ static uint32_t write_window(mc_msg_t* const this, uint32_t window_index)
 
 static void advance_end_window(mc_msg_t* const this)
 {
-  this->next_window_id++;
-  this->end_index = (this->end_index + 1) % this->capacity;
-  this->count++;
+  this->snd->next_window_id++;
+  this->snd->end_index = (this->snd->end_index + 1) % this->snd->capacity;
+  this->snd->count++;
 }
 
 static void push_back(mc_msg_t* const this, void* data, uint32_t size)
 {
-  window_t* const window = get_window(this, this->end_index);
+  window_t* const window = get_window(this->snd, this->snd->end_index);
   window->packet.header  = HEADER;
   window->packet.type    = PKT_DATA;
   window->is_acked       = false;
   window->packet.size    = size;
-  window->packet.id      = this->next_window_id;
+  window->packet.id      = this->snd->next_window_id;
   window->send_count     = 0;
   memcpy(window->packet.data, data, size);
 }
 
 static void clear_sending_acked_windows(mc_msg_t* const this)
 {
-  while (get_window(this, this->begin_index)->is_acked && (INVALID_ID != get_window(this, this->begin_index)->packet.id)) {
-    window_t* const window = get_window(this, this->begin_index);
+  while (get_window(this->snd, this->snd->begin_index)->is_acked && (INVALID_ID != get_window(this->snd, this->snd->begin_index)->packet.id)) {
+    window_t* const window = get_window(this->snd, this->snd->begin_index);
     window->send_count    = 0;
     window->packet.header = 0;
     window->packet.id     = -1;
     window->is_acked      = true;
 
-    this->begin_window_id++;
-    this->begin_index = (this->begin_index + 1) % this->capacity;
-    this->count--;
+    this->snd->begin_window_id++;
+    this->snd->begin_index = (this->snd->begin_index + 1) % this->snd->capacity;
+    this->snd->count--;
   }
 }
 
 static void read_ack(mc_msg_t* const this, uint32_t window_id)
  {
-  if ((window_id < this->begin_window_id) || (window_id >= this->begin_window_id + this->capacity)) {
+  if ((window_id < this->snd->begin_window_id) || (window_id >= this->snd->begin_window_id + this->snd->capacity)) {
     return;
   }
   
-  const uint32_t window_index = ((window_id - this->begin_window_id) + this->begin_index) % this->capacity;
-  window_t* const window = get_window(this, window_index);
+  const uint32_t window_index = ((window_id - this->snd->begin_window_id) + this->snd->begin_index) % this->snd->capacity;
+  window_t* const window = get_window(this->snd, window_index);
   if (!window->is_acked) {
     window->is_acked = true;
     // [WINDOW %u-%u] Received ACK for packet %u - %uus\n",              this->begin_window_id, this->begin_window_id+this->capacity-1, window_id, TimeNowU() - window->last_sent_time_us));
@@ -143,8 +150,8 @@ static void send_ack(mc_msg_t* const this, uint32_t id)
   packet->type   = PKT_ACK;
   packet->id     = id;
   
-  const uint32_t size = this->write(packet, this->window_size);
-  if (size != this->window_size) {
+  const uint32_t size = this->write(packet, this->rcv->window_size);
+  if (size != this->rcv->window_size) {
     // TODO(MN): Handle
   }
   // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
@@ -154,7 +161,7 @@ static uint32_t read_data(mc_msg_t* const this)
 {
   char buffer[100];// TODO(MN): Remove static size temp
   packet_t* const pkt = (packet_t*)buffer;// TODO(MN): Internal buffer
-  const uint32_t read_size = this->read(pkt, this->window_size);
+  const uint32_t read_size = this->read(pkt, this->snd->window_size);
   if (0 == read_size) {
     return 0;
   }
@@ -174,7 +181,7 @@ static uint32_t read_data(mc_msg_t* const this)
   if (PKT_ACK == pkt->type) {
     read_ack(this, pkt->id);
 
-    if (pkt->id == this->begin_window_id) {
+    if (pkt->id == this->snd->begin_window_id) {
       clear_sending_acked_windows(this);
     }
   } else {
@@ -189,13 +196,13 @@ static uint32_t send_unacked(mc_msg_t* const this)
 {
   uint32_t sent_size = 0;
   
-  for (uint32_t window_index = 0; window_index < this->capacity; window_index++) {
-    if (INVALID_ID == get_window(this, window_index)->packet.id) {
+  for (uint32_t window_index = 0; window_index < this->snd->capacity; window_index++) {
+    if (INVALID_ID == get_window(this->snd, window_index)->packet.id) {
       continue;
     }
     
     read_data(this);
-    window_t* const window = get_window(this, window_index);
+    window_t* const window = get_window(this->snd, window_index);
     if (window->is_acked) {
         continue;
     }
@@ -227,18 +234,31 @@ mc_msg_t* mc_msg_new(
     return NULL;//MC_ERR_MEMORY_OUT_OF_RANGE;
   }
   
-  mc_msg_t* const this = malloc(sizeof(mc_msg_t) + (capacity * (sizeof(window_t) + window_size)));
+  mc_msg_t* const this = malloc(sizeof(mc_msg_t) + 
+    (2 * (sizeof(controller_t) + window_size)) +
+    (capacity * (sizeof(window_t) + window_size)));
 
-  this->read            = read_fn;
-  this->write           = write_fn;
-  this->on_receive      = on_receive;
-  this->window_size     = window_size;
-  this->data_size       = window_size - sizeof(packet_t);
-  this->capacity        = capacity;
+  this->read        = read_fn;
+  this->write       = write_fn;
+  this->on_receive  = on_receive;
+
+  this->rcv         = (controller_t*)((char*)this + sizeof(mc_msg_t));
+  this->rcv->window_size = window_size;
+  this->rcv->data_size   = window_size - sizeof(packet_t);
+  this->rcv->capacity    = capacity;
+  this->rcv->windows     = (window_t*)(this->rcv->temp_window + window_size);
+
+  this->snd         = (controller_t*)(char*)this->rcv + (sizeof(controller_t) + window_size);
+  this->snd->window_size = window_size;
+  this->snd->data_size   = window_size - sizeof(packet_t);
+  this->snd->capacity    = capacity;
+  this->snd->windows     = (window_t*)(this->snd->temp_window + window_size);
+
   mc_msg_clear(this);
 
-  for (uint32_t index = 0; index < this->capacity; index++) {
-    get_window(this, index)->packet.id = INVALID_ID;
+  for (uint32_t index = 0; index < capacity; index++) {
+    get_window(this->rcv, index)->packet.id = INVALID_ID;
+    get_window(this->snd, index)->packet.id = INVALID_ID;
   }
   
   return this;
@@ -256,13 +276,19 @@ mc_result mc_msg_clear(mc_msg_t* const this)
     return MC_ERR_INVALID_ARGUMENT;
   }
 
-  this->rcv_last_id = -1;
+  this->rcv_last_id = -1;// TOOD(MN): Move to rcv controller
 
-  this->begin_window_id = 0;
-  this->next_window_id  = 0;
-  this->begin_index     = 0;
-  this->end_index       = 0;
-  this->count           = 0;
+  this->rcv->begin_window_id = 0;
+  this->rcv->next_window_id  = 0;
+  this->rcv->begin_index     = 0;
+  this->rcv->end_index       = 0;
+  this->rcv->count           = 0;
+
+  this->snd->begin_window_id = 0;
+  this->snd->next_window_id  = 0;
+  this->snd->begin_index     = 0;
+  this->snd->end_index       = 0;
+  this->snd->count           = 0;
 
   return MC_SUCCESS;
 }
@@ -289,7 +315,7 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
   }
 
   push_back(this, data, size);
-  /*const uint32_t sent_size = */write_window(this, this->end_index);
+  /*const uint32_t sent_size = */write_window(this, this->snd->end_index);
   advance_end_window(this);
 
   return size;//this->windows->packet.size;
@@ -302,27 +328,28 @@ uint32_t mc_msg_write_finish(mc_msg_t* const msg, uint32_t timeout_us)
 
 uint32_t mc_msg_get_capacity(mc_msg_t* const this)
 {
-  return this->capacity;
+  return this->snd->capacity;
+  return this->snd->count;// TODO(MN): Snd or rcv
 }
 
 uint32_t mc_msg_get_count(mc_msg_t* const this)
 {
-  return this->count;
+  return this->snd->count;// TODO(MN): Snd or rcv
 }
 
 uint32_t  mc_msg_get_window_size(mc_msg_t* const this)
 {
-  return this->window_size;// TODO(MN): Test
+  return this->snd->window_size;// TODO(MN): Test
 }
 
 bool mc_msg_is_empty(mc_msg_t* const this)
 {
-  return (0 == this->count);
+  return (0 == this->snd->count);// TODO(MN): Rcv or snd?
 }
 
 bool mc_msg_is_full(mc_msg_t* const this)
 {
-  return (this->count == this->capacity);
+  return (this->snd->count == this->snd->capacity);// TODO(MN): Rcv or snd?
 }
 
 
