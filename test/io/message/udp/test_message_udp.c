@@ -1,6 +1,6 @@
 /* For testing this module, we need a non-session based communication
  * like UDP, so we just implement a simple send and receive socket.
- * creation, invalid parameters, ...
+ * creation, invalid parameters, diff snd/rcv window sizes, ...
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -287,7 +287,6 @@ int main()
   } else {
     printf("PASSED\n\n");
   }
-
 
   printf("[singly_repetitive]\n");
   result = singly_repetitive();

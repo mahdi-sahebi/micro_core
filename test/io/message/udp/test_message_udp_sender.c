@@ -79,7 +79,6 @@ static void init(void* data)
 
 static void deinit()
 {
-  mc_msg_write_finish(message, 0);
   mc_msg_free(&message);
   client_close();
 }
@@ -94,7 +93,7 @@ void* snd_start(void* data)
   init(data);
   update_data(buffer);
 
-  while (SendCounter < COMPLETE_COUNT) {
+  while (SendCounter <= COMPLETE_COUNT) {
     if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
@@ -105,6 +104,10 @@ void* snd_start(void* data)
     }
 
     update_data(buffer);
+  }
+  
+  if (MC_SUCCESS == *Result) {
+    *Result = mc_msg_write_finish(message, TEST_TIMEOUT) ? MC_SUCCESS : MC_ERR_TIMEOUT;
   }
 
   deinit();

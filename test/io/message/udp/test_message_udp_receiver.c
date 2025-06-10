@@ -104,7 +104,6 @@ static void init(void* data)
 
 static void deinit()
 {
-  mc_msg_read_finish(message, 0);
   mc_msg_free(&message);
   server_close();  
 }
@@ -118,7 +117,7 @@ void* rcv_start(void* data)
 {
   init(data);
 
-  while (ReceiveCounter < (COMPLETE_COUNT - 1)) {
+  while (ReceiveCounter < COMPLETE_COUNT) {// TODO(MN): Remove -1 
     if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
@@ -126,6 +125,10 @@ void* rcv_start(void* data)
 
     // TODO(MN): Check size
     const uint32_t size = mc_msg_read(message);
+  }
+
+  if (MC_SUCCESS == *Result) {
+    *Result = mc_msg_read_finish(message, TEST_TIMEOUT) ? MC_SUCCESS : MC_ERR_TIMEOUT;
   }
 
   deinit();
