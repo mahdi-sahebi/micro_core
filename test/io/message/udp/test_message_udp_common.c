@@ -16,7 +16,7 @@ static bool simulate_loss() {
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {
   if (simulate_loss()) {
-    return 0;
+    return 0;// TODO(MN): Add delay
   }
 
   uint8_t count = RepetitiveSendEnable ? 2 : 1;
