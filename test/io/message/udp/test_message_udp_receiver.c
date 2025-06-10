@@ -96,7 +96,7 @@ static void init(void* data)
   server_create();
   flush_receive_buffer();
 
-  message = mc_msg_new(server_read, server_write, 16 + DATA_LEN * sizeof(uint32_t), 3, on_receive);
+  message = mc_msg_new(server_read, server_write, 16 + DATA_LEN * sizeof(uint32_t), 3, on_receive, TimeNowU);
 
   ReceiveCounter = 0;
   LastTickUS = TimeNowU();
