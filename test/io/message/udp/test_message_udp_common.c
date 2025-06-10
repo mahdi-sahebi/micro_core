@@ -5,6 +5,7 @@
 #include "test_message_udp_common.h"
 
 
+static uint32_t TestIterations = COMPLETE_COUNT;
 static bool RepetitiveSendEnable = false;
 static uint8_t LossRate = 0;
 
@@ -81,4 +82,14 @@ void cfg_set_repetitive_send(bool enable)
 void cfg_set_loss_rate(uint8_t rate)
 {
   LossRate = rate;
+}
+
+void cfg_set_iterations(uint32_t iterations)
+{
+  TestIterations = iterations;
+}
+
+uint32_t cfg_get_iterations()
+{
+  return TestIterations;
 }

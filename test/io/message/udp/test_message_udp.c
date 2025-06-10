@@ -198,6 +198,7 @@ static int singly_direction()
 static int singly_repetitive()
 {
   cfg_set_repetitive_send(true);
+  cfg_set_iterations(10000);
   const int result = singly_direction();
   cfg_set_repetitive_send(true);
   return result;
@@ -206,6 +207,7 @@ static int singly_repetitive()
 static int singly_low_lossy()
 {
   cfg_set_loss_rate(10);
+  cfg_set_iterations(10000);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
@@ -214,6 +216,7 @@ static int singly_low_lossy()
 static int singly_high_lossy()
 {
   cfg_set_loss_rate(70);
+  cfg_set_iterations(1000);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
@@ -244,57 +247,57 @@ int main()
   printf("[MICRO CORE %u.%u.%u - IO - MESSAGE]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
   mc_result result = MC_SUCCESS;
 
-  // printf("[invalid_creation]\n");
-  // result = invalid_creation();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[invalid_creation]\n");
+  result = invalid_creation();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
 
-  // printf("[valid_creation]\n");
-  // result = valid_creation();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[valid_creation]\n");
+  result = valid_creation();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
 
-  // printf("[get_status]\n");
-  // result = get_status();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[get_status]\n");
+  result = get_status();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
 
-  // printf("[clear]\n");
-  // result = clear();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[clear]\n");
+  result = clear();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
 
-  // printf("[singly_direction]\n");
-  // result = singly_direction();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[singly_direction]\n");
+  result = singly_direction();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
-  // printf("[singly_repetitive]\n");
-  // result = singly_repetitive();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[singly_repetitive]\n");
+  result = singly_repetitive();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
   
   printf("[singly_low_lossy]\n");
@@ -315,40 +318,40 @@ int main()
   }
 
 
-  // printf("[small_write]\n");
-  // result = small_write();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[small_write]\n");
+  result = small_write();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
 
-  // printf("[large_write]\n");
-  // result = large_write();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[large_write]\n");
+  result = large_write();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
 
-  // printf("[hulf_duplex]\n");
-  // result = hulf_duplex();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[hulf_duplex]\n");
+  result = hulf_duplex();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
 
-  // printf("[full_duplex]\n");
-  // result = full_duplex();
-  // if (MC_SUCCESS != result) {
-  //   printf("FAILED: %u\n\n", result);
-  // } else {
-  //   printf("PASSED\n\n");
-  // }
+  printf("[full_duplex]\n");
+  result = full_duplex();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
 
   return MC_SUCCESS;
 }
