@@ -117,7 +117,7 @@ void* rcv_start(void* data)
 {
   init(data);
 
-  while (ReceiveCounter < COMPLETE_COUNT) {// TODO(MN): Remove -1 
+  while (ReceiveCounter < cfg_get_iterations()) {
     if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
@@ -127,8 +127,9 @@ void* rcv_start(void* data)
     const uint32_t size = mc_msg_read(message);
   }
 
-  if (MC_SUCCESS == *Result) {
-    *Result = mc_msg_read_finish(message, TEST_TIMEOUT) ? MC_SUCCESS : MC_ERR_TIMEOUT;
+  if ((MC_SUCCESS == *Result) && !mc_msg_read_finish(message, TEST_TIMEOUT)) {
+    printf("mc_msg_read_finish failed\n");
+    *Result = MC_ERR_TIMEOUT;
   }
 
   deinit();

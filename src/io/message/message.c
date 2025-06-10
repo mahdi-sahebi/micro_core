@@ -173,9 +173,6 @@ static uint32_t read_data(mc_msg_t* const this)
   }
 
   if (-1 != this->rcv_last_id) {
-    // if (pkt->id == this->rcv_last_id) {
-    //   return 0;
-    // } else 
     if (pkt->id <= this->rcv_last_id) {
       send_ack(this, pkt->id);
       return 0;
