@@ -57,6 +57,7 @@ struct _mc_msg_t
   mc_msg_read_fn  read;
   mc_msg_write_fn write;
   mc_msg_on_receive_fn on_receive;
+  mc_time_now_us_fn now_us;
 
   // Receive
   uint32_t rcv_last_id;
@@ -152,7 +153,7 @@ static void send_ack(mc_msg_t* const this, uint32_t id)
   
   const uint32_t size = this->write(packet, this->rcv->window_size);
   if (size != this->rcv->window_size) {
-    // TODO(MN): Handle
+    // TODO(MN): Handle. Is it ok to 
   }
   // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
 }
@@ -162,7 +163,7 @@ static uint32_t read_data(mc_msg_t* const this)
   char buffer[100];// TODO(MN): Remove static size temp
   packet_t* const pkt = (packet_t*)buffer;// TODO(MN): Internal buffer
   const uint32_t read_size = this->read(pkt, this->snd->window_size);
-  if (0 == read_size) {
+  if (0 == read_size) {// TODO(MN): Handle incomplete size
     return 0;
   }
   // TODO(MN): If read_size is not equal to this->window_size
@@ -171,7 +172,18 @@ static uint32_t read_data(mc_msg_t* const this)
       return 0; // [INVALID] Bad header/type received
   }
 
-  if (pkt->id == this->rcv_last_id) {
+  if (-1 != this->rcv_last_id) {
+    // if (pkt->id == this->rcv_last_id) {
+    //   return 0;
+    // } else 
+    if (pkt->id <= this->rcv_last_id) {
+      send_ack(this, pkt->id);
+      return 0;
+    }
+  }
+  int dif =(pkt->id - this->rcv_last_id);
+  if (dif > 1) {
+    // printf("f\n");
     return 0;
   }
   this->rcv_last_id = pkt->id;
@@ -203,15 +215,14 @@ static uint32_t send_unacked(mc_msg_t* const this)
     
     read_data(this);
     window_t* const window = get_window(this->snd, window_index);
-    if (window->is_acked) {
+    if (window->is_acked) {// TODO(MN): Check timeout occurance
         continue;
     }
 
     sent_size += window->packet.size;
     
-    // TOOD(MN): Handle if sent_size is incomplete
     if (0 != write_window(this, window_index)) {
-    }// TODO(MN): Handle if not sent. attempt 3 times! 
+    }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
   }
 
   return sent_size;
@@ -222,12 +233,13 @@ mc_msg_t* mc_msg_new(
   mc_msg_write_fn write_fn, 
   uint32_t window_size, 
   uint32_t capacity, 
-  mc_msg_on_receive_fn on_receive)
+  mc_msg_on_receive_fn on_receive,
+  mc_time_now_us_fn now_us)
 {
   // TODO(MN): Input checking. the minimum size of window_size
-  if ((NULL == read_fn) || (NULL == write_fn) || 
+  if ((NULL == read_fn) || (NULL == write_fn) || (NULL == now_us) || 
       (0 == window_size) || (0 == capacity)) {
-      return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
+    return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
   }
 
   if (window_size < (sizeof(packet_t) + 1)) {
@@ -241,6 +253,7 @@ mc_msg_t* mc_msg_new(
   this->read        = read_fn;
   this->write       = write_fn;
   this->on_receive  = on_receive;
+  this->now_us      = now_us;
 
   this->rcv         = (controller_t*)((char*)this + sizeof(mc_msg_t));
   this->rcv->window_size = window_size;
@@ -300,9 +313,19 @@ uint32_t mc_msg_read(mc_msg_t* const this)
   return size;
 }
 
-uint32_t mc_msg_read_finish(mc_msg_t* const msg, uint32_t timeout_us)
+bool mc_msg_read_finish(mc_msg_t* const this, uint32_t timeout_us)
 {
-  return 0;
+  const uint32_t bgn_time_us = this->now_us();
+
+  while (this->rcv->count) {
+    mc_msg_read(this);
+
+    if ((this->now_us() - bgn_time_us) > timeout_us) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
@@ -315,15 +338,30 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
   }
 
   push_back(this, data, size);
-  /*const uint32_t sent_size = */write_window(this, this->snd->end_index);
+  
+  uint32_t sent_size = 0;
+  do {
+    sent_size = write_window(this, this->snd->end_index);
+  } while (0 == sent_size);// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  
   advance_end_window(this);
 
   return size;//this->windows->packet.size;
 }
 
-uint32_t mc_msg_write_finish(mc_msg_t* const msg, uint32_t timeout_us)
+bool mc_msg_write_finish(mc_msg_t* const this, uint32_t timeout_us)
 {
-  return 0;
+  const uint32_t bgn_time_us = this->now_us();
+
+  while (this->snd->count) {
+    mc_msg_read(this);
+
+    if ((this->now_us() - bgn_time_us) > timeout_us) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 uint32_t mc_msg_get_capacity(mc_msg_t* const this)
@@ -347,7 +385,7 @@ bool mc_msg_is_empty(mc_msg_t* const this)
   return (0 == this->snd->count);// TODO(MN): Rcv or snd?
 }
 
-bool mc_msg_is_full(mc_msg_t* const this)
+bool mc_msg_is_full(mc_msg_t* const this)// TODO(MN): snd_is_full
 {
   return (this->snd->count == this->snd->capacity);// TODO(MN): Rcv or snd?
 }
