@@ -101,7 +101,7 @@ static void remove_acked_windows(controller_t* controller)
     window->packet.id     = -1;
     window->is_acked      = true;
 
-    controller->begin_window_id++;
+    controller->begin_window_id++;// TODO(MN): Use advance window
     controller->begin_index = (controller->begin_index + 1) % controller->capacity;
     controller->count--;
   }
@@ -275,6 +275,7 @@ mc_msg_t* mc_msg_new(
 
 void mc_msg_free(mc_msg_t** const this)
 {
+  // TODO(MN): Check inputs
   free(*this);
   *this = NULL;
 }
