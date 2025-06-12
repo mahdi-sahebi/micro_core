@@ -40,16 +40,16 @@ typedef struct {
 
 typedef struct
 {
-  uint32_t begin_window_id;
-  uint32_t next_window_id;
-  uint32_t begin_index;
-  uint32_t end_index;
-  uint32_t count;
-  uint32_t window_size;
-  uint32_t data_size;
-  uint32_t capacity;
-  char temp_window[0];
-  window_t* windows;// TODO(MN): Use window_t*
+  uint32_t  begin_window_id;
+  uint32_t  next_window_id;
+  uint32_t  begin_index;
+  uint32_t  end_index;
+  uint32_t  count;
+  uint32_t  window_size;
+  uint32_t  data_size;
+  uint32_t  capacity;
+  window_t* windows;
+  char      temp_window[0];
 }controller_t;
 
 struct _mc_msg_t
@@ -62,7 +62,7 @@ struct _mc_msg_t
   // Receive
   uint32_t rcv_last_id;
 
-  controller_t* rcv;
+  controller_t* rcv;// TODO(MN): Use array to reduce one pointer size
   controller_t* snd;  
 };
 
@@ -129,9 +129,7 @@ static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
   //     // [ERROR] Attempted to ACK invalid seq %u (MAX_SEQ=%d)\n", seq, MAX_SEQ;
   //     return;
   // }
-
-  char buffer[100];// TODO(MN): Remove static size temp
-  packet_t* const packet = (packet_t*)buffer;
+  packet_t* const packet = (packet_t*)(this->snd->temp_window);
 
   packet->header = HEADER;
   packet->type   = PKT_ACK;
@@ -146,9 +144,8 @@ static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
 
 static uint32_t read_data(mc_msg_t* const this)
 {
-  char buffer[100];// TODO(MN): Remove static size temp
-  packet_t* const pkt = (packet_t*)buffer;// TODO(MN): Internal buffer
-  const uint32_t read_size = this->read(pkt, this->snd->window_size);
+  packet_t* const pkt = (packet_t*)(this->rcv->temp_window);
+  const uint32_t read_size = this->read(pkt, this->rcv->window_size);
   if (0 == read_size) {// TODO(MN): Handle incomplete size
     return 0;
   }
@@ -245,22 +242,22 @@ mc_msg_t* mc_msg_new(
     return NULL;//MC_ERR_MEMORY_OUT_OF_RANGE;
   }
   
-  mc_msg_t* const this = malloc(sizeof(mc_msg_t) + 
-    (2 * (sizeof(controller_t) + window_size)) +
-    (capacity * (sizeof(window_t) + window_size)));
+  const uint32_t windows_size = capacity * (sizeof(window_t) + window_size);
+  const uint32_t controllers_size = 2 * (sizeof(controller_t) + window_size + windows_size);
+  mc_msg_t* const this = malloc(sizeof(mc_msg_t) + controllers_size);
 
-  this->read        = read_fn;
-  this->write       = write_fn;
-  this->on_receive  = on_receive;
-  this->now_us      = now_us;
+  this->read             = read_fn;
+  this->write            = write_fn;
+  this->on_receive       = on_receive;
+  this->now_us           = now_us;
 
-  this->rcv         = (controller_t*)((char*)this + sizeof(mc_msg_t));
+  this->rcv              = (controller_t*)((char*)this + sizeof(mc_msg_t));
   this->rcv->window_size = window_size;
   this->rcv->data_size   = window_size - sizeof(packet_t);
   this->rcv->capacity    = capacity;
   this->rcv->windows     = (window_t*)(this->rcv->temp_window + window_size);
 
-  this->snd         = (controller_t*)(char*)this->rcv + (sizeof(controller_t) + window_size);
+  this->snd              = (controller_t*)(char*)(this->rcv->windows) + windows_size;
   this->snd->window_size = window_size;
   this->snd->data_size   = window_size - sizeof(packet_t);
   this->snd->capacity    = capacity;
