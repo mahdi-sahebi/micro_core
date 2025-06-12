@@ -54,12 +54,36 @@ static void let_server_start()
   usleep(200000);
 }
 
+void print_progress(float progress)
+{
+  const uint32_t BAR_LENGTH = 20;
+  const uint32_t num_bars = progress * BAR_LENGTH;
+
+  printf("\r\t\t\t\t\t\t\r");
+
+  printf("[");
+  for (uint32_t index = 0; index < BAR_LENGTH; index++) {
+      if (index < num_bars) {
+          printf("|");
+      } else {
+          printf("-");
+      }
+  }
+
+  printf("] %.1f%%", progress * 100);
+  if (1.0F == progress) {
+    printf("\n");
+  }
+  fflush(stdout);
+}
+
 static void update_data(uint32_t* const buffer)
 {
   for (uint32_t index = 0; index < DATA_LEN; index++) {
-      buffer[index] = (SendCounter * DATA_LEN) + index;
+    buffer[index] = (SendCounter * DATA_LEN) + index;
   }
 
+  print_progress(SendCounter / (float)cfg_get_iterations());
   SendCounter++;
   LastTickUS = TimeNowU();
   usleep(100);
@@ -70,15 +94,15 @@ static void init(void* data)
   Result = (uint32_t*)data;
   *Result = MC_SUCCESS;
   
+  SendCounter = 0;
   client_create();
   let_server_start();
 
-  message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL);
+  message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL, TimeNowU);
 }
 
 static void deinit()
 {
-  mc_msg_write_finish(message, 0);
   mc_msg_free(&message);
   client_close();
 }
@@ -93,7 +117,7 @@ void* snd_start(void* data)
   init(data);
   update_data(buffer);
 
-  while (SendCounter < COMPLETE_COUNT) {
+  while (SendCounter <= cfg_get_iterations()) {
     if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
@@ -104,6 +128,11 @@ void* snd_start(void* data)
     }
 
     update_data(buffer);
+  }
+  
+  if ((MC_SUCCESS == *Result) && !mc_msg_write_finish(message, TEST_TIMEOUT)) {
+    printf("mc_msg_write_finish failed\n");
+    *Result = MC_ERR_TIMEOUT;
   }
 
   deinit();
