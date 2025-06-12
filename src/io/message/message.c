@@ -44,17 +44,6 @@ static void advance_end_window(wndpool_t* window)
   window->end_index = (window->end_index + 1) % window->capacity;
   window->count++;
 }
-
-static void remove_acked_windows(wndpool_t* controller)
-{
-  while (wnd_is_acked(get_window(controller, controller->bgn_index)) && (INVALID_ID != get_window(controller, controller->bgn_index)->packet.id)) {
-    wnd_t* const window = get_window(controller, controller->bgn_index);
-    wnd_clear(window);
-    controller->bgn_id++;// TODO(MN): Use advance window
-    controller->bgn_index = (controller->bgn_index + 1) % controller->capacity;
-    controller->count--;
-  }
-}
 /////////////////////////////////////////////////// rcv
 
 static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
@@ -107,10 +96,6 @@ static uint32_t read_data(mc_msg_t* const this)
   // TODO(MN): Handle if read_size is not equal to a packet.
   if (PKT_ACK == pkt->type) {
     wndpool_ack(this->snd, pkt->id, NULL);
-
-    if (pkt->id == this->snd->bgn_id) {
-      remove_acked_windows(this->snd);
-    }
   } else {
     rcv_send_ack(this, pkt->id);
     this->on_receive(pkt->data, pkt->size);
