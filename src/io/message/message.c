@@ -2,6 +2,7 @@
  * Remove dynamic allocation
  * Remove standard library dependencies as much as possible
  * Define a network interface with write and read handlers
+ * define cu32_t? ... 
  */
 
 #include <stdlib.h>
@@ -16,16 +17,16 @@
 
 typedef struct
 {
-  uint32_t  begin_window_id;
-  uint32_t  next_window_id;
-  uint32_t  begin_index;
-  uint32_t  end_index;
-  uint32_t  count;
-  uint32_t  window_size;
-  uint32_t  data_size;
-  uint32_t  capacity;
-  wnd_t* windows;
-  char      temp_window[0];
+  uint32_t begin_window_id;
+  uint32_t next_window_id;
+  uint32_t begin_index;
+  uint32_t end_index;
+  uint32_t count;
+  uint32_t window_size;
+  uint32_t data_size;
+  uint32_t capacity;
+  wnd_t*   windows;
+  char     temp_window[0];
 }controller_t;
 
 struct _mc_msg_t
@@ -59,7 +60,7 @@ static void advance_end_window(controller_t* window)
 static void push_window(controller_t* controller, void* data, uint32_t size)
 {
   wnd_t* const window = get_window(controller, controller->end_index);
-  wnd_write(window, data, size, controller->next_window_id);
+  wnd_write(window, mc_span(data, size), controller->next_window_id);
 }
 
 static void remove_acked_windows(controller_t* controller)
@@ -232,8 +233,8 @@ mc_msg_t* mc_msg_new(
   mc_msg_clear(this);
 
   for (uint32_t index = 0; index < capacity; index++) {
-    get_window(this->rcv, index)->packet.id = INVALID_ID;
-    get_window(this->snd, index)->packet.id = INVALID_ID;
+    wnd_clear(get_window(this->rcv, index));
+    wnd_clear(get_window(this->snd, index));
   }
   
   return this;

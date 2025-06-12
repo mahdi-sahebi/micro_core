@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "dsa/span.h"
 
 
 enum definitions
@@ -27,14 +28,14 @@ typedef struct {
 }pkt_t;// TODO(MN): As size as window_size
 
 typedef struct {
-  uint16_t send_count;
+  uint16_t send_count;// TODO(MN): application? 
   bool     is_acked;
   pkt_t    packet;
 }wnd_t;
 
 
 void wnd_clear(wnd_t* const wnd);
-void wnd_write(wnd_t* const wnd, const void* const data, uint32_t size, id_t id);
+void wnd_write(wnd_t* const wnd, mc_span buffer, id_t id);
 void wnd_ack(wnd_t* const wnd);
 bool wnd_is_acked(wnd_t* const wnd);
 

@@ -1,6 +1,7 @@
 #ifndef MC_SPAN_H_
 #define MC_SPAN_H_
 
+// TODO(MN): sub-span, rename to m buffer, is in range,...
 #include <stdbool.h>
 #include <stdint.h>
 
