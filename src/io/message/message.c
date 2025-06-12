@@ -40,41 +40,26 @@ static inline wnd_t* get_window(const wndpool_t* const this, uint16_t index)
 
 static void advance_end_window(wndpool_t* window)
 {
-  window->next_window_id++;
+  window->end_id++;
   window->end_index = (window->end_index + 1) % window->capacity;
   window->count++;
 }
 
 static void remove_acked_windows(wndpool_t* controller)
 {
-  while (wnd_is_acked(get_window(controller, controller->begin_index)) && (INVALID_ID != get_window(controller, controller->begin_index)->packet.id)) {
-    wnd_t* const window = get_window(controller, controller->begin_index);
+  while (wnd_is_acked(get_window(controller, controller->bgn_index)) && (INVALID_ID != get_window(controller, controller->bgn_index)->packet.id)) {
+    wnd_t* const window = get_window(controller, controller->bgn_index);
     wnd_clear(window);
-    controller->begin_window_id++;// TODO(MN): Use advance window
-    controller->begin_index = (controller->begin_index + 1) % controller->capacity;
+    controller->bgn_id++;// TODO(MN): Use advance window
+    controller->bgn_index = (controller->bgn_index + 1) % controller->capacity;
     controller->count--;
   }
 }
-
-static void window_read_ack(wndpool_t* controller, uint32_t window_id)
- {
-  if ((window_id < controller->begin_window_id) || (window_id >= controller->begin_window_id + controller->capacity)) {
-    return;
-  }
-  
-  const uint32_t window_index = ((window_id - controller->begin_window_id) + controller->begin_index) % controller->capacity;
-  wnd_t* const window = get_window(controller, window_index);
-  if (!wnd_is_acked(window)) {
-    wnd_ack(window);
-    // [WINDOW %u-%u] Received ACK for packet %u - %uus\n",              this->begin_window_id, this->begin_window_id+this->capacity-1, window_id, TimeNowU() - window->last_sent_time_us));
-  }
-}
-
 /////////////////////////////////////////////////// rcv
 
 static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
 {
-  // if ((id < this->begin_window_id) || (this->next_window_id < id)) {
+  // if ((id < this->bgn_id) || (this->end_id < id)) {
   //     // [ERROR] Attempted to ACK invalid seq %u (MAX_SEQ=%d)\n", seq, MAX_SEQ;
   //     return;
   // }
@@ -121,9 +106,9 @@ static uint32_t read_data(mc_msg_t* const this)
   // TODO(MN): Handle if header not valid. search for header to lock.
   // TODO(MN): Handle if read_size is not equal to a packet.
   if (PKT_ACK == pkt->type) {
-    window_read_ack(this->snd, pkt->id);
+    wndpool_ack(this->snd, pkt->id, NULL);
 
-    if (pkt->id == this->snd->begin_window_id) {
+    if (pkt->id == this->snd->bgn_id) {
       remove_acked_windows(this->snd);
     }
   } else {
@@ -234,7 +219,7 @@ mc_result mc_msg_clear(mc_msg_t* const this)
 
   wndpool_clear(this->rcv);
   wndpool_clear(this->snd);
-  
+
   return MC_SUCCESS;
 }
 
