@@ -6,9 +6,9 @@
 
 typedef struct
 {
-  uint32_t begin_window_id;
-  uint32_t next_window_id;
-  uint32_t begin_index;
+  uint32_t bgn_id;
+  uint32_t end_id;
+  uint32_t bgn_index;
   uint32_t end_index;
   uint32_t count;// TODO(MN): Extra
   uint32_t window_size;
