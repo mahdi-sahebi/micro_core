@@ -8,15 +8,15 @@ void wnd_clear(wnd_t* const wnd)
   wnd->is_acked  = true;
 }
 
-void wnd_write(wnd_t* const wnd, const void* const data, uint32_t size, id_t id)
+void wnd_write(wnd_t* const wnd, mc_span buffer, id_t id)
 {
   wnd->packet.header  = HEADER;
   wnd->packet.type    = PKT_DATA;
   wnd->is_acked       = false;
-  wnd->packet.size    = size;
+  wnd->packet.size    = buffer.size;
   wnd->packet.id      = id;
   wnd->send_count     = 0;
-  memcpy(wnd->packet.data, data, size);
+  memcpy(wnd->packet.data, buffer.data, buffer.size);
 }
 
 void wnd_ack(wnd_t* const wnd)
