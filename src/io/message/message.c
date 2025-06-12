@@ -2,54 +2,31 @@
  * Remove dynamic allocation
  * Remove standard library dependencies as much as possible
  * Define a network interface with write and read handlers
+ * define cu32_t? ... 
  */
 
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include "core/error.h"
+#include "io/message/window.h"
 #include "io/message/message.h"
 
 
-#define DATA_LEN          10
 
-enum definitions
-{
-  INVALID_ID = -1,
-  HEADER     = 0xA5B3C7E9
-};
-
-typedef enum {
-  PKT_DATA = 0,
-  PKT_ACK
-}packet_type_t;
-
-typedef struct {
-  uint32_t      header;
-  packet_type_t type;
-  uint32_t      id;
-  uint32_t      size;
-  char          data[0];
-}packet_t;// TODO(MN): As size as window_size
-
-typedef struct {
-  uint16_t send_count;
-  bool     is_acked;
-  packet_t packet;
-}window_t;
 
 typedef struct
 {
-  uint32_t  begin_window_id;
-  uint32_t  next_window_id;
-  uint32_t  begin_index;
-  uint32_t  end_index;
-  uint32_t  count;
-  uint32_t  window_size;
-  uint32_t  data_size;
-  uint32_t  capacity;
-  window_t* windows;
-  char      temp_window[0];
+  uint32_t begin_window_id;
+  uint32_t next_window_id;
+  uint32_t begin_index;
+  uint32_t end_index;
+  uint32_t count;
+  uint32_t window_size;
+  uint32_t data_size;
+  uint32_t capacity;
+  wnd_t*   windows;
+  char     temp_window[0];
 }controller_t;
 
 struct _mc_msg_t
@@ -68,9 +45,9 @@ struct _mc_msg_t
 
 
 
-static inline window_t* get_window(const controller_t* const this, uint16_t index)
+static inline wnd_t* get_window(const controller_t* const this, uint16_t index)
 {
-  return (window_t*)((char*)(this->windows) + (index * (sizeof(window_t) + this->data_size)));// TODO(MN): Rcv/snd
+  return (wnd_t*)((char*)(this->windows) + (index * (sizeof(wnd_t) + this->data_size)));// TODO(MN): Rcv/snd
 }
 
 static void advance_end_window(controller_t* window)
@@ -82,26 +59,16 @@ static void advance_end_window(controller_t* window)
 
 static void push_window(controller_t* controller, void* data, uint32_t size)
 {
-  window_t* const window = get_window(controller, controller->end_index);
-  window->packet.header  = HEADER;
-  window->packet.type    = PKT_DATA;
-  window->is_acked       = false;
-  window->packet.size    = size;
-  window->packet.id      = controller->next_window_id;
-  window->send_count     = 0;
-  memcpy(window->packet.data, data, size);
+  wnd_t* const window = get_window(controller, controller->end_index);
+  wnd_write(window, mc_span(data, size), controller->next_window_id);
 }
 
 static void remove_acked_windows(controller_t* controller)
 {
-  while (get_window(controller, controller->begin_index)->is_acked && (INVALID_ID != get_window(controller, controller->begin_index)->packet.id)) {
-    window_t* const window = get_window(controller, controller->begin_index);
-    window->send_count    = 0;
-    window->packet.header = 0;
-    window->packet.id     = -1;
-    window->is_acked      = true;
-
-    controller->begin_window_id++;
+  while (wnd_is_acked(get_window(controller, controller->begin_index)) && (INVALID_ID != get_window(controller, controller->begin_index)->packet.id)) {
+    wnd_t* const window = get_window(controller, controller->begin_index);
+    wnd_clear(window);
+    controller->begin_window_id++;// TODO(MN): Use advance window
     controller->begin_index = (controller->begin_index + 1) % controller->capacity;
     controller->count--;
   }
@@ -114,9 +81,9 @@ static void window_read_ack(controller_t* controller, uint32_t window_id)
   }
   
   const uint32_t window_index = ((window_id - controller->begin_window_id) + controller->begin_index) % controller->capacity;
-  window_t* const window = get_window(controller, window_index);
-  if (!window->is_acked) {
-    window->is_acked = true;
+  wnd_t* const window = get_window(controller, window_index);
+  if (!wnd_is_acked(window)) {
+    wnd_ack(window);
     // [WINDOW %u-%u] Received ACK for packet %u - %uus\n",              this->begin_window_id, this->begin_window_id+this->capacity-1, window_id, TimeNowU() - window->last_sent_time_us));
   }
 }
@@ -129,7 +96,7 @@ static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
   //     // [ERROR] Attempted to ACK invalid seq %u (MAX_SEQ=%d)\n", seq, MAX_SEQ;
   //     return;
   // }
-  packet_t* const packet = (packet_t*)(this->snd->temp_window);
+  pkt_t* const packet = (pkt_t*)(this->snd->temp_window);
 
   packet->header = HEADER;
   packet->type   = PKT_ACK;
@@ -144,7 +111,7 @@ static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
 
 static uint32_t read_data(mc_msg_t* const this)
 {
-  packet_t* const pkt = (packet_t*)(this->rcv->temp_window);
+  pkt_t* const pkt = (pkt_t*)(this->rcv->temp_window);
   const uint32_t read_size = this->read(pkt, this->rcv->window_size);
   if (0 == read_size) {// TODO(MN): Handle incomplete size
     return 0;
@@ -188,7 +155,7 @@ static uint32_t read_data(mc_msg_t* const this)
 /////////////////////////////////////////////////// snd
 static uint32_t snd_write_window(mc_msg_t* const this, uint32_t window_index) 
 {
-  window_t* const window = get_window(this->snd, window_index);
+  wnd_t* const window = get_window(this->snd, window_index);
   const uint32_t sent_size = this->write(&window->packet, this->snd->window_size);
 
   if (0 != sent_size) {
@@ -208,8 +175,8 @@ static uint32_t snd_send_unacked(mc_msg_t* const this)
     }
     
     read_data(this);
-    window_t* const window = get_window(this->snd, window_index);
-    if (window->is_acked) {// TODO(MN): Check timeout occurance
+    wnd_t* const window = get_window(this->snd, window_index);
+    if (wnd_is_acked(window)) {// TODO(MN): Check timeout occurance
         continue;
     }
 
@@ -238,11 +205,11 @@ mc_msg_t* mc_msg_new(
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
   }
 
-  if (window_size < (sizeof(packet_t) + 1)) {
+  if (window_size < (sizeof(pkt_t) + 1)) {
     return NULL;//MC_ERR_MEMORY_OUT_OF_RANGE;
   }
   
-  const uint32_t windows_size = capacity * (sizeof(window_t) + window_size);
+  const uint32_t windows_size = capacity * (sizeof(wnd_t) + window_size);
   const uint32_t controllers_size = 2 * (sizeof(controller_t) + window_size + windows_size);
   mc_msg_t* const this = malloc(sizeof(mc_msg_t) + controllers_size);
 
@@ -253,21 +220,21 @@ mc_msg_t* mc_msg_new(
 
   this->rcv              = (controller_t*)((char*)this + sizeof(mc_msg_t));
   this->rcv->window_size = window_size;
-  this->rcv->data_size   = window_size - sizeof(packet_t);
+  this->rcv->data_size   = window_size - sizeof(pkt_t);
   this->rcv->capacity    = capacity;
-  this->rcv->windows     = (window_t*)(this->rcv->temp_window + window_size);
+  this->rcv->windows     = (wnd_t*)(this->rcv->temp_window + window_size);
 
   this->snd              = (controller_t*)(char*)(this->rcv->windows) + windows_size;
   this->snd->window_size = window_size;
-  this->snd->data_size   = window_size - sizeof(packet_t);
+  this->snd->data_size   = window_size - sizeof(pkt_t);
   this->snd->capacity    = capacity;
-  this->snd->windows     = (window_t*)(this->snd->temp_window + window_size);
+  this->snd->windows     = (wnd_t*)(this->snd->temp_window + window_size);
 
   mc_msg_clear(this);
 
   for (uint32_t index = 0; index < capacity; index++) {
-    get_window(this->rcv, index)->packet.id = INVALID_ID;
-    get_window(this->snd, index)->packet.id = INVALID_ID;
+    wnd_clear(get_window(this->rcv, index));
+    wnd_clear(get_window(this->snd, index));
   }
   
   return this;
@@ -275,6 +242,7 @@ mc_msg_t* mc_msg_new(
 
 void mc_msg_free(mc_msg_t** const this)
 {
+  // TODO(MN): Check inputs
   free(*this);
   *this = NULL;
 }
@@ -386,4 +354,3 @@ bool mc_msg_is_full(mc_msg_t* const this)// TODO(MN): snd_is_full
 }
 
 
-#undef DATA_LEN
