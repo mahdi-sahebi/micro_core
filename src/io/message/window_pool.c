@@ -14,6 +14,37 @@ static void advance_end_window(wndpool_t* this)
   this->count++;
 }
 
+static void advance_begin_id(wndpool_t* this)
+{
+  this->end_id++;
+  this->end_index = (this->end_index + 1) % this->capacity;
+  this->count++;
+}
+
+static void advance_end_id(wndpool_t* this)
+{
+  this->bgn_id++;
+  this->bgn_index = (this->bgn_index + 1) % this->capacity;
+  this->count++;
+}
+
+static void data_receive(wnd_t* const window, uint32_t window_size, wndpool_on_done_fn on_done)
+{
+  if (NULL != on_done) {
+    on_done(mc_span(wnd_get_data(window), window_size), window->packet.id);
+  }
+}
+
+static void remove_acked_windows(wndpool_t* const this, wndpool_on_done_fn on_done)
+{
+  while (wnd_is_acked(get_window(this, this->bgn_index)) && (INVALID_ID != get_window(this, this->bgn_index)->packet.id)) {
+    wnd_t* const window = get_window(this, this->bgn_index);
+    data_receive(window, this->window_size, on_done);
+    wnd_clear(window);
+    advance_end_id(this);
+  }
+}
+
 void wndpool_clear(wndpool_t* const this)
 {
   // TODO(MN): Ignore this loop
@@ -88,11 +119,10 @@ bool wndpool_ack(wndpool_t* const this, id_t id, wndpool_on_done_fn on_done)
     return false;
   }
   
-  // TODO(MN): on_done if id==bgn_id
-  if (id == this->bgn_id) {
+  // // TODO(MN): on_done if id==bgn_id
+  // if (id == this->bgn_id) {
     
-  }
-
+  // }
 
   const uint32_t window_index = ((id - this->bgn_id) + this->bgn_index) % this->capacity;
   wnd_t* const window = get_window(this, window_index);
@@ -101,5 +131,9 @@ bool wndpool_ack(wndpool_t* const this, id_t id, wndpool_on_done_fn on_done)
     // [WINDOW %u-%u] Received ACK for packet %u - %uus\n",              this->bgn_id, this->bgn_id+this->capacity-1, window_id, TimeNowU() - window->last_sent_time_us));
   }
 
+  if (id == this->bgn_id) {
+    remove_acked_windows(this, on_done);
+  }
+  
   return true;
 }
