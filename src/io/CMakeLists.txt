@@ -5,9 +5,11 @@
 set(LIB micro_core_io)
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS 
+    ${INCLUDE_DIRS}/io/message/window.h
     ${INCLUDE_DIRS}/io/message/message.h
 )
 set(SOURCES 
+    message/window.c
     message/message.c
 )
 
