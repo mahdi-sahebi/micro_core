@@ -96,7 +96,7 @@ static void init(void* data)
   server_create();
   flush_receive_buffer();
 
-  message = mc_msg_new(server_read, server_write, 16 + DATA_LEN * sizeof(uint32_t), 3, on_receive);
+  message = mc_msg_new(server_read, server_write, 16 + DATA_LEN * sizeof(uint32_t), 3, on_receive, TimeNowU);
 
   ReceiveCounter = 0;
   LastTickUS = TimeNowU();
@@ -104,7 +104,6 @@ static void init(void* data)
 
 static void deinit()
 {
-  mc_msg_read_finish(message, 0);
   mc_msg_free(&message);
   server_close();  
 }
@@ -118,7 +117,7 @@ void* rcv_start(void* data)
 {
   init(data);
 
-  while (ReceiveCounter < (COMPLETE_COUNT - 1)) {
+  while (ReceiveCounter < cfg_get_iterations()) {
     if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
@@ -126,6 +125,11 @@ void* rcv_start(void* data)
 
     // TODO(MN): Check size
     const uint32_t size = mc_msg_read(message);
+  }
+
+  if ((MC_SUCCESS == *Result) && !mc_msg_read_finish(message, TEST_TIMEOUT)) {
+    printf("mc_msg_read_finish failed\n");
+    *Result = MC_ERR_TIMEOUT;
   }
 
   deinit();

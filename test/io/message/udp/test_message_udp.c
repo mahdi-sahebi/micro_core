@@ -1,6 +1,6 @@
 /* For testing this module, we need a non-session based communication
  * like UDP, so we just implement a simple send and receive socket.
- * creation, invalid parameters, ...
+ * creation, invalid parameters, diff snd/rcv window sizes, ...
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,27 +27,27 @@ static int invalid_creation()
 {
   mc_msg_t* message = NULL;
   
-  message = mc_msg_new(NULL, write_api, DATA_LEN * sizeof(uint32_t), 3, NULL);
+  message = mc_msg_new(NULL, write_api, DATA_LEN * sizeof(uint32_t), 3, NULL, TimeNowU);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(read_api, NULL, DATA_LEN * sizeof(uint32_t), 3, NULL);
+  message = mc_msg_new(read_api, NULL, DATA_LEN * sizeof(uint32_t), 3, NULL, TimeNowU);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(read_api, write_api, 0, 3, NULL);
+  message = mc_msg_new(read_api, write_api, 0, 3, NULL, TimeNowU);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(read_api, write_api, 0, 0, NULL);
+  message = mc_msg_new(read_api, write_api, 0, 0, NULL, TimeNowU);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(read_api, write_api, 1, 3, NULL);
+  message = mc_msg_new(read_api, write_api, 1, 3, NULL, TimeNowU);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -60,7 +60,7 @@ static int valid_creation()
   const uint32_t capcity = 3;
   mc_msg_t* message = NULL;
   
-  message = mc_msg_new(read_api, write_api, 5 * sizeof(uint32_t), capcity, NULL);
+  message = mc_msg_new(read_api, write_api, 5 * sizeof(uint32_t), capcity, NULL, TimeNowU);
   if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -80,7 +80,7 @@ static int valid_creation()
 static int get_status()
 {
   uint32_t data[5];
-  mc_msg_t* message = mc_msg_new(read_api, write_api, 36, 3, NULL);
+  mc_msg_t* message = mc_msg_new(read_api, write_api, 36, 3, NULL, TimeNowU);
   if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -125,7 +125,7 @@ static int get_status()
 static int clear()
 {
   uint32_t data[5];
-  mc_msg_t* message = mc_msg_new(read_api, write_api, 36, 3, NULL);
+  mc_msg_t* message = mc_msg_new(read_api, write_api, 36, 3, NULL, TimeNowU);
 
   mc_result result = mc_msg_clear(NULL);
   if (MC_ERR_INVALID_ARGUMENT != result) {
@@ -168,6 +168,8 @@ static int clear()
 
 static int singly_direction()
 {
+  cfg_set_repetitive_send(false);
+
   pthread_t task_snd;
   pthread_t task_rcv;
   uint32_t snd_error = MC_SUCCESS;
@@ -191,6 +193,33 @@ static int singly_direction()
   }
   
   return MC_SUCCESS;
+}
+
+static int singly_repetitive()
+{
+  cfg_set_repetitive_send(true);
+  cfg_set_iterations(10000);
+  const int result = singly_direction();
+  cfg_set_repetitive_send(true);
+  return result;
+}
+
+static int singly_low_lossy()
+{
+  cfg_set_loss_rate(10);
+  cfg_set_iterations(10000);
+  const int result = singly_direction();
+  cfg_set_loss_rate(0);
+  return result;
+}
+
+static int singly_high_lossy()
+{
+  cfg_set_loss_rate(70);
+  cfg_set_iterations(1000);
+  const int result = singly_direction();
+  cfg_set_loss_rate(0);
+  return result;
 }
 
 static int small_write()
@@ -256,6 +285,32 @@ int main()
 
   printf("[singly_direction]\n");
   result = singly_direction();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
+
+  printf("[singly_repetitive]\n");
+  result = singly_repetitive();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
+
+  
+  printf("[singly_low_lossy]\n");
+  result = singly_low_lossy();
+  if (MC_SUCCESS != result) {
+    printf("FAILED: %u\n\n", result);
+  } else {
+    printf("PASSED\n\n");
+  }
+
+  
+  printf("[singly_high_lossy]\n");
+  result = singly_high_lossy();
   if (MC_SUCCESS != result) {
     printf("FAILED: %u\n\n", result);
   } else {

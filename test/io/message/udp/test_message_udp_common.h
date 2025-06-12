@@ -10,13 +10,18 @@
 #define CLIENT_PORT       9001
 #define COMPLETE_COUNT    10000
 #define DATA_LEN          10
-#define TEST_TIMEOUT      5000000
+#define TEST_TIMEOUT      2000000
 
 
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port);
 uint32_t socket_read(int socket_fd, void* data, uint32_t size);
 
 uint32_t TimeNowU();
+
+void     cfg_set_repetitive_send(bool enable);
+void     cfg_set_loss_rate(uint8_t rate);
+void     cfg_set_iterations(uint32_t iterations);
+uint32_t cfg_get_iterations();
 
 
 #endif /* MC_TEST_MESSAGE_UDP_COMMON_H_ */
