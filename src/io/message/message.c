@@ -10,24 +10,12 @@
 #include <string.h>
 #include "core/error.h"
 #include "io/message/window.h"
+#include "io/message/window_pool.h"
 #include "io/message/message.h"
 
 
 
 
-typedef struct
-{
-  uint32_t begin_window_id;
-  uint32_t next_window_id;
-  uint32_t begin_index;
-  uint32_t end_index;
-  uint32_t count;
-  uint32_t window_size;
-  uint32_t data_size;
-  uint32_t capacity;
-  wnd_t*   windows;
-  char     temp_window[0];
-}controller_t;
 
 struct _mc_msg_t
 { 
@@ -39,31 +27,25 @@ struct _mc_msg_t
   // Receive
   uint32_t rcv_last_id;
 
-  controller_t* rcv;// TODO(MN): Use array to reduce one pointer size
-  controller_t* snd;  
+  wndpool_t* rcv;// TODO(MN): Use array to reduce one pointer size
+  wndpool_t* snd;  
 };
 
 
 
-static inline wnd_t* get_window(const controller_t* const this, uint16_t index)
+static inline wnd_t* get_window(const wndpool_t* const this, uint16_t index)
 {
   return (wnd_t*)((char*)(this->windows) + (index * (sizeof(wnd_t) + this->data_size)));// TODO(MN): Rcv/snd
 }
 
-static void advance_end_window(controller_t* window)
+static void advance_end_window(wndpool_t* window)
 {
   window->next_window_id++;
   window->end_index = (window->end_index + 1) % window->capacity;
   window->count++;
 }
 
-static void push_window(controller_t* controller, void* data, uint32_t size)
-{
-  wnd_t* const window = get_window(controller, controller->end_index);
-  wnd_write(window, mc_span(data, size), controller->next_window_id);
-}
-
-static void remove_acked_windows(controller_t* controller)
+static void remove_acked_windows(wndpool_t* controller)
 {
   while (wnd_is_acked(get_window(controller, controller->begin_index)) && (INVALID_ID != get_window(controller, controller->begin_index)->packet.id)) {
     wnd_t* const window = get_window(controller, controller->begin_index);
@@ -74,7 +56,7 @@ static void remove_acked_windows(controller_t* controller)
   }
 }
 
-static void window_read_ack(controller_t* controller, uint32_t window_id)
+static void window_read_ack(wndpool_t* controller, uint32_t window_id)
  {
   if ((window_id < controller->begin_window_id) || (window_id >= controller->begin_window_id + controller->capacity)) {
     return;
@@ -210,7 +192,7 @@ mc_msg_t* mc_msg_new(
   }
   
   const uint32_t windows_size = capacity * (sizeof(wnd_t) + window_size);
-  const uint32_t controllers_size = 2 * (sizeof(controller_t) + window_size + windows_size);
+  const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
   mc_msg_t* const this = malloc(sizeof(mc_msg_t) + controllers_size);
 
   this->read             = read_fn;
@@ -218,24 +200,19 @@ mc_msg_t* mc_msg_new(
   this->on_receive       = on_receive;
   this->now_us           = now_us;
 
-  this->rcv              = (controller_t*)((char*)this + sizeof(mc_msg_t));
+  this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_msg_t));
   this->rcv->window_size = window_size;
   this->rcv->data_size   = window_size - sizeof(pkt_t);
   this->rcv->capacity    = capacity;
   this->rcv->windows     = (wnd_t*)(this->rcv->temp_window + window_size);
 
-  this->snd              = (controller_t*)(char*)(this->rcv->windows) + windows_size;
+  this->snd              = (wndpool_t*)(char*)(this->rcv->windows) + windows_size;
   this->snd->window_size = window_size;
   this->snd->data_size   = window_size - sizeof(pkt_t);
   this->snd->capacity    = capacity;
   this->snd->windows     = (wnd_t*)(this->snd->temp_window + window_size);
 
   mc_msg_clear(this);
-
-  for (uint32_t index = 0; index < capacity; index++) {
-    wnd_clear(get_window(this->rcv, index));
-    wnd_clear(get_window(this->snd, index));
-  }
   
   return this;
 }
@@ -255,18 +232,9 @@ mc_result mc_msg_clear(mc_msg_t* const this)
 
   this->rcv_last_id = -1;// TOOD(MN): Move to rcv controller
 
-  this->rcv->begin_window_id = 0;
-  this->rcv->next_window_id  = 0;
-  this->rcv->begin_index     = 0;
-  this->rcv->end_index       = 0;
-  this->rcv->count           = 0;
-
-  this->snd->begin_window_id = 0;
-  this->snd->next_window_id  = 0;
-  this->snd->begin_index     = 0;
-  this->snd->end_index       = 0;
-  this->snd->count           = 0;
-
+  wndpool_clear(this->rcv);
+  wndpool_clear(this->snd);
+  
   return MC_SUCCESS;
 }
 
@@ -301,7 +269,7 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
     return 0; // Error
   }
 
-  push_window(this->snd, data, size);
+  wndpool_push(this->snd, mc_span(data, size));
   
   uint32_t sent_size = 0;
   do {
