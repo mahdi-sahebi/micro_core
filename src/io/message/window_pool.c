@@ -110,6 +110,7 @@ bool wndpool_push(wndpool_t* const this, const mc_span data)
 {
   wnd_t* const window = get_window(this, this->end_index);
   wnd_write(window, data, this->end_id);
+  advance_end_window(this);
   return true;
 }
 
