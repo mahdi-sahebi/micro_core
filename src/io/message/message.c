@@ -37,13 +37,6 @@ static inline wnd_t* get_window(const wndpool_t* const this, uint16_t index)
 {
   return (wnd_t*)((char*)(this->windows) + (index * (sizeof(wnd_t) + this->data_size)));// TODO(MN): Rcv/snd
 }
-
-static void advance_end_window(wndpool_t* window)
-{
-  window->end_id++;
-  window->end_index = (window->end_index + 1) % window->capacity;
-  window->count++;
-}
 /////////////////////////////////////////////////// rcv
 
 static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
@@ -87,7 +80,7 @@ static uint32_t read_data(mc_msg_t* const this)
     const int dif = (pkt->id - this->rcv_last_id);
     if (dif > 1) {
       // printf("f\n");
-      return 0;
+      return 0;// TODO(MN): To not push into the window pool
     }
   }
   this->rcv_last_id = pkt->id;
@@ -239,14 +232,13 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
     return 0; // Error
   }
 
-  wndpool_push(this->snd, mc_span(data, size));
   
   uint32_t sent_size = 0;
   // do {
     sent_size = snd_write_window(this, this->snd->end_index);
   // } while (0 == sent_size);// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   
-  advance_end_window(this->snd);
+  wndpool_push(this->snd, mc_span(data, size));
 
   return size;//this->windows->packet.size;
 }
