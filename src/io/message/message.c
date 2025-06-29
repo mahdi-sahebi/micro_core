@@ -84,7 +84,7 @@ static uint32_t read_data(mc_msg_t* const this)
       return 0;
     }
 
-    const int dif =(pkt->id - this->rcv_last_id);
+    const int dif = (pkt->id - this->rcv_last_id);
     if (dif > 1) {
       // printf("f\n");
       return 0;
@@ -242,9 +242,9 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
   wndpool_push(this->snd, mc_span(data, size));
   
   uint32_t sent_size = 0;
-  do {
+  // do {
     sent_size = snd_write_window(this, this->snd->end_index);
-  } while (0 == sent_size);// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  // } while (0 == sent_size);// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   
   advance_end_window(this->snd);
 
