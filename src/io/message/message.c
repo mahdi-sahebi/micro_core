@@ -71,6 +71,11 @@ static uint32_t read_data(mc_msg_t* const this)
       return 0; // [INVALID] Bad header/type received
   }
 
+  if (PKT_ACK == pkt->type) {
+    wndpool_ack(this->snd, pkt->id, NULL);
+    return read_size;
+  } 
+
   if (-1 != this->rcv_last_id) {// TODO(MN): Handle invalid id on overflows(long time)
     if (pkt->id <= this->rcv_last_id) {// TODO(MN): Handle overflow
       rcv_send_ack(this, pkt->id);
@@ -87,12 +92,8 @@ static uint32_t read_data(mc_msg_t* const this)
 
   // TODO(MN): Handle if header not valid. search for header to lock.
   // TODO(MN): Handle if read_size is not equal to a packet.
-  if (PKT_ACK == pkt->type) {
-    wndpool_ack(this->snd, pkt->id, NULL);
-  } else {
-    rcv_send_ack(this, pkt->id);
-    this->on_receive(pkt->data, pkt->size);
-  }
+  rcv_send_ack(this, pkt->id);
+  this->on_receive(pkt->data, pkt->size);
 
   return read_size;
 }
