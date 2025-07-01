@@ -13,7 +13,6 @@ typedef struct
   uint32_t bgn_id;
   uint32_t end_id;
   uint32_t bgn_index;
-  uint32_t count;// TODO(MN): Extra
   uint32_t window_size;
   uint32_t data_size;
   uint32_t capacity;
@@ -29,6 +28,7 @@ bool     wndpool_is_empty(wndpool_t* const this);
 bool     wndpool_is_full(wndpool_t* const this);
 bool     wndpool_contains(wndpool_t* const this, id_t id);
 wnd_t*   wndpool_get(wndpool_t* const this, id_t id);
+uint32_t wndpool_get_count(wndpool_t* const this);
 uint32_t wndpool_get_capacity(wndpool_t* const this);
 id_t     wndpool_get_bgn_id(wndpool_t* const this);
 id_t     wndpool_get_end_id(wndpool_t* const this);
