@@ -231,15 +231,14 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
   if (mc_msg_is_full(this)) {
     return 0; // Error
   }
-
   
+  const uint32_t end_index = this->snd->end_index;
+  wndpool_push(this->snd, mc_span(data, size));
   uint32_t sent_size = 0;
   // do {
-    sent_size = snd_write_window(this, this->snd->end_index);
+    sent_size = snd_write_window(this, end_index);
   // } while (0 == sent_size);// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   
-  wndpool_push(this->snd, mc_span(data, size));
-
   return size;//this->windows->packet.size;
 }
 

@@ -16,7 +16,7 @@ static void advance_end_window(wndpool_t* this)
 
 static void advance_begin_id(wndpool_t* this)
 {
-  this->end_id++;
+  this->bgn_id++;
   this->end_index = (this->end_index + 1) % this->capacity;
   this->count++;
 }
