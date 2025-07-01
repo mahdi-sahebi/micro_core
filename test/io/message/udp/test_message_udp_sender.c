@@ -54,36 +54,12 @@ static void let_server_start()
   usleep(200000);
 }
 
-void print_progress(float progress)
-{
-  const uint32_t BAR_LENGTH = 20;
-  const uint32_t num_bars = progress * BAR_LENGTH;
-
-  printf("\r\t\t\t\t\t\t\r");
-
-  printf("[");
-  for (uint32_t index = 0; index < BAR_LENGTH; index++) {
-      if (index < num_bars) {
-          printf("|");
-      } else {
-          printf("-");
-      }
-  }
-
-  printf("] %.1f%%", progress * 100);
-  if (1.0F == progress) {
-    printf("\n");
-  }
-  fflush(stdout);
-}
-
 static void update_data(uint32_t* const buffer)
 {
   for (uint32_t index = 0; index < DATA_LEN; index++) {
     buffer[index] = (SendCounter * DATA_LEN) + index;
   }
 
-  print_progress(SendCounter / (float)cfg_get_iterations());
   SendCounter++;
   LastTickUS = TimeNowU();
   usleep(100);

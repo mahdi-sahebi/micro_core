@@ -68,6 +68,29 @@ static bool verify_data(const uint32_t* const buffer, uint32_t packet_id)
   return true;
 }
 
+static void print_progress(float progress)
+{
+  const uint32_t BAR_LENGTH = 20;
+  const uint32_t num_bars = progress * BAR_LENGTH;
+
+  printf("\r\t\t\t\t\t\t\r");
+
+  printf("[");
+  for (uint32_t index = 0; index < BAR_LENGTH; index++) {
+    if (index < num_bars) {
+      printf("|");
+    } else {
+      printf("-");
+    }
+  }
+
+  printf("] %.1f%%", progress * 100);
+  if (1.0F == progress) {
+    printf("\n");
+  }
+  fflush(stdout);
+}
+
 static void on_receive(const void* const data, uint32_t size)
 {
   if ((DATA_LEN * sizeof(uint32_t)) != size) {
@@ -82,6 +105,7 @@ static void on_receive(const void* const data, uint32_t size)
     return;
   }
 
+  print_progress(ReceiveCounter / (float)cfg_get_iterations());
   ReceiveCounter++;
   LastTickUS = TimeNowU();
 }
