@@ -266,7 +266,7 @@ uint32_t mc_msg_get_capacity(mc_msg_t* const this)
 
 uint32_t mc_msg_get_count(mc_msg_t* const this)
 {
-  return this->snd->count;// TODO(MN): Snd or rcv
+  return wndpool_get_count(this->snd);// TODO(MN): Snd or rcv
 }
 
 uint32_t  mc_msg_get_window_size(mc_msg_t* const this)
