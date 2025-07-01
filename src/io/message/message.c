@@ -213,7 +213,7 @@ bool mc_msg_read_finish(mc_msg_t* const this, uint32_t timeout_us)
 {
   const uint32_t bgn_time_us = this->now_us();
 
-  while (this->rcv->count) {
+  while (!wndpool_is_empty(this->rcv)) {
     mc_msg_read(this);
 
     if ((this->now_us() - bgn_time_us) > timeout_us) {
@@ -228,7 +228,7 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
 {
   // if size > this->window_size
   mc_msg_read(this);
-  
+
   if (mc_msg_is_full(this) || 
     (this->snd->end_id >= (this->snd->bgn_id + this->snd->capacity))) {// TODO(MN): Same conditions?
     return 0; // Error
@@ -248,7 +248,7 @@ bool mc_msg_write_finish(mc_msg_t* const this, uint32_t timeout_us)
 {
   const uint32_t bgn_time_us = this->now_us();
 
-  while (this->snd->count) {
+  while (!wndpool_is_empty(this->snd)) {
     mc_msg_read(this);
 
     if ((this->now_us() - bgn_time_us) > timeout_us) {
@@ -276,12 +276,12 @@ uint32_t  mc_msg_get_window_size(mc_msg_t* const this)
 
 bool mc_msg_is_empty(mc_msg_t* const this)
 {
-  return (0 == this->snd->count);// TODO(MN): Rcv or snd?
+  return wndpool_is_empty(this->snd);// TODO(MN): Rcv or snd?
 }
 
 bool mc_msg_is_full(mc_msg_t* const this)// TODO(MN): snd_is_full
 {
-  return (this->snd->count == this->snd->capacity);// TODO(MN): Rcv or snd?
+  return wndpool_is_full(this->snd);// TODO(MN): Rcv or snd?
 }
 
 
