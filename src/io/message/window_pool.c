@@ -23,13 +23,6 @@ static void advance_end_window(wndpool_t* this)
   this->count++;
 }
 
-// static void advance_end_id(wndpool_t* const this)
-// {
-//   this->bgn_id++;
-//   this->bgn_index = (this->bgn_index + 1) % this->capacity;
-//   this->count++;
-// }
-
 static void data_receive(wnd_t* const window, uint32_t window_size, wndpool_on_done_fn on_done)
 {
   if (NULL != on_done) {
@@ -62,12 +55,12 @@ void wndpool_clear(wndpool_t* const this)
 
 bool wndpool_is_empty(wndpool_t* const this)
 {
-  return false;
+  return (0 == this->count);
 }
 
 bool wndpool_is_full(wndpool_t* const this)
 {
-  return false;
+  return (this->count == this->capacity);
 }
 
 bool wndpool_contains(wndpool_t* const this, id_t id)
