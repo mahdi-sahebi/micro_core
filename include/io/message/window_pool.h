@@ -1,3 +1,7 @@
+/* TODO(MN): This container is not a queue, so doesn't need to have enqueue and dequeue.
+ * Use const for all arguments
+ */
+
 #ifndef MC_MESSAGE_WINDOW_POOL_H_
 #define MC_MESSAGE_WINDOW_POOL_H_
 
@@ -29,6 +33,10 @@ wnd_t*   wndpool_get(wndpool_t* const this, id_t id);
 uint32_t wndpool_get_capacity(wndpool_t* const this);
 id_t     wndpool_get_bgn_id(wndpool_t* const this);
 id_t     wndpool_get_end_id(wndpool_t* const this);
+bool     wndpool_enqueue(wndpool_t* const this, const mc_span data);
+bool     wndpool_dequeue(wndpool_t* const this, const mc_span data);
+void     wndpool_remove_first(wndpool_t* const this);// TODO(MN): Pop top
+bool     wndpool_insert(wndpool_t* const this, const mc_span data, const id_t id);
 bool     wndpool_push(wndpool_t* const this, const mc_span data);
 bool     wndpool_ack(wndpool_t* const this, id_t id, wndpool_on_done_fn on_done);
 

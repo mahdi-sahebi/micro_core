@@ -14,19 +14,6 @@ static void advance_end_window(wndpool_t* this)
   this->count++;
 }
 
-static void advance_begin_id(wndpool_t* const this)
-{
-  this->bgn_id++;
-  this->bgn_index = (this->bgn_index + 1) % this->capacity;
-
-  if (this->end_id < this->bgn_id) {
-    this->end_id    = this->bgn_id;
-    this->end_index = this->bgn_index;
-  }
-
-  this->count--;
-}
-
 static void advance_end_id(wndpool_t* const this)
 {
   this->bgn_id++;
@@ -47,7 +34,7 @@ static void remove_acked_windows(wndpool_t* const this, wndpool_on_done_fn on_do
     wnd_t* const window = get_window(this, this->bgn_index);
     data_receive(window, this->window_size, on_done);
     wnd_clear(window);
-    advance_begin_id(this);
+    wndpool_remove_first(this);
   }
 }
 
@@ -77,7 +64,9 @@ bool wndpool_is_full(wndpool_t* const this)
 
 bool wndpool_contains(wndpool_t* const this, id_t id)
 {
-  return false;
+  // TODO(MN): To be able to insert, we need to remove count and always have whole of 
+  // pool. then define the contains() like below.
+  return false;//((this->bgn_id <= id) && (id <= this->bgn_id + this->capacity));
 }
 
 wnd_t* wndpool_get(wndpool_t* const this, id_t id)
@@ -93,6 +82,26 @@ bool wndpool_enqueue(wndpool_t* const this, const mc_span data)
 }
 
 bool wndpool_dequeue(wndpool_t* const this, const mc_span data)
+{
+  return false;
+}
+
+void wndpool_remove_first(wndpool_t* const this)
+{
+  this->bgn_id++;
+  this->bgn_index = (this->bgn_index + 1) % this->capacity;
+
+  if (this->end_id < this->bgn_id) {
+    this->end_id    = this->bgn_id;
+    this->end_index = this->bgn_index;
+  }
+
+  if (this->count) {
+    this->count--;
+  }
+}
+
+bool wndpool_insert(wndpool_t* const this, const mc_span data, const id_t id)
 {
   return false;
 }
