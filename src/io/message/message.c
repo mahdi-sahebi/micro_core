@@ -85,11 +85,12 @@ static uint32_t read_data(mc_msg_t* const this)
     const int dif = (pkt->id - this->rcv_last_id);
     if (dif > 1) {
       // printf("f\n");
+      // const bool is_added = wndpool_push(this->rcv, mc_span(pkt, read_size));
       return 0;// TODO(MN): To not push into the window pool
     }
   }
   this->rcv_last_id = pkt->id;
-
+  wndpool_remove_first(this->rcv);
   // TODO(MN): Handle if header not valid. search for header to lock.
   // TODO(MN): Handle if read_size is not equal to a packet.
   rcv_send_ack(this, pkt->id);
