@@ -100,9 +100,8 @@ static uint32_t read_data(mc_msg_t* const this)
 }
 
 /////////////////////////////////////////////////// snd
-static uint32_t snd_write_window(mc_msg_t* const this, uint32_t window_index) 
+static uint32_t snd_write_window(mc_msg_t* const this, wnd_t* const window) 
 {
-  wnd_t* const window = get_window(this->snd, window_index);
   const uint32_t sent_size = this->write(&window->packet, this->snd->window_size);
 
   if (0 != sent_size) {
@@ -129,7 +128,7 @@ static uint32_t snd_send_unacked(mc_msg_t* const this)
 
     sent_size += window->packet.size;
     
-    if (0 != snd_write_window(this, window_index)) {
+    if (0 != snd_write_window(this, window)) {
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
   }
 
@@ -229,16 +228,17 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
 {
   // if size > this->window_size
   mc_msg_read(this);
-  // TODO(MN): Check is not full
-  if (mc_msg_is_full(this)) {
+  
+  if (mc_msg_is_full(this) || 
+    (this->snd->end_id >= (this->snd->bgn_id + this->snd->capacity))) {// TODO(MN): Same conditions?
     return 0; // Error
   }
   
-  const uint32_t end_index = this->snd->end_index;
+  wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);
   wndpool_push(this->snd, mc_span(data, size));
   uint32_t sent_size = 0;
   // do {
-    sent_size = snd_write_window(this, end_index);
+    sent_size = snd_write_window(this, window);
   // } while (0 == sent_size);// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   
   return size;//this->windows->packet.size;

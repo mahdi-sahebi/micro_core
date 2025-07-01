@@ -2,6 +2,16 @@
 #include "io/message/window_pool.h"
 
 
+static uint32_t get_index_from_id(const wndpool_t* const this, uint32_t id)
+{
+  uint32_t dif = id - this->bgn_id;
+  if (id < this->bgn_id) {
+    dif += this->capacity;
+  }
+
+  return (this->bgn_id + dif) % this->capacity;
+}
+
 static inline wnd_t* get_window(const wndpool_t* const this, uint16_t index)
 {
   return (wnd_t*)((char*)(this->windows) + (index * (sizeof(wnd_t) + this->data_size)));// TODO(MN): Rcv/snd
@@ -10,16 +20,15 @@ static inline wnd_t* get_window(const wndpool_t* const this, uint16_t index)
 static void advance_end_window(wndpool_t* this)
 {
   this->end_id++;
-  this->end_index = (this->end_index + 1) % this->capacity;
   this->count++;
 }
 
-static void advance_end_id(wndpool_t* const this)
-{
-  this->bgn_id++;
-  this->bgn_index = (this->bgn_index + 1) % this->capacity;
-  this->count++;
-}
+// static void advance_end_id(wndpool_t* const this)
+// {
+//   this->bgn_id++;
+//   this->bgn_index = (this->bgn_index + 1) % this->capacity;
+//   this->count++;
+// }
 
 static void data_receive(wnd_t* const window, uint32_t window_size, wndpool_on_done_fn on_done)
 {
@@ -45,11 +54,10 @@ void wndpool_clear(wndpool_t* const this)
     wnd_clear(get_window(this, index));
   }
 
-  this->bgn_id = 0;
-  this->end_id  = 0;
-  this->bgn_index     = 0;
-  this->end_index       = 0;
-  this->count           = 0;
+  this->bgn_id    = 0;
+  this->end_id    = 0;
+  this->bgn_index = 0;
+  this->count     = 0;
 }
 
 bool wndpool_is_empty(wndpool_t* const this)
@@ -71,14 +79,15 @@ bool wndpool_contains(wndpool_t* const this, id_t id)
 
 wnd_t* wndpool_get(wndpool_t* const this, id_t id)
 {
-  return NULL;
+  return get_window(this, get_index_from_id(this, id));
 }
 
 bool wndpool_enqueue(wndpool_t* const this, const mc_span data)
 {
-  wnd_t* const window = get_window(this, this->end_index);
-  wnd_write(window, data, this->end_id);
-  return true;
+  // wnd_t* const window = get_window(this, this->end_index);
+  // wnd_write(window, data, this->end_id);
+  // return true;
+  return false;
 }
 
 bool wndpool_dequeue(wndpool_t* const this, const mc_span data)
@@ -92,8 +101,7 @@ void wndpool_remove_first(wndpool_t* const this)
   this->bgn_index = (this->bgn_index + 1) % this->capacity;
 
   if (this->end_id < this->bgn_id) {
-    this->end_id    = this->bgn_id;
-    this->end_index = this->bgn_index;
+    this->end_id = this->bgn_id;
   }
 
   if (this->count) {
@@ -123,7 +131,8 @@ id_t wndpool_get_end_id(wndpool_t* const this)
 
 bool wndpool_push(wndpool_t* const this, const mc_span data)
 {
-  wnd_t* const window = get_window(this, this->end_index);
+  const uint32_t index = get_index_from_id(this, this->end_id);
+  wnd_t* const window = get_window(this, index);
   wnd_write(window, data, this->end_id);
   advance_end_window(this);
   return true;
