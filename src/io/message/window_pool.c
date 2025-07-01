@@ -14,14 +14,20 @@ static void advance_end_window(wndpool_t* this)
   this->count++;
 }
 
-static void advance_begin_id(wndpool_t* this)
+static void advance_begin_id(wndpool_t* const this)
 {
   this->bgn_id++;
-  this->end_index = (this->end_index + 1) % this->capacity;
-  this->count++;
+  this->bgn_index = (this->bgn_index + 1) % this->capacity;
+
+  if (this->end_id < this->bgn_id) {
+    this->end_id    = this->bgn_id;
+    this->end_index = this->bgn_index;
+  }
+
+  this->count--;
 }
 
-static void advance_end_id(wndpool_t* this)
+static void advance_end_id(wndpool_t* const this)
 {
   this->bgn_id++;
   this->bgn_index = (this->bgn_index + 1) % this->capacity;
@@ -41,7 +47,7 @@ static void remove_acked_windows(wndpool_t* const this, wndpool_on_done_fn on_do
     wnd_t* const window = get_window(this, this->bgn_index);
     data_receive(window, this->window_size, on_done);
     wnd_clear(window);
-    advance_end_id(this);
+    advance_begin_id(this);
   }
 }
 
