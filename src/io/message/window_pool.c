@@ -123,16 +123,6 @@ uint32_t wndpool_get_capacity(wndpool_t* const this)
   return this->capacity;
 }
 
-id_t wndpool_get_bgn_id(wndpool_t* const this)
-{
-  return this->bgn_id;
-}
-
-id_t wndpool_get_end_id(wndpool_t* const this)
-{
-  return this->bgn_id + this->capacity;
-}
-
 bool wndpool_push(wndpool_t* const this, const mc_span data)
 {
   if (wndpool_is_full(this)) {
