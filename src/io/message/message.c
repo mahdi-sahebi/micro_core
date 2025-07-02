@@ -3,6 +3,7 @@
  * Remove standard library dependencies as much as possible
  * Define a network interface with write and read handlers
  * define cu32_t? ... 
+ * Add crc
  */
 
 #include <stdlib.h>
@@ -12,9 +13,6 @@
 #include "io/message/window.h"
 #include "io/message/window_pool.h"
 #include "io/message/message.h"
-
-
-
 
 
 struct _mc_msg_t
@@ -32,11 +30,6 @@ struct _mc_msg_t
 };
 
 
-
-static inline wnd_t* get_window(const wndpool_t* const this, uint16_t index)
-{
-  return (wnd_t*)((char*)(this->windows) + (index * (sizeof(wnd_t) + this->data_size)));// TODO(MN): Rcv/snd
-}
 /////////////////////////////////////////////////// rcv
 
 static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
@@ -85,7 +78,7 @@ static uint32_t read_data(mc_msg_t* const this)
     const int dif = (pkt->id - this->rcv_last_id);
     if (dif > 1) {
       // printf("f\n");
-      // const bool is_added = wndpool_push(this->rcv, mc_span(pkt, read_size));
+      // const bool is_added = wndpool_insert(this->rcv, mc_span(pkt, read_size), pkt->id);
       return 0;// TODO(MN): To not push into the window pool
     }
   }
@@ -115,13 +108,13 @@ static uint32_t snd_send_unacked(mc_msg_t* const this)
 {
   uint32_t sent_size = 0;
   
-  for (uint32_t window_index = 0; window_index < this->snd->capacity; window_index++) {
-    if (INVALID_ID == get_window(this->snd, window_index)->packet.id) {
+  for (uint32_t id = this->snd->bgn_id; id < this->snd->end_id; id++) {
+    wnd_t* const window = wndpool_get(this->snd, id);// TODO(MN): Make it const
+    if (INVALID_ID == window->packet.id) {// TODO(MN): Extra
       continue;
     }
     
     read_data(this);
-    wnd_t* const window = get_window(this->snd, window_index);
     if (wnd_is_acked(window)) {// TODO(MN): Check timeout occurance
         continue;
     }
@@ -226,12 +219,11 @@ bool mc_msg_read_finish(mc_msg_t* const this, uint32_t timeout_us)
 
 uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
 {
-  // if size > this->window_size
+  // TODO(MN): if size > this->window_size
   mc_msg_read(this);
 
-  if (mc_msg_is_full(this) || 
-    (this->snd->end_id >= (this->snd->bgn_id + this->snd->capacity))) {// TODO(MN): Same conditions?
-    return 0; // Error
+  if (mc_msg_is_full(this)) {
+    return 0; // TODO(MN): Error
   }
   
   wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);
@@ -241,7 +233,7 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
     sent_size = snd_write_window(this, window);
   // } while (0 == sent_size);// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   
-  return size;//this->windows->packet.size;
+  return size;
 }
 
 bool mc_msg_write_finish(mc_msg_t* const this, uint32_t timeout_us)

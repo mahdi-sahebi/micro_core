@@ -2,7 +2,7 @@
 #include "io/message/window_pool.h"
 
 
-static uint32_t get_index_from_id(const wndpool_t* const this, uint32_t id)
+static uint32_t get_index(const wndpool_t* const this, uint32_t id)
 {
   uint32_t dif = id - this->bgn_id;
   if (id < this->bgn_id) {
@@ -12,7 +12,7 @@ static uint32_t get_index_from_id(const wndpool_t* const this, uint32_t id)
   return (this->bgn_id + dif) % this->capacity;
 }
 
-static inline wnd_t* get_window(const wndpool_t* const this, uint16_t index)
+static inline wnd_t* get_window(const wndpool_t* const this, const uint32_t index)
 {
   return (wnd_t*)((char*)(this->windows) + (index * (sizeof(wnd_t) + this->data_size)));// TODO(MN): Rcv/snd
 }
@@ -70,7 +70,7 @@ bool wndpool_contains(wndpool_t* const this, id_t id)
 
 wnd_t* wndpool_get(wndpool_t* const this, id_t id)
 {
-  return get_window(this, get_index_from_id(this, id));
+  return get_window(this, get_index(this, id));
 }
 
 bool wndpool_enqueue(wndpool_t* const this, const mc_span data)
@@ -98,7 +98,16 @@ void wndpool_remove_first(wndpool_t* const this)
 
 bool wndpool_insert(wndpool_t* const this, const mc_span data, const id_t id)
 {
-  return false;
+  if (wndpool_is_full(this)) {
+    return false;
+  }
+  
+  const uint32_t index = get_index(this, this->end_id);
+  wnd_t* const window = get_window(this, index);
+  wnd_write(window, data, this->end_id);
+  this->end_id++;
+
+  return true;
 }
 
 uint32_t wndpool_get_capacity(wndpool_t* const this)
@@ -118,10 +127,14 @@ id_t wndpool_get_end_id(wndpool_t* const this)
 
 bool wndpool_push(wndpool_t* const this, const mc_span data)
 {
-  const uint32_t index = get_index_from_id(this, this->end_id);
-  wnd_t* const window = get_window(this, index);
+  if (wndpool_is_full(this)) {
+    return false;
+  }
+  
+  wnd_t* const window = wndpool_get(this, this->end_id);
   wnd_write(window, data, this->end_id);
   this->end_id++;
+
   return true;
 }
 
