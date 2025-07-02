@@ -19,7 +19,15 @@ static inline wnd_t* get_window(const wndpool_t* const this, const uint32_t inde
 
 uint32_t wndpool_get_count(wndpool_t* const this)
 {
-  return (this->end_id - this->bgn_id);
+  uint32_t count = 0;
+
+  for (uint32_t index = 0; index < this->capacity; index++) {
+    if (wnd_is_valid(get_window(this, index))) {
+      count++;
+    }
+  }
+
+  return count;
 }
 
 static void data_receive(wnd_t* const window, uint32_t window_size, wndpool_on_done_fn on_done)
