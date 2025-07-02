@@ -29,9 +29,15 @@ static void data_receive(wnd_t* const window, uint32_t window_size, wndpool_on_d
   }
 }
 
+static bool is_first_acked(const wndpool_t* const this)
+{
+  return wnd_is_acked(get_window(this, this->bgn_index)) &&
+         (INVALID_ID != get_window(this, this->bgn_index)->packet.id);
+}
+
 static void remove_acked_windows(wndpool_t* const this, wndpool_on_done_fn on_done)
 {
-  while (wnd_is_acked(get_window(this, this->bgn_index)) && (INVALID_ID != get_window(this, this->bgn_index)->packet.id)) {
+  while (is_first_acked(this)) {
     wnd_t* const window = get_window(this, this->bgn_index);
     data_receive(window, this->window_size, on_done);
     wnd_clear(window);
@@ -88,6 +94,8 @@ bool wndpool_dequeue(wndpool_t* const this, const mc_span data)
 
 void wndpool_remove_first(wndpool_t* const this)
 {
+  wnd_clear(get_window(this, this->bgn_index));
+
   this->bgn_id++;
   this->bgn_index = (this->bgn_index + 1) % this->capacity;
 
@@ -97,8 +105,8 @@ void wndpool_remove_first(wndpool_t* const this)
 }
 
 bool wndpool_insert(wndpool_t* const this, const mc_span data, const id_t id)
-{
-  if (wndpool_is_full(this)) {
+{return false;
+  if (!wndpool_contains(this, id)) {
     return false;
   }
   
