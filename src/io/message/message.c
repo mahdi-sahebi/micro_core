@@ -108,9 +108,10 @@ static uint32_t snd_send_unacked(mc_msg_t* const this)
 {
   uint32_t sent_size = 0;
   
-  for (uint32_t id = this->snd->bgn_id; id < this->snd->end_id; id++) {
+  const uint32_t end_id = this->snd->bgn_id + this->snd->capacity;
+  for (uint32_t id = this->snd->bgn_id; id < end_id; id++) {
     wnd_t* const window = wndpool_get(this->snd, id);// TODO(MN): Make it const
-    if (INVALID_ID == window->packet.id) {// TODO(MN): Extra
+    if (!wnd_is_valid(window)) {
       continue;
     }
     

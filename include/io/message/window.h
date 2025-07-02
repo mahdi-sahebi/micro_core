@@ -39,6 +39,7 @@ void  wnd_write(wnd_t* const wnd, mc_span buffer, id_t id);
 void* wnd_get_data(wnd_t* const wnd);
 void  wnd_ack(wnd_t* const wnd);
 bool  wnd_is_acked(wnd_t* const wnd);
+bool  wnd_is_valid(const wnd_t* const wnd);
 
 
 #endif /* MC_MESSAGE_WINDOW_H_ */
