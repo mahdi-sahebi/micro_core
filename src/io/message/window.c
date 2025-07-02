@@ -1,3 +1,5 @@
+/* TODO(MN): const for all arguments
+ */
 #include <string.h>
 #include "io/message/window.h"
 
@@ -32,4 +34,9 @@ void wnd_ack(wnd_t* const wnd)
 bool wnd_is_acked(wnd_t* const wnd)
 {
   return wnd->is_acked;
+}
+
+bool wnd_is_valid(const wnd_t* const wnd)
+{
+  return (INVALID_ID != wnd->packet.id);
 }
