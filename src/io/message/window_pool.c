@@ -77,9 +77,7 @@ bool wndpool_is_full(wndpool_t* const this)
 
 bool wndpool_contains(wndpool_t* const this, id_t id)
 {
-  // TODO(MN): To be able to insert, we need to remove count and always have whole of 
-  // pool. then define the contains() like below.
-  return false;//((this->bgn_id <= id) && (id <= this->bgn_id + this->capacity));
+  return ((this->bgn_id <= id) && (id < this->bgn_id + this->capacity));
 }
 
 wnd_t* wndpool_get(wndpool_t* const this, id_t id)
