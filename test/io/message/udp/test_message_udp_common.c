@@ -10,8 +10,9 @@ static bool RepetitiveSendEnable = false;
 static uint8_t LossRate = 0;
 
 
-static bool simulate_loss() {
-  return (rand() % 100) < LossRate;
+static bool simulate_loss() 
+{
+  return ((random() / (float)RAND_MAX) * 100) < LossRate;
 }
 
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
