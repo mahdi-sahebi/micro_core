@@ -30,10 +30,10 @@ uint32_t wndpool_get_count(wndpool_t* const this)
   return count;
 }
 
-static void data_receive(wnd_t* const window, uint32_t window_size, wndpool_on_done_fn on_done)
+static void data_receive(wnd_t* const window, uint32_t window_size, mc_msg_on_receive_fn on_done)
 {
   if (NULL != on_done) {
-    on_done(mc_span(wnd_get_data(window), window_size), window->packet.id);
+    on_done(wnd_get_data(window), wnd_get_data_size(window));//, window->packet.id);
   }
 }
 
@@ -41,16 +41,6 @@ static bool is_first_acked(const wndpool_t* const this)
 {
   return wnd_is_acked(get_window(this, this->bgn_index)) &&
          (INVALID_ID != get_window(this, this->bgn_index)->packet.id);
-}
-
-static void remove_acked_windows(wndpool_t* const this, wndpool_on_done_fn on_done)
-{
-  while (is_first_acked(this)) {
-    wnd_t* const window = get_window(this, this->bgn_index);
-    data_receive(window, this->window_size, on_done);
-    wnd_clear(window);
-    wndpool_remove_first(this);
-  }
 }
 
 void wndpool_clear(wndpool_t* const this)
@@ -110,16 +100,26 @@ void wndpool_remove_first(wndpool_t* const this)
   }
 }
 
+void wndpool_remove_acked(wndpool_t* const this, mc_msg_on_receive_fn on_receive)
+{
+  while (is_first_acked(this)) {
+    wnd_t* const window = get_window(this, this->bgn_index);
+    data_receive(window, this->window_size, on_receive);
+    wnd_clear(window);
+    wndpool_remove_first(this);
+  }
+}
+
 bool wndpool_insert(wndpool_t* const this, const mc_span data, const id_t id)
-{return false;
+{
   if (!wndpool_contains(this, id)) {
     return false;
   }
   
-  const uint32_t index = get_index(this, this->end_id);
+  const uint32_t index = get_index(this, id);
   wnd_t* const window = get_window(this, index);
-  wnd_write(window, data, this->end_id);
-  this->end_id++;
+  wnd_write(window, data, id);
+  window->is_acked = true;
 
   return true;
 }
@@ -142,7 +142,7 @@ bool wndpool_push(wndpool_t* const this, const mc_span data)
   return true;
 }
 
-bool wndpool_ack(wndpool_t* const this, id_t id, wndpool_on_done_fn on_done)
+bool wndpool_ack(wndpool_t* const this, id_t id, mc_msg_on_receive_fn on_done)
 {
   if ((id < this->bgn_id) || (id >= this->bgn_id + this->capacity)) {
     return false;
@@ -150,7 +150,6 @@ bool wndpool_ack(wndpool_t* const this, id_t id, wndpool_on_done_fn on_done)
   
   // // TODO(MN): on_done if id==bgn_id
   // if (id == this->bgn_id) {
-    
   // }
 
   const uint32_t window_index = ((id - this->bgn_id) + this->bgn_index) % this->capacity;
@@ -161,7 +160,7 @@ bool wndpool_ack(wndpool_t* const this, id_t id, wndpool_on_done_fn on_done)
   }
 
   if (id == this->bgn_id) {
-    remove_acked_windows(this, on_done);
+    wndpool_remove_acked(this, on_done);
   }
   
   return true;

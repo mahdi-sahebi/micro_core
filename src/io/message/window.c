@@ -26,6 +26,11 @@ void* wnd_get_data(wnd_t* const wnd)
   return wnd->packet.data;
 }
 
+uint32_t wnd_get_data_size(wnd_t* const wnd)
+{
+  return wnd->packet.size - sizeof(pkt_t);
+}
+
 void wnd_ack(wnd_t* const wnd)
 {
   wnd->is_acked  = true;

@@ -2,6 +2,7 @@
 #define MC_IO_MESSAGE_H_
 
 #include <stdint.h>
+#include "core/error.h"
 
 typedef struct _mc_msg_t mc_msg_t;
 typedef uint32_t (*mc_msg_read_fn)(void* const data, uint32_t size);
