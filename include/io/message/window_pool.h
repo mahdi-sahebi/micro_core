@@ -6,7 +6,7 @@
 #define MC_MESSAGE_WINDOW_POOL_H_
 
 #include "window.h"
-
+#include "io/message/message.h"// TODO(MN): Remove for encapsulation
 
 typedef struct
 {
@@ -33,9 +33,10 @@ uint32_t wndpool_get_capacity(wndpool_t* const this);
 bool     wndpool_enqueue(wndpool_t* const this, const mc_span data);
 bool     wndpool_dequeue(wndpool_t* const this, const mc_span data);
 void     wndpool_remove_first(wndpool_t* const this);// TODO(MN): Pop top
+void     wndpool_remove_acked(wndpool_t* const this, mc_msg_on_receive_fn on_receive);// TODO(MN): Make it private
 bool     wndpool_insert(wndpool_t* const this, const mc_span data, const id_t id);
 bool     wndpool_push(wndpool_t* const this, const mc_span data);
-bool     wndpool_ack(wndpool_t* const this, id_t id, wndpool_on_done_fn on_done);
+bool     wndpool_ack(wndpool_t* const this, id_t id, mc_msg_on_receive_fn on_done);
 
 
 #endif /* MC_MESSAGE_WINDOW_POOL_H_ */
