@@ -21,10 +21,6 @@ struct _mc_msg_t
   mc_msg_write_fn write;
   mc_msg_on_receive_fn on_receive;
   mc_time_now_us_fn now_us;
-
-  // Receive
-  uint32_t rcv_last_id;
-
   wndpool_t* rcv;// TODO(MN): Use array to reduce one pointer size
   wndpool_t* snd;  
 };
@@ -69,14 +65,14 @@ static uint32_t read_data(mc_msg_t* const this)
     return read_size;
   } 
 
-  if (-1 != this->rcv_last_id) {// TODO(MN): Handle invalid id on overflows(long time)
-    if (pkt->id <= this->rcv_last_id) {// TODO(MN): Handle overflow
+  if (0 != this->rcv->bgn_id) {// TODO(MN): Handle invalid id on overflows(long time)
+    if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
       rcv_send_ack(this, pkt->id);
       return 0;
     }
 
-    const int dif = (pkt->id - this->rcv_last_id);
-    if (dif > 1) {
+    const int dif = (pkt->id - this->rcv->bgn_id);
+    if (dif > 0) {
       wndpool_insert(this->rcv, mc_span(pkt->data, pkt->size), pkt->id);
       return 0;
     }
@@ -85,8 +81,7 @@ static uint32_t read_data(mc_msg_t* const this)
   rcv_send_ack(this, pkt->id);
   wndpool_remove_first(this->rcv);
   this->on_receive(pkt->data, pkt->size);
-  wndpool_remove_acked(this->rcv, this->on_receive);
-  this->rcv_last_id = this->rcv->bgn_id - 1;
+  wndpool_remove_acked(this->rcv, this->on_receive);// TODO(MN): Merge with wndpool_ack
 
   return read_size;
 }
@@ -186,9 +181,7 @@ mc_result mc_msg_clear(mc_msg_t* const this)
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;
   }
-
-  this->rcv_last_id = -1;// TOOD(MN): Move to rcv controller
-
+  
   wndpool_clear(this->rcv);
   wndpool_clear(this->snd);
 
