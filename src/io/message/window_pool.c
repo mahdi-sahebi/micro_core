@@ -33,7 +33,7 @@ uint32_t wndpool_get_count(wndpool_t* const this)
 static void data_receive(wnd_t* const window, uint32_t window_size, mc_msg_on_receive_fn on_done)
 {
   if (NULL != on_done) {
-    on_done(wnd_get_data(window), wnd_get_data_size(window));//, window->packet.id);
+    on_done(wnd_get_data(window), window->packet.size);//, window->packet.id);
   }
 }
 
@@ -118,6 +118,9 @@ bool wndpool_insert(wndpool_t* const this, const mc_span data, const id_t id)
   
   const uint32_t index = get_index(this, id);
   wnd_t* const window = get_window(this, index);
+
+  if (window->packet.id != -1)// TOOD(MN): Optimize
+   window->is_acked = true;
   wnd_write(window, data, id);
   window->is_acked = true;
 

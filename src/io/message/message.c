@@ -61,7 +61,7 @@ static uint32_t read_data(mc_msg_t* const this)
   // TODO(MN): If read_size is not equal to this->window_size
 
   if (HEADER != pkt->header) {// TODO(MN): Find header
-      return 0; // [INVALID] Bad header/type received
+      return 0; // [INVALID] Bad header/type received. 
   }
 
   if (PKT_ACK == pkt->type) {
@@ -82,13 +82,11 @@ static uint32_t read_data(mc_msg_t* const this)
     }
   }
 
-  this->rcv_last_id = pkt->id;// TODO(MN): Set begin of rcv at end of this func
-  // TODO(MN): Handle if header not valid. search for header to lock.
-  // TODO(MN): Handle if read_size is not equal to a packet.
   rcv_send_ack(this, pkt->id);
   wndpool_remove_first(this->rcv);
   this->on_receive(pkt->data, pkt->size);
   wndpool_remove_acked(this->rcv, this->on_receive);
+  this->rcv_last_id = this->rcv->bgn_id - 1;
 
   return read_size;
 }
