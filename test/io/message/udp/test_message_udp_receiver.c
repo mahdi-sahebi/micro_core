@@ -136,6 +136,15 @@ static bool timed_out()
   return ((TimeNowU() - LastTickUS) > TEST_TIMEOUT);
 }
 
+static void wait_for_sender()
+{
+  const uint32_t end_time = TimeNowU() + 1000000;
+
+  while (TimeNowU() < end_time) {
+    mc_msg_read(message);
+  }
+}
+
 void* rcv_start(void* data)
 {
   init(data);
@@ -146,8 +155,7 @@ void* rcv_start(void* data)
       break;
     }
 
-    // TODO(MN): Check size
-    const uint32_t size = mc_msg_read(message);
+    mc_msg_read(message);
   }
 
   if ((MC_SUCCESS == *Result) && !mc_msg_read_finish(message, TEST_TIMEOUT)) {
@@ -155,6 +163,7 @@ void* rcv_start(void* data)
     *Result = MC_ERR_TIMEOUT;
   }
 
+  wait_for_sender();
   deinit();
   return NULL;
 }

@@ -14,7 +14,7 @@ static mc_msg_t* message = NULL;
 static uint32_t SendCounter = 0;
 static uint32_t LastTickUS = 0;
 static uint32_t* Result = NULL;
-static uint32_t buffer[DATA_LEN];
+static uint32_t Buffer[DATA_LEN];
 
 
 
@@ -54,10 +54,10 @@ static void let_server_start()
   usleep(200000);
 }
 
-static void update_data(uint32_t* const buffer)
+static void update_data(uint32_t* const Buffer)
 {
   for (uint32_t index = 0; index < DATA_LEN; index++) {
-    buffer[index] = (SendCounter * DATA_LEN) + index;
+    Buffer[index] = (SendCounter * DATA_LEN) + index;
   }
 
   SendCounter++;
@@ -91,7 +91,7 @@ static bool timed_out()
 void* snd_start(void* data)
 {
   init(data);
-  update_data(buffer);
+  update_data(Buffer);
 
   while (SendCounter <= cfg_get_iterations()) {
     if (timed_out()) {
@@ -99,11 +99,11 @@ void* snd_start(void* data)
       break;
     }
     
-    if (sizeof(buffer) != mc_msg_write(message, buffer, sizeof(buffer))) {
+    if (sizeof(Buffer) != mc_msg_write(message, Buffer, sizeof(Buffer))) {
       continue;
     }
 
-    update_data(buffer);
+    update_data(Buffer);
   }
   
   if ((MC_SUCCESS == *Result) && !mc_msg_write_finish(message, TEST_TIMEOUT)) {
