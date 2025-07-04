@@ -4,6 +4,7 @@
  * Define a network interface with write and read handlers
  * define cu32_t? ... 
  * Add crc
+ * security: dynamic key authentication, ...
  */
 
 #include <stdlib.h>
@@ -30,17 +31,13 @@ struct _mc_msg_t
 
 static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
 {
-  // if ((id < this->bgn_id) || (this->end_id < id)) {
-  //     // [ERROR] Attempted to ACK invalid seq %u (MAX_SEQ=%d)\n", seq, MAX_SEQ;
-  //     return;
-  // }
-  pkt_t* const packet = (pkt_t*)(this->snd->temp_window);
+  pkt_t* const pkt = this->snd->temp_window;
 
-  packet->header = HEADER;
-  packet->type   = PKT_ACK;
-  packet->id     = id;
+  pkt->header = HEADER;
+  pkt->type   = PKT_ACK;
+  pkt->id     = id;
   
-  const uint32_t size = this->write(packet, this->rcv->window_size);
+  const uint32_t size = this->write(pkt, this->rcv->window_size);
   if (size != this->rcv->window_size) {
     // TODO(MN): Handle. Is it ok to 
   }
@@ -49,7 +46,7 @@ static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
 
 static uint32_t read_data(mc_msg_t* const this)
 {
-  pkt_t* const pkt = (pkt_t*)(this->rcv->temp_window);
+  pkt_t* const pkt = this->rcv->temp_window;
   const uint32_t read_size = this->read(pkt, this->rcv->window_size);
   if (0 == read_size) {// TODO(MN): Handle incomplete size(smaller or larger)
     return 0;
@@ -69,10 +66,9 @@ static uint32_t read_data(mc_msg_t* const this)
     return 0;
   }
 
-  const int dif = (pkt->id - this->rcv->bgn_id);
-  if (dif > 0) {
+  if (pkt->id > this->rcv->bgn_id) {
     wndpool_insert(this->rcv, mc_span(pkt->data, pkt->size), pkt->id);
-    return 0;
+    return read_size;
   }
 
   rcv_send_ack(this, pkt->id);
@@ -141,8 +137,9 @@ mc_msg_t* mc_msg_new(
   }
   
   const uint32_t windows_size = capacity * (sizeof(wnd_t) + window_size);
+  /*                                                         temp window + all windows */
   const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
-  mc_msg_t* const this = malloc(sizeof(mc_msg_t) + controllers_size);
+  mc_msg_t* const this = malloc(sizeof(mc_msg_t) + controllers_size);// TODO(MN): Remove as soon as possible
 
   this->read             = read_fn;
   this->write            = write_fn;
@@ -153,13 +150,13 @@ mc_msg_t* mc_msg_new(
   this->rcv->window_size = window_size;
   this->rcv->data_size   = window_size - sizeof(pkt_t);
   this->rcv->capacity    = capacity;
-  this->rcv->windows     = (wnd_t*)(this->rcv->temp_window + window_size);
+  this->rcv->windows     = (wnd_t*)((char*)this->rcv->temp_window + window_size);
 
   this->snd              = (wndpool_t*)(char*)(this->rcv->windows) + windows_size;
   this->snd->window_size = window_size;
   this->snd->data_size   = window_size - sizeof(pkt_t);
   this->snd->capacity    = capacity;
-  this->snd->windows     = (wnd_t*)(this->snd->temp_window + window_size);
+  this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
 
   mc_msg_clear(this);
   
