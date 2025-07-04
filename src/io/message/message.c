@@ -27,9 +27,7 @@ struct _mc_msg_t
 };
 
 
-/////////////////////////////////////////////////// rcv
-
-static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
+static void send_ack(mc_msg_t* const this, uint32_t id)
 {
   pkt_t* const pkt = this->snd->temp_window;
 
@@ -52,7 +50,7 @@ static uint32_t read_data(mc_msg_t* const this)
   }
 
   if (HEADER != pkt->header) {// TODO(MN): Find header
-      return 0; // [INVALID] Bad header/type received. 
+    return 0; // [INVALID] Bad header/type received. 
   }
 
   if (PKT_ACK == pkt->type) {
@@ -61,7 +59,7 @@ static uint32_t read_data(mc_msg_t* const this)
   }
 
   if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
-    rcv_send_ack(this, pkt->id);
+    send_ack(this, pkt->id);
     return 0;
   }
 
@@ -70,7 +68,7 @@ static uint32_t read_data(mc_msg_t* const this)
     return read_size;
   }
 
-  rcv_send_ack(this, pkt->id);
+  send_ack(this, pkt->id);
   wndpool_remove_first(this->rcv);
   this->on_receive(pkt->data, pkt->size);
   wndpool_remove_acked(this->rcv, this->on_receive);// TODO(MN): Merge with wndpool_ack
@@ -78,19 +76,17 @@ static uint32_t read_data(mc_msg_t* const this)
   return read_size;
 }
 
-/////////////////////////////////////////////////// snd
-static uint32_t snd_send_unacked(mc_msg_t* const this) 
+static uint32_t send_unacked(mc_msg_t* const this) 
 {
-  uint32_t sent_size = 0;
-  
+  uint32_t sent_size = 0;  
   const uint32_t end_id = this->snd->bgn_id + this->snd->capacity;
+
   for (uint32_t id = this->snd->bgn_id; id < end_id; id++) {
     const wnd_t* const window = wndpool_get(this->snd, id);
     if (!wnd_is_valid(window)) {
       continue;
     }
     
-    read_data(this);
     if (wnd_is_acked(window)) {// TODO(MN): Check timeout occurance
         continue;
     }
@@ -103,8 +99,6 @@ static uint32_t snd_send_unacked(mc_msg_t* const this)
 
   return sent_size;
 }
-
-/////////////////////////////////////////////////// message layer
 
 mc_msg_t* mc_msg_new(
   mc_msg_read_fn read_fn, 
@@ -173,7 +167,7 @@ mc_result mc_msg_clear(mc_msg_t* const this)
 uint32_t mc_msg_read(mc_msg_t* const this)
 {
   const uint32_t size = read_data(this);
-  snd_send_unacked(this);
+  send_unacked(this);
   return size;
 }
 
