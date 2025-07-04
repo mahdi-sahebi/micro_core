@@ -51,10 +51,9 @@ static uint32_t read_data(mc_msg_t* const this)
 {
   pkt_t* const pkt = (pkt_t*)(this->rcv->temp_window);
   const uint32_t read_size = this->read(pkt, this->rcv->window_size);
-  if (0 == read_size) {// TODO(MN): Handle incomplete size
+  if (0 == read_size) {// TODO(MN): Handle incomplete size(smaller or larger)
     return 0;
   }
-  // TODO(MN): If read_size is not equal to this->window_size
 
   if (HEADER != pkt->header) {// TODO(MN): Find header
       return 0; // [INVALID] Bad header/type received. 
@@ -63,19 +62,17 @@ static uint32_t read_data(mc_msg_t* const this)
   if (PKT_ACK == pkt->type) {
     wndpool_ack(this->snd, pkt->id, NULL);
     return read_size;
-  } 
+  }
 
-  if (0 != this->rcv->bgn_id) {// TODO(MN): Handle invalid id on overflows(long time)
-    if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
-      rcv_send_ack(this, pkt->id);
-      return 0;
-    }
+  if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
+    rcv_send_ack(this, pkt->id);
+    return 0;
+  }
 
-    const int dif = (pkt->id - this->rcv->bgn_id);
-    if (dif > 0) {
-      wndpool_insert(this->rcv, mc_span(pkt->data, pkt->size), pkt->id);
-      return 0;
-    }
+  const int dif = (pkt->id - this->rcv->bgn_id);
+  if (dif > 0) {
+    wndpool_insert(this->rcv, mc_span(pkt->data, pkt->size), pkt->id);
+    return 0;
   }
 
   rcv_send_ack(this, pkt->id);
