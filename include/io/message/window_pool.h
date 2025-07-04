@@ -28,8 +28,8 @@ bool     wndpool_is_empty(wndpool_t* const this);
 bool     wndpool_is_full(wndpool_t* const this);
 bool     wndpool_contains(wndpool_t* const this, id_t id);
 wnd_t*   wndpool_get(wndpool_t* const this, id_t id);
-uint32_t wndpool_get_count(wndpool_t* const this);
-uint32_t wndpool_get_capacity(wndpool_t* const this);
+uint32_t wndpool_get_count(const wndpool_t* const this);
+uint32_t wndpool_get_capacity(const wndpool_t* const this);
 bool     wndpool_enqueue(wndpool_t* const this, const mc_span data);
 bool     wndpool_dequeue(wndpool_t* const this, const mc_span data);
 void     wndpool_remove_first(wndpool_t* const this);// TODO(MN): Pop top
