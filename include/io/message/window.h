@@ -13,6 +13,7 @@ enum definitions
 };
 
 typedef uint32_t id_t;
+typedef uint8_t idx_t;
 
 typedef enum 
 {

@@ -104,13 +104,14 @@ mc_msg_t* mc_msg_new(
   mc_msg_read_fn read_fn, 
   mc_msg_write_fn write_fn, 
   uint32_t window_size, 
-  uint32_t capacity, 
+  uint8_t capacity, 
   mc_msg_on_receive_fn on_receive,
   mc_time_now_us_fn now_us)
 {
   // TODO(MN): Input checking. the minimum size of window_size
   if ((NULL == read_fn) || (NULL == write_fn) || (NULL == now_us) || 
-      (0 == window_size) || (0 == capacity)) {
+      (0 == window_size) || (0 == capacity) || 
+      (capacity >= (sizeof(idx_t) * 8))) {
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
   }
 
