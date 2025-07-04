@@ -17,7 +17,6 @@ void wnd_write(wnd_t* const wnd, mc_span buffer, id_t id)
   wnd->is_acked      = false;
   wnd->packet.size   = buffer.size;
   wnd->packet.id     = id;
-  wnd->send_count    = 0;
   memcpy(wnd->packet.data, buffer.data, buffer.size);
 }
 
@@ -26,7 +25,7 @@ void* wnd_get_data(wnd_t* const wnd)
   return wnd->packet.data;
 }
 
-uint32_t wnd_get_data_size(wnd_t* const wnd)
+uint32_t wnd_get_data_size(const wnd_t* const wnd)
 {
   return wnd->packet.size - sizeof(pkt_t);
 }
@@ -36,7 +35,7 @@ void wnd_ack(wnd_t* const wnd)
   wnd->is_acked  = true;
 }
 
-bool wnd_is_acked(wnd_t* const wnd)
+bool wnd_is_acked(const wnd_t* const wnd)
 {
   return wnd->is_acked;
 }
