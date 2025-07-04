@@ -75,16 +75,15 @@ static void print_progress(float progress)
 
   printf("\r\t\t\t\t\t\t\r");
 
-  printf("[");
   for (uint32_t index = 0; index < BAR_LENGTH; index++) {
     if (index < num_bars) {
-      printf("|");
+      printf("█");
     } else {
-      printf("-");
+      printf("▒");
     }
   }
 
-  printf("] %.1f%%", progress * 100);
+  printf(" %.1f%%", progress * 100);
   if (1.0F == progress) {
     printf("\n");
   }
@@ -105,8 +104,8 @@ static void on_receive(const void* const data, uint32_t size)
     return;
   }
 
-  print_progress(ReceiveCounter / (float)cfg_get_iterations());
   ReceiveCounter++;
+  print_progress(ReceiveCounter / (float)cfg_get_iterations());
   LastTickUS = TimeNowU();
 }
 
