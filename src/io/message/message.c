@@ -37,8 +37,7 @@ static void rcv_send_ack(mc_msg_t* const this, uint32_t id)
   pkt->type   = PKT_ACK;
   pkt->id     = id;
   
-  const uint32_t size = this->write(pkt, this->rcv->window_size);
-  if (size != this->rcv->window_size) {
+  if (this->write(pkt, this->rcv->window_size) != this->rcv->window_size) {
     // TODO(MN): Handle. Is it ok to 
   }
   // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
@@ -80,24 +79,13 @@ static uint32_t read_data(mc_msg_t* const this)
 }
 
 /////////////////////////////////////////////////// snd
-static uint32_t snd_write_window(mc_msg_t* const this, wnd_t* const window) 
-{
-  const uint32_t sent_size = this->write(&window->packet, this->snd->window_size);
-
-  if (0 != sent_size) {
-    window->send_count++;
-  }
-
-  return sent_size;
-}
-
 static uint32_t snd_send_unacked(mc_msg_t* const this) 
 {
   uint32_t sent_size = 0;
   
   const uint32_t end_id = this->snd->bgn_id + this->snd->capacity;
   for (uint32_t id = this->snd->bgn_id; id < end_id; id++) {
-    wnd_t* const window = wndpool_get(this->snd, id);// TODO(MN): Make it const
+    const wnd_t* const window = wndpool_get(this->snd, id);
     if (!wnd_is_valid(window)) {
       continue;
     }
@@ -109,7 +97,7 @@ static uint32_t snd_send_unacked(mc_msg_t* const this)
 
     sent_size += window->packet.size;
     
-    if (0 != snd_write_window(this, window)) {
+    if (0 != this->write(&window->packet, this->snd->window_size)) {
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
   }
 
@@ -213,12 +201,9 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
     return 0; // TODO(MN): Error
   }
   
-  wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);
+  const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);
   wndpool_push(this->snd, mc_span(data, size));
-  uint32_t sent_size = 0;
-  // do {
-    sent_size = snd_write_window(this, window);
-  // } while (0 == sent_size);// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  this->write(&window->packet, this->snd->window_size); ;// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   
   return size;
 }
