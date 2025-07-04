@@ -2,7 +2,7 @@
 #include "io/message/window_pool.h"
 
 
-static uint32_t get_index(const wndpool_t* const this, uint32_t id)
+static uint32_t get_index(const wndpool_t* const this, const id_t id)
 {
   uint32_t dif = id - this->bgn_id;
   if (id < this->bgn_id) {
@@ -12,29 +12,9 @@ static uint32_t get_index(const wndpool_t* const this, uint32_t id)
   return (this->bgn_id + dif) % this->capacity;
 }
 
-static inline wnd_t* get_window(const wndpool_t* const this, const uint32_t index)
+static wnd_t* get_window(const wndpool_t* const this, const uint32_t index)
 {
   return (wnd_t*)((char*)(this->windows) + (index * (sizeof(wnd_t) + this->data_size)));// TODO(MN): Rcv/snd
-}
-
-uint32_t wndpool_get_count(wndpool_t* const this)
-{
-  uint32_t count = 0;
-
-  for (uint32_t index = 0; index < this->capacity; index++) {
-    if (wnd_is_valid(get_window(this, index))) {
-      count++;
-    }
-  }
-
-  return count;
-}
-
-static void data_receive(wnd_t* const window, uint32_t window_size, mc_msg_on_receive_fn on_done)
-{
-  if (NULL != on_done) {
-    on_done(wnd_get_data(window), window->packet.size);//, window->packet.id);
-  }
 }
 
 static bool is_first_acked(const wndpool_t* const this)
@@ -104,7 +84,11 @@ void wndpool_remove_acked(wndpool_t* const this, mc_msg_on_receive_fn on_receive
 {
   while (is_first_acked(this)) {
     wnd_t* const window = get_window(this, this->bgn_index);
-    data_receive(window, this->window_size, on_receive);
+
+    if (NULL != on_receive) {
+      on_receive(wnd_get_data(window), window->packet.size);
+    }
+
     wnd_clear(window);
     wndpool_remove_first(this);
   }
@@ -127,7 +111,20 @@ bool wndpool_insert(wndpool_t* const this, const mc_span data, const id_t id)
   return true;
 }
 
-uint32_t wndpool_get_capacity(wndpool_t* const this)
+uint32_t wndpool_get_count(const wndpool_t* const this)
+{
+  uint32_t count = 0;
+
+  for (uint32_t index = 0; index < this->capacity; index++) {
+    if (wnd_is_valid(get_window(this, index))) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+uint32_t wndpool_get_capacity(const wndpool_t* const this)
 {
   return this->capacity;
 }
