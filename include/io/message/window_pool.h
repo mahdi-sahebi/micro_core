@@ -17,7 +17,7 @@ typedef struct
   uint32_t data_size;
   uint32_t capacity;
   wnd_t*   windows;
-  char     temp_window[0];
+  pkt_t    temp_window[0];
 }wndpool_t;
 
 typedef void (*wndpool_on_done_fn)(const mc_span data, id_t id);
