@@ -2,7 +2,7 @@
 
 
 # Variables
-set(LIB micro_core_time)
+set(LIB mcore_time)
 set(PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include/core)
 set(HEADERS ${PUBLIC_INCLUDE_DIR}/time.h)
 if (UNIX)

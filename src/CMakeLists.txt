@@ -5,7 +5,7 @@ add_subdirectory(io)
 
 
 # Variables
-set(LIB micro_core)
+set(LIB mcore)
 # set(HEADERS )
 # set(SOURCES )
 
@@ -20,8 +20,8 @@ add_library(${LIB} INTERFACE)
 # Linking
 target_link_libraries(${LIB} 
   INTERFACE
-  micro_core_core
-  micro_core_io
+  mcore_core
+  mcore_io
 )
 
 
