@@ -1,4 +1,5 @@
 # Subdirectory
+add_subdirectory(core)
 add_subdirectory(dsa)
 add_subdirectory(io)
 
@@ -19,6 +20,7 @@ add_library(${LIB} INTERFACE)
 # Linking
 target_link_libraries(${LIB} 
   INTERFACE
+  micro_core_core
   micro_core_io
 )
 
