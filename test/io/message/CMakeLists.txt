@@ -32,5 +32,5 @@ target_include_directories(${TEST} PRIVATE ${INCLUDE_DIRS})
 
 
 # Linking
-target_link_libraries(${TEST} PRIVATE micro_core_io)
+target_link_libraries(${TEST} PRIVATE mcore_io)
 
