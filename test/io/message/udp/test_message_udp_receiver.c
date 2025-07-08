@@ -75,16 +75,15 @@ static void print_progress(float progress)
 
   printf("\r\t\t\t\t\t\t\r");
 
-  printf("[");
   for (uint32_t index = 0; index < BAR_LENGTH; index++) {
     if (index < num_bars) {
-      printf("|");
+      printf("█");
     } else {
-      printf("-");
+      printf("▒");
     }
   }
 
-  printf("] %.1f%%", progress * 100);
+  printf(" %.1f%%", progress * 100);
   if (1.0F == progress) {
     printf("\n");
   }
@@ -105,8 +104,8 @@ static void on_receive(const void* const data, uint32_t size)
     return;
   }
 
-  print_progress(ReceiveCounter / (float)cfg_get_iterations());
   ReceiveCounter++;
+  print_progress(ReceiveCounter / (float)cfg_get_iterations());
   LastTickUS = TimeNowU();
 }
 
@@ -137,6 +136,15 @@ static bool timed_out()
   return ((TimeNowU() - LastTickUS) > TEST_TIMEOUT);
 }
 
+static void wait_for_sender()
+{
+  const uint32_t end_time = TimeNowU() + 1000000;
+
+  while (TimeNowU() < end_time) {
+    mc_msg_recv(message);
+  }
+}
+
 void* rcv_start(void* data)
 {
   init(data);
@@ -147,15 +155,15 @@ void* rcv_start(void* data)
       break;
     }
 
-    // TODO(MN): Check size
-    const uint32_t size = mc_msg_read(message);
+    mc_msg_recv(message);
   }
 
-  if ((MC_SUCCESS == *Result) && !mc_msg_read_finish(message, TEST_TIMEOUT)) {
-    printf("mc_msg_read_finish failed\n");
+  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT)) {
+    printf("mc_msg_flush failed\n");
     *Result = MC_ERR_TIMEOUT;
   }
 
+  wait_for_sender();
   deinit();
   return NULL;
 }

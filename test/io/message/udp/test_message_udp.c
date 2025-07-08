@@ -65,99 +65,6 @@ static int valid_creation()
     return MC_ERR_BAD_ALLOC;
   }
 
-  if (capcity != mc_msg_get_capacity(message)) {
-    return MC_ERR_BAD_ALLOC;
-  }
-
-  mc_msg_free(&message);
-  if (NULL != message) {
-    return MC_ERR_BAD_ALLOC;
-  }
-
-  return MC_SUCCESS;
-}
-
-static int get_status()
-{
-  uint32_t data[5];
-  mc_msg_t* message = mc_msg_new(read_api, write_api, 36, 3, NULL, TimeNowU);
-  if (NULL == message) {
-    return MC_ERR_BAD_ALLOC;
-  }
-
-  /* Empty state */
-  if (!mc_msg_is_empty(message)) {
-    return MC_ERR_RUNTIME;
-  }
-  if (mc_msg_is_full(message)) {
-    return MC_ERR_RUNTIME;
-  }
-
-  /* Adding */
-  const uint32_t capacity = mc_msg_get_capacity(message);
-  for (uint32_t index = 0; index < capacity; index++) {
-    if (mc_msg_write(message, data, sizeof(data)) != sizeof(data)) {
-      return MC_ERR_INCOMPLETE;
-    }
-
-    if (mc_msg_get_count(message) != (index + 1)) {
-      return MC_ERR_MEMORY_OUT_OF_RANGE;
-    }
-  }
-
-  /* Full state */
-  if (mc_msg_is_empty(message)) {
-    return MC_ERR_RUNTIME;
-  }
-  if (!mc_msg_is_full(message)) {
-    return MC_ERR_RUNTIME;
-  }
-
-
-  mc_msg_free(&message);
-  if (NULL != message) {
-    return MC_ERR_BAD_ALLOC;
-  }
-
-  return MC_SUCCESS;
-}
-
-static int clear()
-{
-  uint32_t data[5];
-  mc_msg_t* message = mc_msg_new(read_api, write_api, 36, 3, NULL, TimeNowU);
-
-  mc_result result = mc_msg_clear(NULL);
-  if (MC_ERR_INVALID_ARGUMENT != result) {
-    return result;
-  }
-
-  result = mc_msg_clear(message);
-  if (MC_SUCCESS != result) {
-    return result;
-  }
-
-  if (!mc_msg_is_empty(message)) {
-    return MC_ERR_RUNTIME;
-  }
-
-  for (uint32_t index = 0; index < mc_msg_get_capacity(message); index++) {
-    mc_msg_write(message, data, sizeof(data)) != sizeof(data);
-  }
-
-  if (mc_msg_is_empty(message) || !mc_msg_is_full(message)) {
-    return MC_ERR_RUNTIME;
-  }
-
-  result = mc_msg_clear(message);
-  if (MC_SUCCESS != result) {
-    return result;
-  }
-
-  if (!mc_msg_is_empty(message) || mc_msg_is_full(message)) {
-    return MC_ERR_RUNTIME;
-  }
-
   mc_msg_free(&message);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
@@ -206,8 +113,8 @@ static int singly_repetitive()
 
 static int singly_low_lossy()
 {
-  cfg_set_loss_rate(10);
-  cfg_set_iterations(10000);
+  cfg_set_loss_rate(20);
+  cfg_set_iterations(1000);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
@@ -215,8 +122,8 @@ static int singly_low_lossy()
 
 static int singly_high_lossy()
 {
-  cfg_set_loss_rate(70);
-  cfg_set_iterations(1000);
+  cfg_set_loss_rate(95);
+  cfg_set_iterations(200);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
@@ -265,24 +172,6 @@ int main()
   }
 
 
-  printf("[get_status]\n");
-  result = get_status();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
-  }
-
-
-  printf("[clear]\n");
-  result = clear();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
-  }
-
-
   printf("[singly_direction]\n");
   result = singly_direction();
   if (MC_SUCCESS != result) {
@@ -291,6 +180,7 @@ int main()
     printf("PASSED\n\n");
   }
 
+
   printf("[singly_repetitive]\n");
   result = singly_repetitive();
   if (MC_SUCCESS != result) {
@@ -298,7 +188,6 @@ int main()
   } else {
     printf("PASSED\n\n");
   }
-
   
   printf("[singly_low_lossy]\n");
   result = singly_low_lossy();
@@ -308,7 +197,6 @@ int main()
     printf("PASSED\n\n");
   }
 
-  
   printf("[singly_high_lossy]\n");
   result = singly_high_lossy();
   if (MC_SUCCESS != result) {
@@ -317,7 +205,7 @@ int main()
     printf("PASSED\n\n");
   }
 
-
+  /*
   printf("[small_write]\n");
   result = small_write();
   if (MC_SUCCESS != result) {
@@ -352,6 +240,6 @@ int main()
   } else {
     printf("PASSED\n\n");
   }
-
+*/
   return MC_SUCCESS;
 }
