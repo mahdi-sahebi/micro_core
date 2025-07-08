@@ -18,12 +18,12 @@
 
 struct _mc_msg_t
 { 
-  mc_msg_read_fn  read;
-  mc_msg_write_fn write;
+  mc_msg_read_fn       read;
+  mc_msg_write_fn      write;
   mc_msg_on_receive_fn on_receive;
-  mc_time_now_us_fn now_us;
-  wndpool_t* rcv;// TODO(MN): Use array to reduce one pointer size
-  wndpool_t* snd;  
+  mc_time_now_us_fn    now_us;
+  wndpool_t*           rcv;// TODO(MN): Use array to reduce one pointer size
+  wndpool_t*           snd;  
 };
 
 
@@ -49,7 +49,7 @@ static uint32_t read_data(mc_msg_t* const this)
     return 0;
   }
 
-  if (HEADER != pkt->header) {// TODO(MN): Find header
+  if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
     return 0; // [INVALID] Bad header/type received. 
   }
 
@@ -141,7 +141,8 @@ mc_msg_t* mc_msg_new(
   this->snd->capacity    = capacity;
   this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
 
-  mc_msg_clear(this);
+  wndpool_clear(this->rcv);
+  wndpool_clear(this->snd);
   
   return this;
 }
@@ -153,46 +154,19 @@ void mc_msg_free(mc_msg_t** const this)
   *this = NULL;
 }
 
-mc_result mc_msg_clear(mc_msg_t* const this)
-{
-  if (NULL == this) {
-    return MC_ERR_INVALID_ARGUMENT;
-  }
-  
-  wndpool_clear(this->rcv);
-  wndpool_clear(this->snd);
-
-  return MC_SUCCESS;
-}
-
-uint32_t mc_msg_read(mc_msg_t* const this)
+uint32_t mc_msg_recv(mc_msg_t* const this)
 {
   const uint32_t size = read_data(this);
   send_unacked(this);
   return size;
 }
 
-bool mc_msg_read_finish(mc_msg_t* const this, uint32_t timeout_us)
-{
-  const uint32_t bgn_time_us = this->now_us();
-
-  while (!wndpool_is_empty(this->rcv)) {
-    mc_msg_read(this);
-
-    if ((this->now_us() - bgn_time_us) > timeout_us) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
+uint32_t mc_msg_send(mc_msg_t* const this, void* data, uint32_t size)
 {
   // TODO(MN): if size > this->window_size
-  mc_msg_read(this);
+  mc_msg_recv(this);
 
-  if (mc_msg_is_full(this)) {
+  if (wndpool_is_full(this->snd)) {
     return 0; // TODO(MN): Error
   }
   
@@ -203,12 +177,12 @@ uint32_t mc_msg_write(mc_msg_t* const this, void* data, uint32_t size)
   return size;
 }
 
-bool mc_msg_write_finish(mc_msg_t* const this, uint32_t timeout_us)
+bool mc_msg_flush(mc_msg_t* const this, uint32_t timeout_us)
 {
   const uint32_t bgn_time_us = this->now_us();
 
-  while (!wndpool_is_empty(this->snd)) {
-    mc_msg_read(this);
+  while (!wndpool_is_empty(this->snd) || !wndpool_is_empty(this->rcv)) {
+    mc_msg_recv(this);
 
     if ((this->now_us() - bgn_time_us) > timeout_us) {
       return false;
@@ -218,29 +192,5 @@ bool mc_msg_write_finish(mc_msg_t* const this, uint32_t timeout_us)
   return true;
 }
 
-uint32_t mc_msg_get_capacity(mc_msg_t* const this)
-{
-  return this->snd->capacity;// TODO(MN): Snd or rcv
-}
-
-uint32_t mc_msg_get_count(mc_msg_t* const this)
-{
-  return wndpool_get_count(this->snd);// TODO(MN): Snd or rcv
-}
-
-uint32_t  mc_msg_get_window_size(mc_msg_t* const this)
-{
-  return this->snd->window_size;// TODO(MN): Test
-}
-
-bool mc_msg_is_empty(mc_msg_t* const this)
-{
-  return wndpool_is_empty(this->snd);// TODO(MN): Rcv or snd?
-}
-
-bool mc_msg_is_full(mc_msg_t* const this)// TODO(MN): snd_is_full
-{
-  return wndpool_is_full(this->snd);// TODO(MN): Rcv or snd?
-}
 
 

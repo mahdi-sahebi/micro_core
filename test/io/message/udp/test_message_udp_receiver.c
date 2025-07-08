@@ -141,7 +141,7 @@ static void wait_for_sender()
   const uint32_t end_time = TimeNowU() + 1000000;
 
   while (TimeNowU() < end_time) {
-    mc_msg_read(message);
+    mc_msg_recv(message);
   }
 }
 
@@ -155,11 +155,11 @@ void* rcv_start(void* data)
       break;
     }
 
-    mc_msg_read(message);
+    mc_msg_recv(message);
   }
 
-  if ((MC_SUCCESS == *Result) && !mc_msg_read_finish(message, TEST_TIMEOUT)) {
-    printf("mc_msg_read_finish failed\n");
+  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT)) {
+    printf("mc_msg_flush failed\n");
     *Result = MC_ERR_TIMEOUT;
   }
 
