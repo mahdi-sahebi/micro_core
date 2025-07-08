@@ -128,15 +128,11 @@ bool wndpool_push(wndpool_t* const this, const mc_span data)
 
 bool wndpool_ack(wndpool_t* const this, id_t id, mc_msg_on_receive_fn on_done)
 {
-  if ((id < this->bgn_id) || (id >= this->bgn_id + this->capacity)) {
+  if (!wndpool_contains(this, id)) {
     return false;
   }
   
-  // // TODO(MN): on_done if id==bgn_id
-  // if (id == this->bgn_id) {
-  // }
-
-  const uint32_t window_index = ((id - this->bgn_id) + this->bgn_index) % this->capacity;
+  const uint32_t window_index = get_index(this, id);
   wnd_t* const window = get_window(this, window_index);
   if (!wnd_is_acked(window)) {
     wnd_ack(window);

@@ -99,15 +99,15 @@ void* snd_start(void* data)
       break;
     }
     
-    if (sizeof(Buffer) != mc_msg_write(message, Buffer, sizeof(Buffer))) {
+    if (sizeof(Buffer) != mc_msg_send(message, Buffer, sizeof(Buffer))) {
       continue;
     }
 
     update_data(Buffer);
   }
   
-  if ((MC_SUCCESS == *Result) && !mc_msg_write_finish(message, TEST_TIMEOUT)) {
-    printf("mc_msg_write_finish failed\n");
+  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT)) {
+    printf("mc_msg_flush failed\n");
     *Result = MC_ERR_TIMEOUT;
   }
 
