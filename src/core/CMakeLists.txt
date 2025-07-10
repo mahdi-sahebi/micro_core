@@ -1,13 +1,9 @@
 # Subdirectory
-add_subdirectory(core)
-add_subdirectory(dsa)
-add_subdirectory(io)
+add_subdirectory(time)
 
 
 # Variables
-set(LIB mcore)
-# set(HEADERS )
-# set(SOURCES )
+set(LIB mcore_core)
 
 
 # Binray
@@ -20,8 +16,7 @@ add_library(${LIB} INTERFACE)
 # Linking
 target_link_libraries(${LIB} 
   INTERFACE
-  mcore_core
-  mcore_io
+  mcore_time
 )
 
 
