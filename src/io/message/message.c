@@ -116,7 +116,7 @@ mc_msg_t* mc_msg_new(
   }
 
   if (window_size < (sizeof(pkt_t) + 1)) {
-    return NULL;//MC_ERR_MEMORY_OUT_OF_RANGE;
+    return NULL;//MC_ERR_OUT_OF_RANGE;
   }
   
   const uint32_t windows_size = capacity * (sizeof(wnd_t) + window_size);
