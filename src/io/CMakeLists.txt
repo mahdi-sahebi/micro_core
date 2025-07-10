@@ -21,7 +21,12 @@ add_library(${LIB} STATIC ${SOURCES} ${HEADERS})
 
 
 # Include
-target_include_directories(${LIB} PUBLIC ${INCLUDE_DIRS})
+target_include_directories(${LIB} 
+    PUBLIC ${INCLUDE_DIRS}
+)
 
 
 # Linking
+target_link_libraries(${LIB}
+    PRIVATE mcore_time
+)
