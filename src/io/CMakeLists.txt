@@ -2,7 +2,7 @@
 
 
 # Variables
-set(LIB micro_core_io)
+set(LIB mcore_io)
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS 
     ${INCLUDE_DIRS}/io/message/window.h

@@ -67,15 +67,15 @@ static int span_fill_1()
     for (uint32_t index = 0; index < SIZE; index++) {
         if (index < START_INDEX) { 
             if (CLEAR_MASK != buffer[index]) {
-                return MC_ERR_MEMORY_OUT_OF_RANGE;
+                return MC_ERR_OUT_OF_RANGE;
             }
         } else if ((START_INDEX <= index) && (index < START_INDEX + span.size)) {
             if (MASK != buffer[index]) {
-                return MC_ERR_MEMORY_OUT_OF_RANGE;
+                return MC_ERR_OUT_OF_RANGE;
             }
         } else {
             if (CLEAR_MASK != buffer[index]) {
-                return MC_ERR_MEMORY_OUT_OF_RANGE;
+                return MC_ERR_OUT_OF_RANGE;
             }
         }
     }
@@ -114,15 +114,15 @@ static int span_fill_2()
     for (uint32_t index = 0; index < SIZE; index++) {
         if (index < START_INDEX) { 
             if (CLEAR_MASK != buffer[index]) {
-                return MC_ERR_MEMORY_OUT_OF_RANGE;
+                return MC_ERR_OUT_OF_RANGE;
             }
         } else if ((START_INDEX <= index) && (index < START_INDEX + span.size)) {
             if (MASK != buffer[index]) {
-                return MC_ERR_MEMORY_OUT_OF_RANGE;
+                return MC_ERR_OUT_OF_RANGE;
             }
         } else {
             if (CLEAR_MASK != buffer[index]) {
-                return MC_ERR_MEMORY_OUT_OF_RANGE;
+                return MC_ERR_OUT_OF_RANGE;
             }
         }
     }
