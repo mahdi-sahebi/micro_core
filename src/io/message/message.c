@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "core/error.h"
+#include "core/time.h"
 #include "io/message/window.h"
 #include "io/message/window_pool.h"
 #include "io/message/message.h"
@@ -21,7 +22,6 @@ struct _mc_msg_t
   mc_msg_read_fn       read;
   mc_msg_write_fn      write;
   mc_msg_on_receive_fn on_receive;
-  mc_time_now_us_fn    now_us;
   wndpool_t*           rcv;// TODO(MN): Use array to reduce one pointer size
   wndpool_t*           snd;  
 };
@@ -105,11 +105,10 @@ mc_msg_t* mc_msg_new(
   mc_msg_write_fn write_fn, 
   uint32_t window_size, 
   uint8_t capacity, 
-  mc_msg_on_receive_fn on_receive,
-  mc_time_now_us_fn now_us)
+  mc_msg_on_receive_fn on_receive)
 {
   // TODO(MN): Input checking. the minimum size of window_size
-  if ((NULL == read_fn) || (NULL == write_fn) || (NULL == now_us) || 
+  if ((NULL == read_fn) || (NULL == write_fn) ||
       (0 == window_size) || (0 == capacity) || 
       (capacity >= (sizeof(idx_t) * 8))) {
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
@@ -127,7 +126,6 @@ mc_msg_t* mc_msg_new(
   this->read             = read_fn;
   this->write            = write_fn;
   this->on_receive       = on_receive;
-  this->now_us           = now_us;
 
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_msg_t));
   this->rcv->window_size = window_size;
@@ -172,19 +170,19 @@ uint32_t mc_msg_send(mc_msg_t* const this, void* data, uint32_t size)
   
   const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);
   wndpool_push(this->snd, mc_span(data, size));
-  this->write(&window->packet, this->snd->window_size); ;// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  this->write(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   
   return size;
 }
 
 bool mc_msg_flush(mc_msg_t* const this, uint32_t timeout_us)
 {
-  const uint32_t bgn_time_us = this->now_us();
+  const mc_time_t bgn_time_us = mc_now_u();
 
   while (!wndpool_is_empty(this->snd) || !wndpool_is_empty(this->rcv)) {
     mc_msg_recv(this);
 
-    if ((this->now_us() - bgn_time_us) > timeout_us) {
+    if ((mc_now_u() - bgn_time_us) > timeout_us) {
       return false;
     }
   }

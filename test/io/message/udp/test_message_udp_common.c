@@ -67,14 +67,6 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size)
   return read_size;
 }
 
-uint32_t TimeNowU()
-{
-    struct timeval now;
-    gettimeofday(&now, NULL);
-
-    return (now.tv_sec * 1000000) + now.tv_usec;
-}
-
 void cfg_set_repetitive_send(bool enable)
 {
   RepetitiveSendEnable = enable;
