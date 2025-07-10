@@ -76,9 +76,8 @@ static uint32_t read_data(mc_msg_t* const this)
   return read_size;
 }
 
-static uint32_t send_unacked(mc_msg_t* const this) 
+static void send_unacked(mc_msg_t* const this) 
 {
-  uint32_t sent_size = 0;  
   const uint32_t end_id = this->snd->bgn_id + this->snd->capacity;
 
   for (uint32_t id = this->snd->bgn_id; id < end_id; id++) {
@@ -90,14 +89,10 @@ static uint32_t send_unacked(mc_msg_t* const this)
     if (wnd_is_acked(window)) {// TODO(MN): Check timeout occurance
         continue;
     }
-
-    sent_size += window->packet.size;
     
     if (0 != this->write(&window->packet, this->snd->window_size)) {
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
   }
-
-  return sent_size;
 }
 
 mc_msg_t* mc_msg_new(
