@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "core/error.h"
 #include "core/version.h"
+#include "core/time.h"
 #include "io/message/message.h"
 #include "test_message_udp_common.h"
 #include "test_message_udp_receiver.h"
@@ -13,7 +14,7 @@
 
 static int ServerSocket = -1;
 static uint32_t ReceiveCounter = 0;
-static uint32_t LastTickUS = 0;
+static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
 static mc_msg_t* message = NULL;
 
@@ -106,7 +107,7 @@ static void on_receive(const void* const data, uint32_t size)
 
   ReceiveCounter++;
   print_progress(ReceiveCounter / (float)cfg_get_iterations());
-  LastTickUS = TimeNowU();
+  LastTickUS = mc_now_u();
 }
 
 static void init(void* data)
@@ -119,10 +120,10 @@ static void init(void* data)
   server_create();
   flush_receive_buffer();
 
-  message = mc_msg_new(server_read, server_write, 16 + DATA_LEN * sizeof(uint32_t), 3, on_receive, TimeNowU);
+  message = mc_msg_new(server_read, server_write, 16 + DATA_LEN * sizeof(uint32_t), 3, on_receive);
 
   ReceiveCounter = 0;
-  LastTickUS = TimeNowU();
+  LastTickUS = mc_now_u();
 }
 
 static void deinit()
@@ -133,14 +134,14 @@ static void deinit()
 
 static bool timed_out()
 {
-  return ((TimeNowU() - LastTickUS) > TEST_TIMEOUT);
+  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT);
 }
 
 static void wait_for_sender()
 {
-  const uint32_t end_time = TimeNowU() + 1000000;
+  const mc_time_t end_time = mc_now_u() + 1000000;
 
-  while (TimeNowU() < end_time) {
+  while (mc_now_u() < end_time) {
     mc_msg_recv(message);
   }
 }

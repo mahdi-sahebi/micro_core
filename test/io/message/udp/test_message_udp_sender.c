@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "core/error.h"
+#include "core/time.h"
 #include "io/message/message.h"
 #include "test_message_udp_common.h"
 #include "test_message_udp_sender.h"
@@ -12,10 +13,9 @@
 static int ClientSocket = -1;
 static mc_msg_t* message = NULL;
 static uint32_t SendCounter = 0;
-static uint32_t LastTickUS = 0;
+static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
 static uint32_t Buffer[DATA_LEN];
-
 
 
 static void client_create()
@@ -61,7 +61,7 @@ static void update_data(uint32_t* const Buffer)
   }
 
   SendCounter++;
-  LastTickUS = TimeNowU();
+  LastTickUS = mc_now_u();
   usleep(100);
 }
 
@@ -74,7 +74,7 @@ static void init(void* data)
   client_create();
   let_server_start();
 
-  message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL, TimeNowU);
+  message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL);
 }
 
 static void deinit()
@@ -85,7 +85,7 @@ static void deinit()
 
 static bool timed_out()
 {
-  return ((TimeNowU() - LastTickUS) > TEST_TIMEOUT);
+  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT);
 }
 
 void* snd_start(void* data)
