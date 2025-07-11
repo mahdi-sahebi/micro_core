@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "dsa/span.h"
+#include "core/time.h"
 
 
 enum definitions
@@ -32,6 +33,7 @@ typedef struct
 
 typedef struct 
 {
+  mc_time_t sent_time;
   bool  is_acked;
   pkt_t packet;
 }wnd_t;
@@ -44,6 +46,7 @@ uint32_t wnd_get_data_size(const wnd_t* const wnd);
 void     wnd_ack(wnd_t* const wnd);
 bool     wnd_is_acked(const wnd_t* const wnd);
 bool     wnd_is_valid(const wnd_t* const wnd);
+bool     wnd_is_timedout(const wnd_t* const wnd, uint32_t timeout_us);
 
 
 #endif /* MC_MESSAGE_WINDOW_H_ */
