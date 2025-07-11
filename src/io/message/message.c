@@ -17,6 +17,8 @@
 #include "io/message/message.h"
 
 
+#define MAX_TIMEOUT_US    3000000
+
 struct _mc_msg_t
 { 
   mc_msg_read_fn       read;
@@ -86,7 +88,7 @@ static void send_unacked(mc_msg_t* const this)
       continue;
     }
     
-    if (wnd_is_acked(window)) {// TODO(MN): Check timeout occurance
+    if (wnd_is_acked(window) || !wnd_is_timedout(window, MAX_TIMEOUT_US)) {// TODO(MN): Check timeout occurance
         continue;
     }
     
@@ -186,4 +188,4 @@ bool mc_msg_flush(mc_msg_t* const this, uint32_t timeout_us)
 }
 
 
-
+#undef MAX_TIMEOUT_US
