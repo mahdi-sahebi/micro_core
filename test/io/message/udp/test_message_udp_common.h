@@ -20,6 +20,8 @@ void     cfg_set_repetitive_send(bool enable);
 void     cfg_set_loss_rate(uint8_t rate);
 void     cfg_set_iterations(uint32_t iterations);
 uint32_t cfg_get_iterations();
+uint32_t cfg_get_recv_counter();
+uint32_t cfg_get_send_counter();
 
 
 #endif /* MC_TEST_MESSAGE_UDP_COMMON_H_ */
