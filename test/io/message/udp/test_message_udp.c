@@ -1,12 +1,38 @@
 /* For testing this module, we need a non-session based communication
  * like UDP, so we just implement a simple send and receive socket.
  * creation, invalid parameters, diff snd/rcv window sizes, ...
+ * 
+ * [Test Log]
+ * 
+    [MICRO CORE 1.0.0 - IO - MESSAGE]
+    [invalid_creation]
+    PASSED - 1(us) - Recv: 0 - Send: 0
+
+    [valid_creation]
+    PASSED - 5(us) - Recv: 0 - Send: 0
+
+    [singly_direction]
+    ████████████████████ 100.0%
+    PASSED - 3365581(us) - Recv: 20000 - Send: 20000
+
+    [singly_repetitive]
+    ████████████████████ 100.0%
+    PASSED - 3405046(us) - Recv: 20000 - Send: 20000
+
+    [singly_low_lossy]
+    ████████████████████ 100.0%
+    PASSED - 4863934(us) - Recv: 276387 - Send: 377592
+
+    [singly_high_lossy]
+    ████████████████████ 100.0%
+    PASSED - 21457984(us) - Recv: 4449 - Send: 4447
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include "core/error.h"
 #include "core/version.h"
+#include "core/time.h"
 #include "io/message/message.h"
 #include "test_message_udp_common.h"
 #include "test_message_udp_receiver.h"
@@ -155,90 +181,131 @@ int main()
   mc_result result = MC_SUCCESS;
 
   printf("[invalid_creation]\n");
-  result = invalid_creation();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = invalid_creation();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
 
 
   printf("[valid_creation]\n");
-  result = valid_creation();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = valid_creation();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
 
 
   printf("[singly_direction]\n");
-  result = singly_direction();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = singly_direction();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
 
 
   printf("[singly_repetitive]\n");
-  result = singly_repetitive();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = singly_repetitive();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
   
   printf("[singly_low_lossy]\n");
-  result = singly_low_lossy();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = singly_low_lossy();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
 
+
   printf("[singly_high_lossy]\n");
-  result = singly_high_lossy();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = singly_high_lossy();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
 
   /*
   printf("[small_write]\n");
-  result = small_write();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = small_write();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
 
 
   printf("[large_write]\n");
-  result = large_write();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = large_write();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
 
 
   printf("[hulf_duplex]\n");
-  result = hulf_duplex();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = hulf_duplex();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
 
 
   printf("[full_duplex]\n");
-  result = full_duplex();
-  if (MC_SUCCESS != result) {
-    printf("FAILED: %u\n\n", result);
-  } else {
-    printf("PASSED\n\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = full_duplex();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
+        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+    }
   }
 */
   return MC_SUCCESS;

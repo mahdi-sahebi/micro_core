@@ -8,6 +8,8 @@
 static uint32_t TestIterations = COMPLETE_COUNT;
 static bool RepetitiveSendEnable = false;
 static uint8_t LossRate = 0;
+static uint32_t RecvCounter = 0;
+static uint32_t SendCounter = 0;
 
 
 static bool simulate_loss() 
@@ -40,6 +42,7 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
     }
     if (sent_size == size) {
       count--;
+      SendCounter++;
     }
   }
 
@@ -61,7 +64,9 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size)
   const uint16_t sender_port = ntohs(addr_in.sin_port);
 
   if (-1 == read_size) {
-      read_size = 0;
+    read_size = 0;
+  } else {
+    RecvCounter++;
   }
   
   return read_size;
@@ -80,9 +85,21 @@ void cfg_set_loss_rate(uint8_t rate)
 void cfg_set_iterations(uint32_t iterations)
 {
   TestIterations = iterations;
+  RecvCounter = 0;
+  SendCounter = 0;
 }
 
 uint32_t cfg_get_iterations()
 {
   return TestIterations;
+}
+
+uint32_t cfg_get_recv_counter()
+{
+  return RecvCounter;
+}
+
+uint32_t cfg_get_send_counter()
+{
+  return SendCounter;
 }
