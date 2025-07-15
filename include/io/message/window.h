@@ -33,7 +33,7 @@ typedef struct
 
 typedef struct 
 {
-  mc_time_t sent_time;
+  mc_time_t sent_time;// TODO(MN): Add postfix us
   bool  is_acked;
   pkt_t packet;
 }wnd_t;
