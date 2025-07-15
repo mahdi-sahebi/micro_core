@@ -134,12 +134,12 @@ static void deinit()
 
 static bool timed_out()
 {
-  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT);
+  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US);
 }
 
 static void wait_for_sender()
 {
-  const mc_time_t end_time = mc_now_u() + 1000000;
+  const mc_time_t end_time = mc_now_u() + TEST_TIMEOUT_US;
 
   while (mc_now_u() < end_time) {
     mc_msg_recv(message);
@@ -159,7 +159,7 @@ void* rcv_start(void* data)
     mc_msg_recv(message);
   }
 
-  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT)) {
+  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT_US)) {
     printf("mc_msg_flush failed\n");
     *Result = MC_ERR_TIMEOUT;
   }

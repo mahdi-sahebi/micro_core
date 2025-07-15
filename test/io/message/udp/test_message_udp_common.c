@@ -10,6 +10,8 @@ static bool RepetitiveSendEnable = false;
 static uint8_t LossRate = 0;
 static uint32_t RecvCounter = 0;
 static uint32_t SendCounter = 0;
+static uint32_t RecvFailedCounter = 0;
+static uint32_t SendFailedCounter = 0;
 
 
 static bool simulate_loss() 
@@ -20,6 +22,7 @@ static bool simulate_loss()
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {
   if (simulate_loss()) {
+    SendFailedCounter++;
     return 0;// TODO(MN): Add delay
   }
 
@@ -52,6 +55,7 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
 uint32_t socket_read(int socket_fd, void* data, uint32_t size)
 {
   if (simulate_loss()) {
+    RecvFailedCounter++;
     return 0;
   }
   
@@ -87,6 +91,8 @@ void cfg_set_iterations(uint32_t iterations)
   TestIterations = iterations;
   RecvCounter = 0;
   SendCounter = 0;
+  RecvFailedCounter = 0;
+  SendFailedCounter = 0;
 }
 
 uint32_t cfg_get_iterations()
@@ -102,4 +108,14 @@ uint32_t cfg_get_recv_counter()
 uint32_t cfg_get_send_counter()
 {
   return SendCounter;
+}
+
+uint32_t cfg_get_recv_failed_counter()
+{
+  return RecvFailedCounter;
+}
+
+uint32_t cfg_get_send_failed_counter()
+{
+  return SendFailedCounter;
 }
