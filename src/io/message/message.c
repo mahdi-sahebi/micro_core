@@ -11,19 +11,25 @@
 #include <stdbool.h>
 #include <string.h>
 #include "core/error.h"
+#include "core/time.h"
 #include "io/message/window.h"
 #include "io/message/window_pool.h"
 #include "io/message/message.h"
 
+
+#define MAX_SEND_TIME_US    3000000
+#define MIN_SEND_TIME_US    100
+#define MIN(A, B)           ((A) <= (B) ? (A) : (B))
+#define MAX(A, B)           ((A) >= (B) ? (A) : (B))
 
 struct _mc_msg_t
 { 
   mc_msg_read_fn       read;
   mc_msg_write_fn      write;
   mc_msg_on_receive_fn on_receive;
-  mc_time_now_us_fn    now_us;
+  uint32_t             send_delay_us;
   wndpool_t*           rcv;// TODO(MN): Use array to reduce one pointer size
-  wndpool_t*           snd;  
+  wndpool_t*           snd;
 };
 
 
@@ -40,7 +46,8 @@ static void send_ack(mc_msg_t* const this, uint32_t id)
   }
   // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
 }
-
+#include <stdio.h>
+#include <inttypes.h>
 static uint32_t read_data(mc_msg_t* const this)
 {
   pkt_t* const pkt = this->rcv->temp_window;
@@ -52,8 +59,11 @@ static uint32_t read_data(mc_msg_t* const this)
   if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
     return 0; // [INVALID] Bad header/type received. 
   }
-
+ 
   if (PKT_ACK == pkt->type) {
+    const mc_time_t sent_time = wndpool_get(this->snd, pkt->id)->sent_time;
+    const uint64_t elapsed_time = mc_now_u() - sent_time;
+    this->send_delay_us = elapsed_time * 0.8;
     wndpool_ack(this->snd, pkt->id, NULL);
     return read_size;
   }
@@ -76,28 +86,23 @@ static uint32_t read_data(mc_msg_t* const this)
   return read_size;
 }
 
-static uint32_t send_unacked(mc_msg_t* const this) 
+static void send_unacked(mc_msg_t* const this) 
 {
-  uint32_t sent_size = 0;  
   const uint32_t end_id = this->snd->bgn_id + this->snd->capacity;
 
   for (uint32_t id = this->snd->bgn_id; id < end_id; id++) {
-    const wnd_t* const window = wndpool_get(this->snd, id);
-    if (!wnd_is_valid(window)) {
+    wnd_t* const window = wndpool_get(this->snd, id);
+    if (!wnd_is_valid(window) ||
+        wnd_is_acked(window) || 
+        !wnd_is_timedout(window, this->send_delay_us)) {
       continue;
     }
-    
-    if (wnd_is_acked(window)) {// TODO(MN): Check timeout occurance
-        continue;
-    }
 
-    sent_size += window->packet.size;
-    
-    if (0 != this->write(&window->packet, this->snd->window_size)) {
+    const uint32_t sent_size = this->write(&window->packet, this->snd->window_size);
+    if (this->snd->window_size == sent_size) {
+      window->sent_time = mc_now_u();
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
   }
-
-  return sent_size;
 }
 
 mc_msg_t* mc_msg_new(
@@ -105,11 +110,10 @@ mc_msg_t* mc_msg_new(
   mc_msg_write_fn write_fn, 
   uint32_t window_size, 
   uint8_t capacity, 
-  mc_msg_on_receive_fn on_receive,
-  mc_time_now_us_fn now_us)
+  mc_msg_on_receive_fn on_receive)
 {
   // TODO(MN): Input checking. the minimum size of window_size
-  if ((NULL == read_fn) || (NULL == write_fn) || (NULL == now_us) || 
+  if ((NULL == read_fn) || (NULL == write_fn) ||
       (0 == window_size) || (0 == capacity) || 
       (capacity >= (sizeof(idx_t) * 8))) {
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
@@ -127,7 +131,7 @@ mc_msg_t* mc_msg_new(
   this->read             = read_fn;
   this->write            = write_fn;
   this->on_receive       = on_receive;
-  this->now_us           = now_us;
+  this->send_delay_us    = MIN_SEND_TIME_US;
 
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_msg_t));
   this->rcv->window_size = window_size;
@@ -172,19 +176,19 @@ uint32_t mc_msg_send(mc_msg_t* const this, void* data, uint32_t size)
   
   const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);
   wndpool_push(this->snd, mc_span(data, size));
-  this->write(&window->packet, this->snd->window_size); ;// TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  this->write(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   
   return size;
 }
 
 bool mc_msg_flush(mc_msg_t* const this, uint32_t timeout_us)
 {
-  const uint32_t bgn_time_us = this->now_us();
+  const mc_time_t bgn_time_us = mc_now_u();
 
   while (!wndpool_is_empty(this->snd) || !wndpool_is_empty(this->rcv)) {
     mc_msg_recv(this);
 
-    if ((this->now_us() - bgn_time_us) > timeout_us) {
+    if ((mc_now_u() - bgn_time_us) > timeout_us) {
       return false;
     }
   }
@@ -193,4 +197,7 @@ bool mc_msg_flush(mc_msg_t* const this, uint32_t timeout_us)
 }
 
 
-
+#undef MAX_SEND_TIME_US
+#undef MIN_SEND_TIME_US
+#undef MIN
+#undef MAX

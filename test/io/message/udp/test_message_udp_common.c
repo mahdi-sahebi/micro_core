@@ -8,6 +8,10 @@
 static uint32_t TestIterations = COMPLETE_COUNT;
 static bool RepetitiveSendEnable = false;
 static uint8_t LossRate = 0;
+static uint32_t RecvCounter = 0;
+static uint32_t SendCounter = 0;
+static uint32_t RecvFailedCounter = 0;
+static uint32_t SendFailedCounter = 0;
 
 
 static bool simulate_loss() 
@@ -18,6 +22,7 @@ static bool simulate_loss()
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {
   if (simulate_loss()) {
+    SendFailedCounter++;
     return 0;// TODO(MN): Add delay
   }
 
@@ -40,6 +45,7 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
     }
     if (sent_size == size) {
       count--;
+      SendCounter++;
     }
   }
 
@@ -49,6 +55,7 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
 uint32_t socket_read(int socket_fd, void* data, uint32_t size)
 {
   if (simulate_loss()) {
+    RecvFailedCounter++;
     return 0;
   }
   
@@ -61,18 +68,12 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size)
   const uint16_t sender_port = ntohs(addr_in.sin_port);
 
   if (-1 == read_size) {
-      read_size = 0;
+    read_size = 0;
+  } else {
+    RecvCounter++;
   }
   
   return read_size;
-}
-
-uint32_t TimeNowU()
-{
-    struct timeval now;
-    gettimeofday(&now, NULL);
-
-    return (now.tv_sec * 1000000) + now.tv_usec;
 }
 
 void cfg_set_repetitive_send(bool enable)
@@ -88,9 +89,33 @@ void cfg_set_loss_rate(uint8_t rate)
 void cfg_set_iterations(uint32_t iterations)
 {
   TestIterations = iterations;
+  RecvCounter = 0;
+  SendCounter = 0;
+  RecvFailedCounter = 0;
+  SendFailedCounter = 0;
 }
 
 uint32_t cfg_get_iterations()
 {
   return TestIterations;
+}
+
+uint32_t cfg_get_recv_counter()
+{
+  return RecvCounter;
+}
+
+uint32_t cfg_get_send_counter()
+{
+  return SendCounter;
+}
+
+uint32_t cfg_get_recv_failed_counter()
+{
+  return RecvFailedCounter;
+}
+
+uint32_t cfg_get_send_failed_counter()
+{
+  return SendFailedCounter;
 }
