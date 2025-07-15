@@ -4,28 +4,36 @@
  * 
  * [Test Log]
  * 
-    [MICRO CORE 1.0.0 - IO - MESSAGE]
-    [invalid_creation]
-    PASSED - 1(us) - Recv: 0 - Send: 0
+  [MICRO CORE 1.0.0 - IO - MESSAGE]
+  [invalid_creation]
+  PASSED - 1(us)
 
-    [valid_creation]
-    PASSED - 5(us) - Recv: 0 - Send: 0
+  [valid_creation]
+  PASSED - 6(us)
 
-    [singly_direction]
-    ████████████████████ 100.0%
-    PASSED - 3365581(us) - Recv: 20000 - Send: 20000
+  [singly_direction]
+  ████████████████████ 100.0%
+  Completed[Recv: 20000, Send: 20000] - Failed[Recv: 0(0.0%), Send: 0(0.0%)]
 
-    [singly_repetitive]
-    ████████████████████ 100.0%
-    PASSED - 3405046(us) - Recv: 20000 - Send: 20000
+  PASSED - 7483800(us)
 
-    [singly_low_lossy]
-    ████████████████████ 100.0%
-    PASSED - 4863934(us) - Recv: 276387 - Send: 377592
+  [singly_repetitive]
+  ████████████████████ 100.0%
+  Completed[Recv: 20000, Send: 20000] - Failed[Recv: 0(0.0%), Send: 0(0.0%)]
 
-    [singly_high_lossy]
-    ████████████████████ 100.0%
-    PASSED - 21457984(us) - Recv: 4449 - Send: 4447
+  PASSED - 7494000(us)
+
+  [singly_low_lossy]
+  ████████████████████ 100.0%
+  Completed[Recv: 5810, Send: 5801] - Failed[Recv: 1427(19.7%), Send: 1521(20.8%)]
+
+  PASSED - 5786943(us)
+
+  [singly_high_lossy]
+  ████████████████████ 100.0%
+  Completed[Recv: 4281, Send: 4281] - Failed[Recv: 213604(98.0%), Send: 79823(94.9%)]
+
+  PASSED - 45213009(us)
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -187,8 +195,7 @@ int main()
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
 
@@ -200,8 +207,7 @@ int main()
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
 
@@ -213,8 +219,7 @@ int main()
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
 
@@ -226,11 +231,11 @@ int main()
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
   
+
   printf("[singly_low_lossy]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
@@ -238,8 +243,7 @@ int main()
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
 
@@ -251,8 +255,7 @@ int main()
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
 

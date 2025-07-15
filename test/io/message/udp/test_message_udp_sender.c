@@ -65,6 +65,19 @@ static void update_data(uint32_t* const Buffer)
   usleep(100);
 }
 
+static void print_log()
+{
+  const uint32_t recv_cnt = cfg_get_recv_counter();
+  const uint32_t send_cnt = cfg_get_send_counter();
+  const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
+  const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
+  printf("Completed[Recv: %u, Send: %u] - Failed[Recv: %u(%.1f%%), Send: %u(%.1f%%)]\n\n",
+        recv_cnt, send_cnt, 
+        recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
+        send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
+      );
+}
+
 static void init(void* data)
 {
   Result = (uint32_t*)data;
@@ -81,11 +94,12 @@ static void deinit()
 {
   mc_msg_free(&message);
   client_close();
+  print_log();
 }
 
 static bool timed_out()
 {
-  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT);
+  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US);
 }
 
 void* snd_start(void* data)
@@ -106,7 +120,7 @@ void* snd_start(void* data)
     update_data(Buffer);
   }
   
-  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT)) {
+  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT_US)) {
     printf("mc_msg_flush failed\n");
     *Result = MC_ERR_TIMEOUT;
   }
