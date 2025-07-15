@@ -5,16 +5,20 @@
 set(LIB mcore_time)
 set(PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS ${PUBLIC_INCLUDE_DIR}/core/time.h)
+set(SOURCES "")
 if (UNIX)
   set(SOURCES time_linux.c)
 endif()
 
 
 # Binray
-add_library(${LIB} INTERFACE ${SOURCES} ${HEADERS})
+add_library(${LIB} STATIC ${SOURCES} ${HEADERS})
 
 
 # Include
+target_include_directories(${LIB}
+  PUBLIC ${PUBLIC_INCLUDE_DIR}
+)
 
 
 # Linking

@@ -136,6 +136,7 @@ bool wndpool_ack(wndpool_t* const this, id_t id, mc_msg_on_receive_fn on_done)
   wnd_t* const window = get_window(this, window_index);
   if (!wnd_is_acked(window)) {
     wnd_ack(window);
+    
     // [WINDOW %u-%u] Received ACK for packet %u - %uus\n",              this->bgn_id, this->bgn_id+this->capacity-1, window_id, TimeNowU() - window->last_sent_time_us));
   }
 

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "core/error.h"
+#include "core/time.h"
 #include "io/message/message.h"
 #include "test_message_udp_common.h"
 #include "test_message_udp_sender.h"
@@ -12,10 +13,9 @@
 static int ClientSocket = -1;
 static mc_msg_t* message = NULL;
 static uint32_t SendCounter = 0;
-static uint32_t LastTickUS = 0;
+static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
 static uint32_t Buffer[DATA_LEN];
-
 
 
 static void client_create()
@@ -61,8 +61,21 @@ static void update_data(uint32_t* const Buffer)
   }
 
   SendCounter++;
-  LastTickUS = TimeNowU();
+  LastTickUS = mc_now_u();
   usleep(100);
+}
+
+static void print_log()
+{
+  const uint32_t recv_cnt = cfg_get_recv_counter();
+  const uint32_t send_cnt = cfg_get_send_counter();
+  const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
+  const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
+  printf("Completed[Recv: %u, Send: %u] - Failed[Recv: %u(%.1f%%), Send: %u(%.1f%%)]\n",
+        recv_cnt, send_cnt, 
+        recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
+        send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
+      );
 }
 
 static void init(void* data)
@@ -74,18 +87,19 @@ static void init(void* data)
   client_create();
   let_server_start();
 
-  message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL, TimeNowU);
+  message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL);
 }
 
 static void deinit()
 {
   mc_msg_free(&message);
   client_close();
+  print_log();
 }
 
 static bool timed_out()
 {
-  return ((TimeNowU() - LastTickUS) > TEST_TIMEOUT);
+  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US);
 }
 
 void* snd_start(void* data)
@@ -106,7 +120,7 @@ void* snd_start(void* data)
     update_data(Buffer);
   }
   
-  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT)) {
+  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT_US)) {
     printf("mc_msg_flush failed\n");
     *Result = MC_ERR_TIMEOUT;
   }
