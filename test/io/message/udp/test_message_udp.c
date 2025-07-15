@@ -34,6 +34,17 @@
   Completed[Recv: 4281, Send: 4281] - Failed[Recv: 213604(98.0%), Send: 79823(94.9%)]
 
   PASSED - 45213009(us)
+
+
+
+  --- Singly High Lossy ---
+  [Adaptive Sending Time]
+  Completed[Recv: 4178, Send: 4178] - Failed[Recv: 224314(98.2%), Send: 79635(95.0%)]  48856439(us)
+  Completed[Recv: 4379, Send: 4380] - Failed[Recv: 221447(98.1%), Send: 82686(95.0%)]  45273912(us)
+
+  [Fixed Sending Time]
+  Completed[Recv: 4398, Send: 4398] - Failed[Recv: 232046(98.1%), Send: 82581(94.9%)]  50185999(us)
+  Completed[Recv: 4629, Send: 4630] - Failed[Recv: 241806(98.1%), Send: 87668(95.0%)]  52303896(us)
  */
 #include <stdio.h>
 #include <stdlib.h>
