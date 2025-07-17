@@ -71,7 +71,7 @@ static void print_log()
   const uint32_t send_cnt = cfg_get_send_counter();
   const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
   const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
-  printf("Completed[Recv: %u, Send: %u] - Failed[Recv: %u(%.1f%%), Send: %u(%.1f%%)]\n",
+  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
         recv_cnt, send_cnt, 
         recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
         send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
@@ -87,7 +87,11 @@ static void init(void* data)
   client_create();
   let_server_start();
 
-  message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL);
+  message = mc_msg_new(
+    mc_io(client_read, client_write), 
+    16 + DATA_LEN * sizeof(uint32_t),
+    3,
+    NULL);
 }
 
 static void deinit()

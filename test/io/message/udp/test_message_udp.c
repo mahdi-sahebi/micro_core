@@ -72,27 +72,27 @@ static int invalid_creation()
 {
   mc_msg_t* message = NULL;
   
-  message = mc_msg_new(NULL, write_api, DATA_LEN * sizeof(uint32_t), 3, NULL);
+  message = mc_msg_new(mc_io(NULL, write_api), DATA_LEN * sizeof(uint32_t), 3, NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(read_api, NULL, DATA_LEN * sizeof(uint32_t), 3, NULL);
+  message = mc_msg_new(mc_io(read_api, NULL), DATA_LEN * sizeof(uint32_t), 3, NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(read_api, write_api, 0, 3, NULL);
+  message = mc_msg_new(mc_io(read_api, write_api), 0, 3, NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(read_api, write_api, 0, 0, NULL);
+  message = mc_msg_new(mc_io(read_api, write_api), 0, 0, NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(read_api, write_api, 1, 3, NULL);
+  message = mc_msg_new(mc_io(read_api, write_api), 1, 3, NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -105,7 +105,7 @@ static int valid_creation()
   const uint32_t capcity = 3;
   mc_msg_t* message = NULL;
   
-  message = mc_msg_new(read_api, write_api, 5 * sizeof(uint32_t), capcity, NULL);
+  message = mc_msg_new(mc_io(read_api, write_api), 5 * sizeof(uint32_t), capcity, NULL);
   if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }
