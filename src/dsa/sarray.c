@@ -16,30 +16,26 @@ struct _mc_sarray
 };
 
 
-mc_result_ptr mc_sarray_new(mc_span buffer, uint32_t element_size, uint32_t capacity, mc_comparator comparator)
+mc_result mc_sarray_init(mc_sarray* const this, mc_span buffer, uint32_t element_size, uint32_t capacity, mc_comparator comparator)
 {
+  *this = NULL;
   if (mc_span_is_null(buffer) || mc_span_is_empty(buffer) ||
       (0 == capacity) || (0 == element_size) || (NULL == comparator)) {
-    return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
+    return MC_ERR_INVALID_ARGUMENT;
   }
 
   const uint32_t size = sizeof(struct _mc_sarray) + (capacity * element_size);
 
   if (buffer.size < size) {
-    return mc_result_ptr(NULL, MC_ERR_OUT_OF_RANGE);
+    return MC_ERR_OUT_OF_RANGE;
   }
 
-  mc_sarray array     = (mc_sarray)buffer.data;
-  array->capacity     = size;
-  array->count        = 0;
-  array->element_size = element_size;
+  *this                 = (mc_sarray)buffer.data;
+  (*this)->capacity     = size;
+  (*this)->count        = 0;
+  (*this)->element_size = element_size;
 
-  return mc_result_ptr(array, MC_SUCCESS);
-}
-
-mc_result mc_sarray_free(mc_sarray* const this)
-{
-  return MC_ERR_INVALID_ARGUMENT;
+  return MC_SUCCESS;
 }
 
 mc_result mc_sarray_clear(mc_sarray const this)
