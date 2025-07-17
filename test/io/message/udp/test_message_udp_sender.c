@@ -87,7 +87,11 @@ static void init(void* data)
   client_create();
   let_server_start();
 
-  message = mc_msg_new(client_read, client_write, 16 + DATA_LEN * sizeof(uint32_t), 3, NULL);
+  message = mc_msg_new(
+    mc_io(client_read, client_write), 
+    16 + DATA_LEN * sizeof(uint32_t),
+    3,
+    NULL);
 }
 
 static void deinit()
