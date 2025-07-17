@@ -5,6 +5,9 @@
  * define cu32_t? ... 
  * Add crc
  * security: dynamic key authentication, ...
+ * test of link: for less than window size
+ * link: reliable link + io interface + crc
+ * msg: link + authentication + ID based message passing
  */
 
 #include <stdlib.h>
