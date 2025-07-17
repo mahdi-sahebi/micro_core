@@ -6,12 +6,13 @@ add_subdirectory(io)
 
 # Variables
 set(LIB mcore)
-# set(HEADERS )
-# set(SOURCES )
+set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include/io)
+set(HEADERS ${INCLUDE_DIRS}/io.h)
+set(SOURCES )
 
 
 # Binray
-add_library(${LIB} INTERFACE)
+add_library(${LIB} INTERFACE ${SOURCES} ${HEADERS})
 
 
 # Include

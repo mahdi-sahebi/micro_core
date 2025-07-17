@@ -5,6 +5,9 @@
  * define cu32_t? ... 
  * Add crc
  * security: dynamic key authentication, ...
+ * test of link: for less than window size
+ * link: reliable link + io interface + crc
+ * msg: link + authentication + ID based message passing
  */
 
 #include <stdlib.h>
@@ -24,8 +27,7 @@
 
 struct _mc_msg_t
 { 
-  mc_msg_read_fn       read;
-  mc_msg_write_fn      write;
+  mc_io_t              io;
   mc_msg_on_receive_fn on_receive;
   uint32_t             send_delay_us;
   wndpool_t*           rcv;// TODO(MN): Use array to reduce one pointer size
@@ -41,7 +43,7 @@ static void send_ack(mc_msg_t* const this, uint32_t id)
   pkt->type   = PKT_ACK;
   pkt->id     = id;
   
-  if (this->write(pkt, this->rcv->window_size) != this->rcv->window_size) {
+  if (this->io.send(pkt, this->rcv->window_size) != this->rcv->window_size) {
     // TODO(MN): Handle. Is it ok to 
   }
   // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
@@ -51,7 +53,7 @@ static void send_ack(mc_msg_t* const this, uint32_t id)
 static uint32_t read_data(mc_msg_t* const this)
 {
   pkt_t* const pkt = this->rcv->temp_window;
-  const uint32_t read_size = this->read(pkt, this->rcv->window_size);
+  const uint32_t read_size = this->io.recv(pkt, this->rcv->window_size);
   if (0 == read_size) {// TODO(MN): Handle incomplete size(smaller or larger)
     return 0;
   }
@@ -98,7 +100,7 @@ static void send_unacked(mc_msg_t* const this)
       continue;
     }
 
-    const uint32_t sent_size = this->write(&window->packet, this->snd->window_size);
+    const uint32_t sent_size = this->io.send(&window->packet, this->snd->window_size);
     if (this->snd->window_size == sent_size) {
       window->sent_time = mc_now_u();
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
@@ -106,14 +108,13 @@ static void send_unacked(mc_msg_t* const this)
 }
 
 mc_msg_t* mc_msg_new(
-  mc_msg_read_fn read_fn, 
-  mc_msg_write_fn write_fn, 
+  mc_io_t io, 
   uint32_t window_size, 
   uint8_t capacity, 
   mc_msg_on_receive_fn on_receive)
 {
   // TODO(MN): Input checking. the minimum size of window_size
-  if ((NULL == read_fn) || (NULL == write_fn) ||
+  if ((NULL == io.recv) || (NULL == io.send) ||
       (0 == window_size) || (0 == capacity) || 
       (capacity >= (sizeof(idx_t) * 8))) {
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
@@ -128,8 +129,7 @@ mc_msg_t* mc_msg_new(
   const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
   mc_msg_t* const this = malloc(sizeof(mc_msg_t) + controllers_size);// TODO(MN): Remove as soon as possible
 
-  this->read             = read_fn;
-  this->write            = write_fn;
+  this->io               = io;
   this->on_receive       = on_receive;
   this->send_delay_us    = MIN_SEND_TIME_US;
 
@@ -176,7 +176,7 @@ uint32_t mc_msg_send(mc_msg_t* const this, void* data, uint32_t size)
   
   const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);
   wndpool_push(this->snd, mc_span(data, size));
-  this->write(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  this->io.send(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   
   return size;
 }
