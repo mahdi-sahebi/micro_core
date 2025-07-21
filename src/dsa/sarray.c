@@ -1,8 +1,9 @@
 /* TODO(MN): Reduce meta data size.
- * Not tested. Implement test cases.
+ * Not tested. Implement test cases. How to find out the meta data size?
  */
 
- #include <stdlib.h>
+#include <stdlib.h>
+#include <string.h>
 #include "dsa/span.h"
 #include "dsa/sarray.h"
 
@@ -85,24 +86,21 @@ mc_result mc_sarray_insert(mc_sarray this, const void* data)
     memcpy(GET_DATA(this, 0), data, this->data_size);
   } else {
     uint32_t bgn = 0;
-    uint32_t end = this->count - 1;
+    uint32_t end = this->count;
 
-    void* bgn_data = GET_DATA(this, bgn);
-    void* end_data = GET_DATA(this, end);
-
-    for (; bgn != end;) {
+    while (bgn < end) {
       const uint32_t mid = (bgn + end) >> 1;
 
       if (this->comparator(data, GET_DATA(this, mid))) {
-        end = mid - 1;
+        end = mid;
       } else {
         bgn = mid + 1;
       }
     }
 
     /* Shift one element to right */
-    for (uint32_t index = this->count - 1; index >= bgn; index--) {
-      memcpy(GET_DATA(this, index + 1), GET_DATA(this, index), this->data_size);
+    for (uint32_t index = this->count; index > bgn; index--) {
+      memcpy(GET_DATA(this, index), GET_DATA(this, index - 1), this->data_size);
     }
 
     memcpy(GET_DATA(this, bgn), data, this->data_size);
@@ -122,8 +120,8 @@ mc_result mc_sarray_remove(mc_sarray this, uint32_t index)
   }
 
   /* Shift one element to left */
-  for (uint32_t itr = index + 1; itr < this->count - 1; itr++) {
-    memcpy(GET_DATA(this, index - 1), GET_DATA(this, index), this->data_size);
+  for (uint32_t itr = index; itr < this->count - 1; itr++) {
+    memcpy(GET_DATA(this, itr), GET_DATA(this, itr + 1), this->data_size);
   }
 
   this->count--;
