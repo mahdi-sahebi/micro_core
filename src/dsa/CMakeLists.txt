@@ -2,7 +2,7 @@
 
 
 # Variables
-set(LIB micro_core_dsa)
+set(LIB micro_core_dsa)# TODO(MN): Rename to mcore_dsa
 set(PUBLIC_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include/)
 set(HEADERS 
     ${PUBLIC_INCLUDE_DIRS}/dsa/memory/memlin.h
