@@ -40,7 +40,7 @@ typedef struct
 typedef struct
 {
   void*  data;
-  mc_result result;
+  mc_result result;// TODO(MN): rename
 }mc_result_ptr;
 
 #define mc_result_ptr(DATA, ERROR)      (mc_result_ptr){.data = (DATA), .result = (ERROR)}
