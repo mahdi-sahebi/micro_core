@@ -14,6 +14,7 @@ mc_result_ptr  mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capac
 mc_result      mc_sarray_clear(mc_sarray this);
 mc_result_u32  mc_sarray_get_count(const mc_sarray this);
 mc_result_ptr  mc_sarray_get(const mc_sarray this, uint32_t index);
+mc_result_ptr  mc_sarray_find(const mc_sarray this, const void* const data);
 mc_result      mc_sarray_insert(mc_sarray this, const void* data);
 mc_result      mc_sarray_remove(mc_sarray this, uint32_t index);
 mc_result_bool mc_sarray_is_emtpy(const mc_sarray this);
