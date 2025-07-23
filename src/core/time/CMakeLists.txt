@@ -2,7 +2,7 @@
 
 
 # Variables
-set(LIB mcore_time)
+set(LIB ${PROJECT_NAME}_time)
 set(PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS ${PUBLIC_INCLUDE_DIR}/core/time.h)
 set(SOURCES "")

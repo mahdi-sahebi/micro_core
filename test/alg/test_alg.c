@@ -19,7 +19,7 @@ static int search_null_buffer()
   const mc_span buffer = mc_span(NULL, 0);
   int16_t key = 5;
   
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
 
   if (NULL != itr) {
     return MC_ERR_RUNTIME;
@@ -33,7 +33,7 @@ static int search_null_comparator()
   const mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 5;
   
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, NULL);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), NULL);
   
   if (NULL != itr) {
     return MC_ERR_RUNTIME;
@@ -47,7 +47,7 @@ static int search_empty_buffer()
   const mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 5;
 
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
 
   if (itr != array) {
     return MC_ERR_RUNTIME;
@@ -61,7 +61,7 @@ static int search_present()
   const mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 5;
 
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
   
   if (itr != &array[2]) {
     return MC_ERR_RUNTIME;
@@ -75,7 +75,7 @@ static int search_not_present()
   const mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 6;
 
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
   
   if (itr != &array[3]) {
     return MC_ERR_RUNTIME;
@@ -89,7 +89,7 @@ static int search_greater_than_all()
   const mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 10;
 
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
   
   if (itr != &array[5]) {
     return MC_ERR_RUNTIME;
@@ -103,7 +103,7 @@ static int search_less_than_all()
   const mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 0;
   
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
   
   if (itr != &array[0]) {
     return MC_ERR_RUNTIME;
@@ -116,7 +116,7 @@ static int search_first_duplicate()
   int16_t array[] = {1, 2, 2, 2, 3};
   mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 2;
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
   
   if (itr != &array[1]) {
     return MC_ERR_RUNTIME;
@@ -130,7 +130,7 @@ static int search_element_end()
   mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 3;
 
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
   
   if (itr != &array[4]) {
     return MC_ERR_RUNTIME;
@@ -144,7 +144,7 @@ static int search_not_prepresent_with_duplicate()
   mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 2;
 
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
   
   if (itr != &array[0]) {
     return MC_ERR_RUNTIME;
@@ -161,7 +161,7 @@ static int search_large_array()
   const mc_span buffer = mc_span(array, sizeof(array));
   int16_t key = 9999;
 
-  const int16_t* itr = mc_alg_lower_bound(buffer, sizeof(key), &key, comparator);
+  const int16_t* itr = mc_alg_lower_bound(buffer, &key, sizeof(key), comparator);
   
   if (itr != &array[9999]) {
     return MC_ERR_RUNTIME;

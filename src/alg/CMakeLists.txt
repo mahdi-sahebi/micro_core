@@ -11,7 +11,7 @@ set(SOURCES
   span.c
   algorithm.c
 )
-set(LIB mcore_alg)
+set(LIB ${PROJECT_NAME}_alg)
 
 
 # Binray
