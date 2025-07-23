@@ -27,6 +27,6 @@ mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, uint16_t data
     }
   }
 
-  const void* element = (bgn != count) ? (buffer.data + (bgn * data_size)) : NULL;
+  void* element = (bgn != count) ? (buffer.data + (bgn * data_size)) : NULL;
   return mc_result_ptr(element, MC_SUCCESS);
 }
