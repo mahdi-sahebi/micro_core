@@ -2,6 +2,7 @@
 #define MC_SPAN_H_
 
 // TODO(MN): sub-span, rename to m buffer, is in range,...
+// TODO(MN): Without API ?
 #include <stdbool.h>
 #include <stdint.h>
 
