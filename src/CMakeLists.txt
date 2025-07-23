@@ -1,5 +1,6 @@
 # Subdirectory
 add_subdirectory(core)
+add_subdirectory(alg)
 add_subdirectory(dsa)
 add_subdirectory(io)
 
@@ -22,6 +23,7 @@ add_library(${LIB} INTERFACE ${SOURCES} ${HEADERS})
 target_link_libraries(${LIB} 
   INTERFACE
   mcore_core
+  mcore_alg
   mcore_io
 )
 
