@@ -322,5 +322,5 @@ int main()
     }
   }
 */
-  return MC_SUCCESS;
+  return MC_SUCCESS;// TODO(MN): Do && for all results
 }
