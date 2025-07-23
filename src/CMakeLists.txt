@@ -7,8 +7,8 @@ add_subdirectory(io)
 
 # Variables
 set(LIB mcore)
-set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include/io)
-set(HEADERS ${INCLUDE_DIRS}/io.h)
+set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include/io)# TODO(MN): Must be general and not io
+set(HEADERS ${INCLUDE_DIRS}/io.h)# TODO(MN): Must be general and not io
 set(SOURCES )
 
 
