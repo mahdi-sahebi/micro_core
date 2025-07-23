@@ -4,11 +4,9 @@
 set(LIB micro_core_dsa)
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS 
-    ${INCLUDE_DIRS}/dsa/span.h
     ${INCLUDE_DIRS}/dsa/memory/memlin.h
 )
 set(SOURCES 
-    span.c
     memory/memlin.c
 )
 
