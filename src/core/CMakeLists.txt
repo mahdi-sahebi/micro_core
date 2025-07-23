@@ -3,7 +3,7 @@ add_subdirectory(time)
 
 
 # Variables
-set(LIB mcore_core)
+set(LIB ${PROJECT_NAME}_core)
 
 
 # Binray
@@ -16,7 +16,7 @@ add_library(${LIB} INTERFACE)
 # Linking
 target_link_libraries(${LIB} 
   INTERFACE
-  mcore_time
+  ${PROJECT_NAME}_time
 )
 
 
