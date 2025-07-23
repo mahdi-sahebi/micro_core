@@ -9,8 +9,8 @@
 typedef struct
 {
     void*    data;
-    uint32_t size;// u32? opt
-}mc_span;
+    uint32_t size;// u32? opt. rename to capacity
+}mc_span;// TODO(MN): Rename to mc_buffer. add data_size. get_count()
 
 
 #define mc_span(DATA, SIZE)                 (mc_span){.data = (DATA), .size = (SIZE)}

@@ -8,7 +8,7 @@ not fragmentable
 */
 
 #include <core/error.h>
-#include <dsa/span.h>
+#include <alg/span.h>
 
 
 typedef struct _mc_memlin mc_memlin;

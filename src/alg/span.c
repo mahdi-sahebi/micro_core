@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "dsa/span.h"
+#include "alg/span.h"
 
 bool mc_span_is_empty(mc_span buffer)
 {
