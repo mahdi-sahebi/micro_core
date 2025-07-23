@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "dsa/span.h"
+#include "alg/span.h"
 #include "core/time.h"
 
 
