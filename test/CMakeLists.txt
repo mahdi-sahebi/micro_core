@@ -8,6 +8,7 @@ set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 
 # Subdirectory
 add_subdirectory(alg)
+add_subdirectory(dsa)
 add_subdirectory(io)
 
 
