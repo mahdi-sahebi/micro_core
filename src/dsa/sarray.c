@@ -73,6 +73,37 @@ mc_result_ptr mc_sarray_get(const mc_sarray this, uint32_t index)
   return mc_result_ptr(GET_DATA(this, index), MC_ERR_INVALID_ARGUMENT);
 }
 
+mc_result_ptr mc_sarray_find(const mc_sarray this, const void* const data)
+{
+  if ((NULL == this) || (NULL == data)) {
+    return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
+  }
+
+  if (0 == this->count) {
+    return mc_result_ptr(NULL, MC_SUCCESS);
+  }
+  
+  uint32_t bgn = 0;
+  uint32_t end = this->count;
+
+  while (bgn < end) {
+    const uint32_t mid = (bgn + end) >> 1;
+
+    if (this->comparator(data, GET_DATA(this, mid))) {
+      end = mid;
+    } else {
+      bgn = mid + 1;
+    }
+  }  
+
+  void* found_data = NULL;
+  if (!this->comparator(data, GET_DATA(this, bgn)) && !this->comparator(GET_DATA(this, bgn), data)) {
+    found_data = GET_DATA(this, bgn);
+  }
+
+  return mc_result_ptr(found_data, MC_SUCCESS);
+}
+
 mc_result mc_sarray_insert(mc_sarray this, const void* data)
 {
   if (NULL == this) {
@@ -99,9 +130,7 @@ mc_result mc_sarray_insert(mc_sarray this, const void* data)
     }
 
     /* Shift one element to right */
-    for (uint32_t index = this->count; index > bgn; index--) {
-      memcpy(GET_DATA(this, index), GET_DATA(this, index - 1), this->data_size);
-    }
+    memmove(GET_DATA(this, bgn + 1), GET_DATA(this, bgn), this->data_size * (this->count - bgn));
 
     memcpy(GET_DATA(this, bgn), data, this->data_size);
   }
@@ -120,9 +149,7 @@ mc_result mc_sarray_remove(mc_sarray this, uint32_t index)
   }
 
   /* Shift one element to left */
-  for (uint32_t itr = index; itr < this->count - 1; itr++) {
-    memcpy(GET_DATA(this, itr), GET_DATA(this, itr + 1), this->data_size);
-  }
+  memmove(GET_DATA(this, index), GET_DATA(this, index + 1), this->data_size * (this->count - index));
 
   this->count--;
   return MC_SUCCESS;
