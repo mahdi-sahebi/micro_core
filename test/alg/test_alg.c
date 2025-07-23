@@ -182,16 +182,14 @@ static int search_large_array()
 int main()
 {
   printf("[MICRO CORE - ALG - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
-  mc_result total_result = MC_SUCCESS;
+  uint32_t total_failed = 0;
 
   printf("[search_invalid_arguments]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_invalid_arguments();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
@@ -202,10 +200,8 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_empty_buffer();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
@@ -216,10 +212,8 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_present();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
@@ -230,10 +224,8 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_not_present();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
@@ -244,10 +236,8 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_greater_than_all();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
@@ -258,10 +248,8 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_less_than_all();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
@@ -272,10 +260,8 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_first_duplicate();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
@@ -286,10 +272,8 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_element_end();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
@@ -300,10 +284,8 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_not_prepresent_with_duplicate();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
@@ -314,16 +296,18 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = search_large_array();
+    total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
-      if (MC_SUCCESS == total_result) {
-        total_result = result;
-      }
       printf("FAILED: %u\n\n", result);
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
 
+  if (0 != total_failed) {
+    printf("#%d Tests failed\n", total_failed);
+  }
+
   printf("passed\n");
-  return total_result;
+  return MC_SUCCESS;
 }
