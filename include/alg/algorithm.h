@@ -5,10 +5,18 @@
 #include "core/error.h"
 #include "alg/span.h"
 
-typedef int8_t (*mc_alg_comparator)(const void* data_1, const void* data_2);
+
+typedef enum __attribute__((packed))
+{
+  MC_ALG_EQ = 0,
+  MC_ALG_GT = 1,
+  MC_ALG_LT = 2
+}mc_cmp;
+
+typedef mc_cmp (*mc_cmp_fn)(const void* a, const void* b);
 
 
-mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, uint16_t data_size, mc_alg_comparator comparator);
+mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, uint16_t data_size, mc_cmp_fn comparator);
 
 
 #endif /* MC_ALG_ALGORITHM_H_ */

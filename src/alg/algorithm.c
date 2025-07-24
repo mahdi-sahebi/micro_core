@@ -2,7 +2,7 @@
 #include "alg/algorithm.h"
 
 
-mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, uint16_t data_size, mc_alg_comparator comparator)
+mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, uint16_t data_size, mc_cmp_fn comparator)
 {
   if ((NULL == data) || (0 == data_size) || 
       mc_span_is_null(buffer) || (NULL == comparator)) {
@@ -27,6 +27,6 @@ mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, uint16_t data
     }
   }
 
-  const void* element = (bgn != count) ? (buffer.data + (bgn * data_size)) : NULL;
+  void* element = (bgn != count) ? (buffer.data + (bgn * data_size)) : NULL;
   return mc_result_ptr(element, MC_SUCCESS);
 }
