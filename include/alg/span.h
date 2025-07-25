@@ -1,6 +1,7 @@
 /* TODO(MN): sub-span, rename to m buffer, is in range,...
  * Rename namespace _t
  * Change data to char
+ * Move into the core?
  */
 
 #ifndef MC_SPAN_H_
