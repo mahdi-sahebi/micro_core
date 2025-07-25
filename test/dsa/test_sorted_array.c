@@ -200,7 +200,7 @@ static int test_empty()
   return MC_SUCCESS;
 }
 
-static int test_single_data()
+static int test_insert_on_empty()
 {
   int16_t memory[10];
   mc_span buffer = mc_span(memory, sizeof(memory));
@@ -208,34 +208,41 @@ static int test_single_data()
   mc_result_ptr result_ptr = {0};
   
   mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
-  
-  result_bool = mc_sarray_is_empty(array);
-  if ((MC_SUCCESS != result_bool.result) || (false == result_bool.value)) {
-    return MC_ERR_RUNTIME;
-  }
-  
+    
   int16_t value = 42;
   mc_result result = mc_sarray_insert(array, &value);
   if (MC_SUCCESS != result) {
     return result;
   }
   
-  result_bool = mc_sarray_is_empty(array);
-  if ((MC_SUCCESS != result_bool.result) || (true == result_bool.value)) {
+  if (mc_sarray_is_empty(array).value || (1 != mc_sarray_get_count(array).value)) {
     return MC_ERR_RUNTIME;
   }
-  
-  mc_result_u32 result_u32 = mc_sarray_get_count(array);
-  if ((MC_SUCCESS != result_u32.result) || (1 != result_u32.value)) {
-    return MC_ERR_RUNTIME;
-  }
-  
+    
   result_ptr = mc_sarray_get(array, 0);
   if ((MC_SUCCESS != result_ptr.result) || (NULL == result_ptr.data)) {
     return MC_ERR_OUT_OF_RANGE;
   }
-  const int16_t read_value = *(int16_t*)result_ptr.data;
-  if (value != read_value) {
+  if (value != *(int16_t*)result_ptr.data) {
+    return MC_ERR_RUNTIME;
+  }
+  
+  return MC_SUCCESS;
+}
+
+static int test_insert_on_full()
+{
+  int16_t memory[10];
+  mc_span buffer = mc_span(memory, sizeof(memory));
+  
+  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  fill_i16(array);
+  mc_result result = mc_sarray_insert(array, &(int16_t){42});// TODO(MN): Define a micro
+  if (MC_ERR_OUT_OF_RANGE != result) {
+    return result;
+  }
+  
+  if (mc_sarray_is_empty(array).value || (1 != mc_sarray_get_count(array).value)) {
     return MC_ERR_RUNTIME;
   }
   
@@ -408,11 +415,24 @@ int main()
     }
   }
 
-  printf("[test_single_data]\n");
+  printf("[test_insert_on_empty]\n");
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_single_data();
+    const mc_result result = test_insert_on_empty();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_insert_on_full]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_insert_on_full();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
