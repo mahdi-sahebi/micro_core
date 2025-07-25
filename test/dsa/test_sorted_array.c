@@ -1,3 +1,6 @@
+/* TODO(MN): Remove asc, dsc, random. also for insert.
+ */
+
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -192,6 +195,81 @@ static int test_single_data()
   return MC_SUCCESS;
 }
 
+static int test_multiple_data()
+{
+  mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
+  uint16_t memory[10];
+  mc_span buffer = mc_span(memory, sizeof(memory));
+  
+  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+
+  /* Fill */
+  for (uint8_t index = 0; index < capacity; index++) {
+    int16_t x = (index * 100) + 600;
+    const mc_result result = mc_sarray_insert(array, &x);
+    if (MC_SUCCESS != result) {
+      return result;
+    }
+    
+    if ((index + 1) != mc_sarray_get_count(array).value) {
+      return MC_ERR_BAD_ALLOC;
+    }
+  }
+
+  /* Insert when is full */
+  int16_t x = 100;
+  mc_result result = mc_sarray_insert(array, &x);
+  if (MC_SUCCESS == result) {
+    return MC_ERR_BAD_ALLOC;
+  }
+  
+
+  /* Verify content */
+  for (uint8_t index = 0; index < capacity; index++) {
+    const int16_t x = (index * 100) + 600;
+    const mc_result_ptr result = mc_sarray_get(array, index);
+    if ((MC_SUCCESS != result.result) || (NULL == result.data)){
+      return result.result;
+    }
+    
+    if (x != *(int16_t*)result.data) {
+      return MC_ERR_OUT_OF_RANGE;
+    }
+  }
+
+
+  /* Empty */
+  uint8_t index = capacity;
+  while (index--) {
+    const mc_result result = mc_sarray_remove(array, index);
+    if (MC_SUCCESS != result){
+      return result;
+    }
+
+    if ((capacity - index + 1) != mc_sarray_get_count(array).value) {
+      return MC_ERR_BAD_ALLOC;
+    }
+    
+    int16_t x = (index * 100) + 600;
+    const mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    if ((MC_ERR_OUT_OF_RANGE != result_ptr.result) || (NULL != result_ptr.data)) {
+      return MC_ERR_BAD_ALLOC;
+    }
+  }
+
+
+  if (0 != mc_sarray_get_count(array).value) {
+    return MC_ERR_BAD_ALLOC;
+  }
+  result = mc_sarray_remove(array, index);
+  if (MC_SUCCESS != result){
+    return result;
+  }
+    
+  return MC_SUCCESS;
+}
+
 int main()
 {
   printf("[MICRO CORE - DSA - SORTED_ARRAY - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
@@ -251,6 +329,18 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_single_data();
+    total_failed += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_multiple_data]\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_multiple_data();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
