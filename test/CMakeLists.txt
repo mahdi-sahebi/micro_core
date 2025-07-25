@@ -23,6 +23,6 @@ target_include_directories(test_dsa_memlin PRIVATE ${INCLUDE_DIRS})
 
 
 # Linking
-target_link_libraries(test_dsa_span PRIVATE micro_core_dsa)
-target_link_libraries(test_dsa_memlin PRIVATE micro_core_dsa)
+target_link_libraries(test_dsa_span PRIVATE ${PROJECT_NAME}_alg)
+target_link_libraries(test_dsa_memlin PRIVATE ${PROJECT_NAME}_dsa)
 
