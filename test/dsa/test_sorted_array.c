@@ -206,8 +206,8 @@ static int test_insert_on_empty()
   mc_span buffer = mc_span(memory, sizeof(memory));
   
   mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
-  
-  mc_result result = mc_sarray_insert(array, &(int16_t){42});
+  int16_t value = 42;
+  mc_result result = mc_sarray_insert(array, &value);
   if (MC_SUCCESS != result) {
     return result;
   }
@@ -387,6 +387,54 @@ static int test_clear_when_full()
   return MC_SUCCESS;
 }
 
+static int test_remove_when_empty()
+{
+  int16_t memory[10];
+  mc_span buffer = mc_span(memory, sizeof(memory));
+  
+  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  
+  mc_result result = mc_sarray_remove(array, 0);
+  if (MC_ERR_OUT_OF_RANGE != result) {
+    return result;
+  }
+
+  result = mc_sarray_remove(array, 17);
+  if (MC_ERR_OUT_OF_RANGE != result) {
+    return result;
+  }
+
+  result = mc_sarray_remove(array, -1);
+  if (MC_ERR_OUT_OF_RANGE != result) {
+    return result;
+  }
+  
+  if (mc_sarray_is_empty(array).value || (0 != mc_sarray_get_count(array).value)) {
+    return MC_ERR_RUNTIME;
+  }
+  
+  return MC_SUCCESS;
+}
+
+static int test_remove()
+{
+  int16_t memory[10];
+  mc_span buffer = mc_span(memory, sizeof(memory));
+  
+  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  fill_i16(array);
+
+  uint8_t index = mc_sarray_get_capacity(array).value;
+  while (index--) {
+    mc_result result = mc_sarray_remove(array, index);
+    if (MC_ERR_OUT_OF_RANGE != result) {
+      return result;
+    }
+  }
+  
+  return MC_SUCCESS;
+}
+
 int main()
 {
   printf("[MICRO CORE - DSA - SORTED_ARRAY - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
@@ -543,6 +591,32 @@ int main()
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_clear_when_full();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_remove_when_empty]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_remove_when_empty();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_remove]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_remove();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
