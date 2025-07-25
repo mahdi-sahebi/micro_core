@@ -273,15 +273,17 @@ static int test_multiple_data()
 int main()
 {
   printf("[MICRO CORE - DSA - SORTED_ARRAY - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
-  uint32_t total_failed = 0;
+  uint32_t test_count = 0;
+  uint32_t test_failed_count = 0;
 
   test_required_size();
 
   printf("[test_required_size]\n");
   {
+    test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_required_size();
-    total_failed += (MC_SUCCESS != result);
+    test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
@@ -291,9 +293,10 @@ int main()
 
   printf("[test_invalid_creation]\n");
   {
+    test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_invalid_creation();
-    total_failed += (MC_SUCCESS != result);
+    test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
@@ -303,9 +306,10 @@ int main()
 
   printf("[test_correct_creation_i16]\n");
   {
+    test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_correct_creation_i16();
-    total_failed += (MC_SUCCESS != result);
+    test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
@@ -315,9 +319,10 @@ int main()
 
   printf("[test_correct_creation_str]\n");
   {
+    test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_correct_creation_str();
-    total_failed += (MC_SUCCESS != result);
+    test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
@@ -327,9 +332,10 @@ int main()
 
   printf("[test_single_data]\n");
   {
+    test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_single_data();
-    total_failed += (MC_SUCCESS != result);
+    test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
@@ -339,9 +345,10 @@ int main()
 
   printf("[test_multiple_data]\n");
   {
+    test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_multiple_data();
-    total_failed += (MC_SUCCESS != result);
+    test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
@@ -349,10 +356,14 @@ int main()
     }
   }
 
-  if (0 != total_failed) {
-    printf("#%d Tests failed\n", total_failed);
-  }
+  if (0 != test_count) {
+    printf("%u Tests ran, %u tests failed\n", test_count, test_failed_count);
+    if (0 != test_failed_count) {
+      printf("#%d Tests failed\n", test_failed_count);
+      return MC_ERR_RUNTIME;
+    }
 
-  printf("passed\n");
+    printf("passed\n");
+  }
   return MC_SUCCESS;
 }
