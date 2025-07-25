@@ -50,6 +50,40 @@ static int test_required_size()
   return MC_SUCCESS;
 }
 
+static int test_invalid_creation()
+{
+  char memory[10];
+  mc_span buffer = mc_span(memory, sizeof(memory));
+  mc_result_ptr result = {0};
+  
+  result = mc_sarray_init(mc_span(NULL, 10), sizeof(int16_t), 5, comparator_i16);
+  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+    return MC_ERR_RUNTIME;
+  }
+  
+  result = mc_sarray_init(mc_span(memory, 0), sizeof(int16_t), 5, comparator_i16);
+  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+    return MC_ERR_RUNTIME;
+  }
+  
+  result = mc_sarray_init(buffer, 0, 5, comparator_i16);
+  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+    return MC_ERR_RUNTIME;
+  }
+  
+  result = mc_sarray_init(buffer, sizeof(int16_t), 0, comparator_i16);
+  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+    return MC_ERR_RUNTIME;
+  }
+  
+  result = mc_sarray_init(buffer, sizeof(int16_t), 5, NULL);
+  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+    return MC_ERR_RUNTIME;
+  }
+
+  return MC_SUCCESS;
+}
+
 
 int main()
 {
@@ -62,6 +96,18 @@ int main()
   {
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_required_size();
+    total_failed += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_invalid_creation]\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_invalid_creation();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
