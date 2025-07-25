@@ -330,7 +330,7 @@ static int test_multiple_data()
   return MC_SUCCESS;
 }
 
-static int test_clear()
+static int test_clear_when_empty()
 {
   int16_t memory[10];
   mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
@@ -344,9 +344,38 @@ static int test_clear()
     return MC_ERR_RUNTIME;
   }
 
+  return MC_SUCCESS;
+}
+
+static int test_clear()
+{
+  int16_t memory[10];
+  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  
+  mc_sarray_insert(array, &(int16_t){54});
+  mc_sarray_insert(array, &(int16_t){514});
+  mc_sarray_insert(array, &(int16_t){7});
+
+  mc_result result = mc_sarray_clear(array);
+  if (MC_SUCCESS != result) {
+    return result;
+  }
+
+  if (!mc_sarray_is_empty(array).value || (0 != mc_sarray_get_count(array).value)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  return MC_SUCCESS;
+}
+
+static int test_clear_when_full()
+{
+  int16_t memory[10];
+  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  
   fill_i16(array);
 
-  result = mc_sarray_clear(array);
+  mc_result result = mc_sarray_clear(array);
   if (MC_SUCCESS != result) {
     return result;
   }
@@ -483,11 +512,37 @@ int main()
     }
   }
 
+  printf("[test_clear_when_empty]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_clear_when_empty();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
   printf("[test_clear]\n");
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_clear();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_clear_when_full]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_clear_when_full();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
