@@ -11,12 +11,14 @@
 #include "dsa/sarray.h"
 
 
-static int8_t comparator_i16(const void* a, const void* b) 
+static mc_cmp comparator_i16(const void* data_1, const void* data_2) 
 {
-  return *(const int*)a - *(const int*)b;
+  const int16_t a = *(int16_t*)data_1;
+  const int16_t b = *(int16_t*)data_2;
+  return (a > b) - (a < b);
 }
 
-static int8_t comparator_str(const void* a, const void* b) 
+static mc_cmp comparator_str(const void* a, const void* b) 
 {
   return strcmp(a, b);
 }
@@ -168,7 +170,7 @@ static int test_correct_creation_str()
 
 static int test_empty()
 {
-  int16_t memory[10];
+  int16_t memory[25];
   mc_result_bool result_bool = {0};
   mc_result_ptr result_ptr = {0};
   
@@ -205,7 +207,7 @@ static int test_empty()
 
 static int test_insert_on_empty()
 {
-  int16_t memory[10];
+  int16_t memory[25];
   mc_span buffer = mc_span(memory, sizeof(memory));
   
   mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
@@ -232,7 +234,7 @@ static int test_insert_on_empty()
 
 static int test_insert()
 {
-  uint16_t memory[10];
+  uint16_t memory[25];
   mc_span buffer = mc_span(memory, sizeof(memory));
   mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
 
@@ -251,7 +253,7 @@ static int test_insert()
 
 static int test_insert_on_full()
 {
-  int16_t memory[10];
+  int16_t memory[25];
   mc_span buffer = mc_span(memory, sizeof(memory));
   
   mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
@@ -261,48 +263,46 @@ static int test_insert_on_full()
     return result;
   }
   
-  if (mc_sarray_is_empty(array).value || (1 != mc_sarray_get_count(array).value)) {
+  if (mc_sarray_is_empty(array).value || (10 != mc_sarray_get_count(array).value)) {
     return MC_ERR_RUNTIME;
   }
   
   return MC_SUCCESS;
 }
 
-static int test_multiple_data()
+static int test_get()
 {
   mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
-  uint16_t memory[10];
-  mc_span buffer = mc_span(memory, sizeof(memory));
-  
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  uint16_t memory[25];
+
+  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  fill_i16(array);  
   const uint8_t capacity = mc_sarray_get_capacity(array).value;
 
-  fill_i16(array);
-
-
-  /* Insert when is full */
-  int16_t x = 100;
-  mc_result result = mc_sarray_insert(array, &x);
-  if (MC_SUCCESS == result) {
-    return MC_ERR_BAD_ALLOC;
-  }
-  
-
-  /* Verify content */
   for (uint8_t index = 0; index < capacity; index++) {
-    const int16_t x = (index * 100) + 600;
     const mc_result_ptr result = mc_sarray_get(array, index);
     if ((MC_SUCCESS != result.result) || (NULL == result.data)){
       return result.result;
     }
     
+    const int16_t x = (index * 100) + 600;
     if (x != *(int16_t*)result.data) {
       return MC_ERR_OUT_OF_RANGE;
     }
   }
+    
+  return MC_SUCCESS;
+}
 
+static int test_find()
+{
+  mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
+  uint16_t memory[25];
 
-  /* Empty */
+  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  fill_i16(array); 
+  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+
   uint8_t index = capacity;
   while (index--) {
     const mc_result result = mc_sarray_remove(array, index);
@@ -310,24 +310,15 @@ static int test_multiple_data()
       return result;
     }
 
-    if ((capacity - index + 1) != mc_sarray_get_count(array).value) {
+    if (index != mc_sarray_get_count(array).value) {
       return MC_ERR_BAD_ALLOC;
     }
     
     int16_t x = (index * 100) + 600;
     const mc_result_ptr result_ptr = mc_sarray_find(array, &x);
-    if ((MC_ERR_OUT_OF_RANGE != result_ptr.result) || (NULL != result_ptr.data)) {
-      return MC_ERR_BAD_ALLOC;
+    if ((MC_SUCCESS != result_ptr.result) || (NULL != result_ptr.data)) {
+      return MC_ERR_OUT_OF_RANGE;
     }
-  }
-
-
-  if (0 != mc_sarray_get_count(array).value) {
-    return MC_ERR_BAD_ALLOC;
-  }
-  result = mc_sarray_remove(array, index);
-  if (MC_SUCCESS != result){
-    return result;
   }
     
   return MC_SUCCESS;
@@ -335,7 +326,7 @@ static int test_multiple_data()
 
 static int test_clear_when_empty()
 {
-  int16_t memory[10];
+  int16_t memory[25];
   mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
   
   mc_result result = mc_sarray_clear(array);
@@ -352,7 +343,7 @@ static int test_clear_when_empty()
 
 static int test_clear()
 {
-  int16_t memory[10];
+  int16_t memory[25];
   mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
   
   mc_sarray_insert(array, &(int16_t){54});
@@ -373,7 +364,7 @@ static int test_clear()
 
 static int test_clear_when_full()
 {
-  int16_t memory[10];
+  int16_t memory[25];
   mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
   
   fill_i16(array);
@@ -392,7 +383,7 @@ static int test_clear_when_full()
 
 static int test_remove_when_empty()
 {
-  int16_t memory[10];
+  int16_t memory[25];
   mc_span buffer = mc_span(memory, sizeof(memory));
   
   mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
@@ -421,7 +412,7 @@ static int test_remove_when_empty()
 
 static int test_remove()
 {
-  int16_t memory[10];
+  int16_t memory[25];
   mc_span buffer = mc_span(memory, sizeof(memory));
   
   mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
@@ -550,11 +541,24 @@ int main()
     }
   }
 
-  printf("[test_multiple_data]\n");
+  printf("[test_get]\n");
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_multiple_data();
+    const mc_result result = test_get();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_find]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_find();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
