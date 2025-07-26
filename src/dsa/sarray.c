@@ -100,7 +100,7 @@ mc_result_ptr mc_sarray_get(const mc_sarray this, uint32_t index)
     return mc_result_ptr(NULL, MC_ERR_OUT_OF_RANGE);
   }
 
-  return mc_result_ptr(GET_DATA(this, index), MC_ERR_INVALID_ARGUMENT);
+  return mc_result_ptr(GET_DATA(this, index), MC_SUCCESS);
 }
 
 mc_result_ptr mc_sarray_find(const mc_sarray this, const void* const data)
