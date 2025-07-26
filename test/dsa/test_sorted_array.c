@@ -1,6 +1,3 @@
-/* TODO(MN): Remove asc, dsc, random. also for insert.
- */
-
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -232,7 +229,7 @@ static int test_insert_on_empty()
   return MC_SUCCESS;
 }
 
-static int test_insert()
+static int test_insert_ascending()
 {
   uint16_t memory[25];
   mc_span buffer = mc_span(memory, sizeof(memory));
@@ -241,10 +238,54 @@ static int test_insert()
   const uint8_t capacity = mc_sarray_get_capacity(array).value;
 
   for (uint16_t index = 0; index < capacity; index++) {
-    mc_result result = mc_sarray_insert(array, &(int16_t){(index * 100) + 600});
-
-    if (MC_SUCCESS == result) {
+    int16_t x = (index * 100) + 600;
+    
+    mc_result result = mc_sarray_insert(array, &x);
+    if (MC_SUCCESS != result) {
       return result;
+    }
+
+    if ((index + 1) != mc_sarray_get_count(array).value) {
+      return MC_ERR_BAD_ALLOC;
+    }
+
+    mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    if ((MC_SUCCESS != result_ptr.result) || (NULL == result_ptr.data)) {
+      return result_ptr.result;
+    }
+    if (x != *(int16_t*)result_ptr.data) {
+      return MC_ERR_OUT_OF_RANGE;
+    }
+  }
+    
+  return MC_SUCCESS;
+}
+
+static int test_insert_descending()
+{
+  uint16_t memory[25];
+  mc_span buffer = mc_span(memory, sizeof(memory));
+  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+
+  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+
+  for (uint16_t index = 0; index < capacity; index++) {
+    int16_t x = -index * 10;
+    mc_result result = mc_sarray_insert(array, &x);
+    if (MC_SUCCESS != result) {
+      return result;
+    }
+
+    if ((index + 1) != mc_sarray_get_count(array).value) {
+      return MC_ERR_BAD_ALLOC;
+    }
+
+    mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    if ((MC_SUCCESS != result_ptr.result) || (NULL == result_ptr.data)) {
+      return result_ptr.result;
+    }
+    if (x != *(int16_t*)result_ptr.data) {
+      return MC_ERR_OUT_OF_RANGE;
     }
   }
     
@@ -554,11 +595,24 @@ int main()
     }
   }
 
-  printf("[test_insert]\n");
+  printf("[test_insert_ascending]\n");
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_insert();
+    const mc_result result = test_insert_ascending();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_insert_descending]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_insert_descending();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
