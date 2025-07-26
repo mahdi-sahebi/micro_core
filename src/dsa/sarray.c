@@ -12,14 +12,14 @@
 
 struct _mc_sarray
 {
-  mc_comparator comparator;
-  uint32_t capacity;
-  uint32_t count;
-  uint16_t data_size;
-  char     data[0];
+  mc_cmp_fn comparator;
+  uint32_t  capacity;
+  uint32_t  count;
+  uint16_t  data_size;
+  char      data[0];
 };
 
-#define GET_DATA(ARRAY, INDEX)   ((ARRAY)->data + ((ARRAY)->data_size * (INDEX)))
+#define GET_DATA(ARRAY, INDEX)   ((ARRAY)->data + ((ARRAY)->data_size * (INDEX)))// TODO(MN): Opt
 
 
 // TODO(MN): Should it be meta_data_size/minimum_required_size
@@ -32,7 +32,7 @@ mc_result_u32 mc_sarray_required_size(uint32_t data_size, uint32_t capacity)// T
   return mc_result_u32(sizeof(struct _mc_sarray) + (capacity * data_size), MC_SUCCESS);
 }
 
-mc_result_ptr mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capacity, mc_comparator comparator)
+mc_result_ptr mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capacity, mc_cmp_fn comparator)
 {
   if (mc_span_is_null(buffer) || mc_span_is_empty(buffer) ||
       (0 == capacity) || (0 == data_size) || (NULL == comparator)) {
@@ -151,8 +151,11 @@ mc_result mc_sarray_insert(mc_sarray this, const void* data)
 
     while (bgn < end) {
       const uint32_t mid = (bgn + end) >> 1;
-
-      if (this->comparator(data, GET_DATA(this, mid))) {
+      const mc_cmp cmp = this->comparator(data, GET_DATA(this, mid));
+      if        (MC_ALG_EQ == cmp) {
+        bgn = mid;
+        break;
+      } else if (MC_ALG_LT == cmp) {
         end = mid;
       } else {
         bgn = mid + 1;
@@ -160,7 +163,9 @@ mc_result mc_sarray_insert(mc_sarray this, const void* data)
     }
 
     /* Shift one element to right */
-    memmove(GET_DATA(this, bgn + 1), GET_DATA(this, bgn), this->data_size * (this->count - bgn));
+    if (bgn < this->count) {
+      memmove(GET_DATA(this, bgn + 1), GET_DATA(this, bgn), this->data_size * (this->count - bgn));
+    }
 
     memcpy(GET_DATA(this, bgn), data, this->data_size);
   }
