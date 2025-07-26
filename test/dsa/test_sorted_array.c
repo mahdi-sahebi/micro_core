@@ -292,6 +292,37 @@ static int test_insert_descending()
   return MC_SUCCESS;
 }
 
+static int test_insert_not_ordered()
+{
+  uint16_t memory[25];
+  mc_span buffer = mc_span(memory, sizeof(memory));
+  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+
+  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+  int16_t nums[] = {7, 19, 0, 9, -5, 67, 3, 4, -8, -8};
+
+  for (uint16_t index = 0; index < capacity; index++) {
+    mc_result result = mc_sarray_insert(array, &nums[index]);
+    if (MC_SUCCESS != result) {
+      return result;
+    }
+
+    if ((index + 1) != mc_sarray_get_count(array).value) {
+      return MC_ERR_BAD_ALLOC;
+    }
+
+    mc_result_ptr result_ptr = mc_sarray_find(array, &nums[index]);
+    if ((MC_SUCCESS != result_ptr.result) || (NULL == result_ptr.data)) {
+      return result_ptr.result;
+    }
+    if (nums[index] != *(int16_t*)result_ptr.data) {
+      return MC_ERR_OUT_OF_RANGE;
+    }
+  }
+    
+  return MC_SUCCESS;
+}
+
 static int test_insert_on_full()
 {
   int16_t memory[25];
@@ -613,6 +644,19 @@ int main()
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_result result = test_insert_descending();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_insert_not_ordered]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_insert_not_ordered();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
