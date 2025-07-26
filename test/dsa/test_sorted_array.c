@@ -448,6 +448,26 @@ static int test_remove_ascending()
   return MC_SUCCESS;
 }
 
+static int test_remove_middle()
+{
+  int16_t memory[25];
+  mc_span buffer = mc_span(memory, sizeof(memory));
+  
+  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  fill_i16(array);
+
+  uint8_t index = mc_sarray_get_capacity(array).value;
+  while (index--) {
+    const uint32_t mid = (mc_sarray_get_count(array).value - 1) / 2;
+    mc_result result = mc_sarray_remove(array, mid);
+    if (MC_ERR_OUT_OF_RANGE != result) {
+      return result;
+    }
+  }
+  
+  return MC_SUCCESS;
+}
+
 int main()
 {
   printf("[MICRO CORE - DSA - SORTED_ARRAY - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
@@ -664,6 +684,18 @@ int main()
     }
   }
 
+  printf("[test_remove_middle]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_result result = test_remove_middle();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
 
   if (0 != test_count) {
     printf("%u Tests ran, %u tests failed\n", test_count, test_failed_count);
