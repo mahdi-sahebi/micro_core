@@ -46,7 +46,7 @@ mc_result_ptr mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capaci
 
   mc_sarray this   = (mc_sarray)buffer.data;
   this->comparator = comparator;
-  this->capacity   = size;
+  this->capacity   = (size - sizeof(struct _mc_sarray)) / data_size;
   this->count      = 0;
   this->data_size  = data_size;
 
