@@ -403,7 +403,7 @@ static int test_remove_when_empty()
     return result;
   }
   
-  if (mc_sarray_is_empty(array).value || (0 != mc_sarray_get_count(array).value)) {
+  if (!mc_sarray_is_empty(array).value || (0 != mc_sarray_get_count(array).value)) {
     return MC_ERR_RUNTIME;
   }
   
