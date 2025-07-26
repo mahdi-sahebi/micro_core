@@ -111,7 +111,11 @@ static int test_correct_creation_i16()
 {
   int16_t memory[25];
   
-  mc_result_ptr result_ptr = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16);
+  mc_result_ptr result_ptr = mc_sarray_init(
+    mc_span(memory, sizeof(memory)),
+    sizeof(int16_t), 
+    10, 
+    comparator_i16);
   mc_sarray array = result_ptr.data;
   if ((MC_SUCCESS != result_ptr.result) || (NULL == array)) {
     return MC_ERR_BAD_ALLOC;
@@ -141,7 +145,11 @@ static int test_correct_creation_str()
   mc_result_ptr result_ptr = {0};
   mc_result_u32 result_u32 = {0};
   
-  result_ptr = mc_sarray_init(mc_span(memory, sizeof(memory)), 10, 1, comparator_str);
+  result_ptr = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    10, 
+    1, 
+    comparator_str);
   mc_sarray array = result_ptr.data;
   if ((MC_SUCCESS != result_ptr.result) || (NULL == array)) {
     return MC_ERR_BAD_ALLOC;
@@ -171,7 +179,11 @@ static int test_empty()
   mc_result_bool result_bool = {0};
   mc_result_ptr result_ptr = {0};
   
-  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   
   result_bool = mc_sarray_is_empty(array);
   if ((MC_SUCCESS != result_bool.result) || (false == result_bool.value)) {
@@ -205,9 +217,12 @@ static int test_empty()
 static int test_insert_on_empty()
 {
   int16_t memory[25];
-  mc_span buffer = mc_span(memory, sizeof(memory));
   
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   int16_t value = 42;
   mc_result result = mc_sarray_insert(array, &value);
   if (MC_SUCCESS != result) {
@@ -232,8 +247,11 @@ static int test_insert_on_empty()
 static int test_insert_ascending()
 {
   uint16_t memory[25];
-  mc_span buffer = mc_span(memory, sizeof(memory));
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
 
   const uint8_t capacity = mc_sarray_get_capacity(array).value;
 
@@ -264,8 +282,11 @@ static int test_insert_ascending()
 static int test_insert_descending()
 {
   uint16_t memory[25];
-  mc_span buffer = mc_span(memory, sizeof(memory));
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
 
   const uint8_t capacity = mc_sarray_get_capacity(array).value;
 
@@ -295,8 +316,11 @@ static int test_insert_descending()
 static int test_insert_not_ordered()
 {
   uint16_t memory[25];
-  mc_span buffer = mc_span(memory, sizeof(memory));
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
 
   const uint8_t capacity = mc_sarray_get_capacity(array).value;
   int16_t nums[] = {7, 19, 0, 9, -5, 67, 3, 4, -8, -8};
@@ -326,9 +350,12 @@ static int test_insert_not_ordered()
 static int test_insert_on_full()
 {
   int16_t memory[25];
-  mc_span buffer = mc_span(memory, sizeof(memory));
   
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   fill_i16(array);
   mc_result result = mc_sarray_insert(array, &(int16_t){42});// TODO(MN): Define a micro
   if (MC_ERR_OUT_OF_RANGE != result) {
@@ -347,7 +374,11 @@ static int test_get()
   mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
   uint16_t memory[25];
 
-  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   fill_i16(array);  
   const uint8_t capacity = mc_sarray_get_capacity(array).value;
 
@@ -371,7 +402,11 @@ static int test_find()
   mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
   uint16_t memory[25];
 
-  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   fill_i16(array); 
   const uint8_t capacity = mc_sarray_get_capacity(array).value;
 
@@ -399,7 +434,11 @@ static int test_find()
 static int test_clear_when_empty()
 {
   int16_t memory[25];
-  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   
   mc_result result = mc_sarray_clear(array);
   if (MC_SUCCESS != result) {
@@ -416,7 +455,11 @@ static int test_clear_when_empty()
 static int test_clear()
 {
   int16_t memory[25];
-  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   
   mc_sarray_insert(array, &(int16_t){54});
   mc_sarray_insert(array, &(int16_t){514});
@@ -437,7 +480,11 @@ static int test_clear()
 static int test_clear_when_full()
 {
   int16_t memory[25];
-  mc_sarray array = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   
   fill_i16(array);
 
@@ -456,9 +503,12 @@ static int test_clear_when_full()
 static int test_remove_when_empty()
 {
   int16_t memory[25];
-  mc_span buffer = mc_span(memory, sizeof(memory));
   
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   
   mc_result result = mc_sarray_remove(array, 0);
   if (MC_ERR_OUT_OF_RANGE != result) {
@@ -485,9 +535,12 @@ static int test_remove_when_empty()
 static int test_remove_descending()
 {
   int16_t memory[25];
-  mc_span buffer = mc_span(memory, sizeof(memory));
   
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   fill_i16(array);
 
   uint8_t index = mc_sarray_get_capacity(array).value;
@@ -504,9 +557,12 @@ static int test_remove_descending()
 static int test_remove_ascending()
 {
   int16_t memory[25];
-  mc_span buffer = mc_span(memory, sizeof(memory));
   
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   fill_i16(array);
 
   uint8_t index = mc_sarray_get_capacity(array).value;
@@ -523,9 +579,12 @@ static int test_remove_ascending()
 static int test_remove_middle()
 {
   int16_t memory[25];
-  mc_span buffer = mc_span(memory, sizeof(memory));
   
-  mc_sarray array = mc_sarray_init(buffer, sizeof(int16_t), 10, comparator_i16).data;
+  mc_sarray array = mc_sarray_init(
+    mc_span(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
   fill_i16(array);
 
   uint8_t index = mc_sarray_get_capacity(array).value;
