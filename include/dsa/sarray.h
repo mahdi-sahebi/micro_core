@@ -5,14 +5,14 @@
 #include <stdbool.h>
 #include "core/error.h"
 #include "alg/span.h"
+#include "alg/algorithm.h"
 
 
 typedef struct _mc_sarray* mc_sarray;
-typedef int8_t (*mc_comparator)(const void* const data_1, const void* const data_2);
 
 
 mc_result_u32  mc_sarray_required_size(uint32_t data_size, uint32_t capacity);
-mc_result_ptr  mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capacity, mc_comparator comparator);
+mc_result_ptr  mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capacity, mc_cmp_fn comparator);
 mc_result      mc_sarray_clear(mc_sarray this);
 mc_result_u32  mc_sarray_get_count(const mc_sarray this);
 mc_result_u32  mc_sarray_get_capacity(const mc_sarray this);
