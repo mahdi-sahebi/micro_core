@@ -1,10 +1,12 @@
 /* TODO(MN): Reduce meta data size.
  * Not tested. Implement test cases. How to find out the meta data size?
+ * Remove capacity from mc_sarray_init. calculate according to the span?
+ * Doc: memory safe for detaching pointer, destructor, free
  */
 
 #include <stdlib.h>
 #include <string.h>
-#include "dsa/span.h"
+#include "alg/span.h"
 #include "dsa/sarray.h"
 
 
@@ -19,6 +21,16 @@ struct _mc_sarray
 
 #define GET_DATA(ARRAY, INDEX)   ((ARRAY)->data + ((ARRAY)->data_size * (INDEX)))
 
+
+// TODO(MN): Should it be meta_data_size/minimum_required_size
+mc_result_u32 mc_sarray_required_size(uint32_t data_size, uint32_t capacity)// TODO(MN): u16, 
+{
+  if ((0 == capacity) || (0 == data_size)) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+
+  return mc_result_u32(sizeof(struct _mc_sarray) + (capacity * data_size), MC_SUCCESS);
+}
 
 mc_result_ptr mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capacity, mc_comparator comparator)
 {
@@ -52,13 +64,31 @@ mc_result mc_sarray_clear(mc_sarray this)
   return MC_SUCCESS;
 }
 
-mc_result_u32  mc_sarray_get_count(const mc_sarray this)
+mc_result_u32 mc_sarray_get_count(const mc_sarray this)
 {
   if (NULL == this) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
   return mc_result_u32(this->count, MC_SUCCESS);
+}
+
+mc_result_u32 mc_sarray_get_capacity(const mc_sarray this)
+{
+  if (NULL == this) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+
+  return mc_result_u32(this->capacity, MC_SUCCESS);
+}
+
+mc_result_u32 mc_sarray_get_data_size(const mc_sarray this)
+{
+  if (NULL == this) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+
+  return mc_result_u32(this->data_size, MC_SUCCESS);
 }
 
 mc_result_ptr mc_sarray_get(const mc_sarray this, uint32_t index)
@@ -155,7 +185,7 @@ mc_result mc_sarray_remove(mc_sarray this, uint32_t index)
   return MC_SUCCESS;
 }
 
-mc_result_bool mc_sarray_is_emtpy(const mc_sarray this)
+mc_result_bool mc_sarray_is_empty(const mc_sarray this)
 {
   if (NULL == this) {
     return mc_result_bool(false, MC_ERR_INVALID_ARGUMENT);
