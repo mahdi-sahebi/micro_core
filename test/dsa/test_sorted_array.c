@@ -71,7 +71,7 @@ static int test_required_size()
 
 static int test_invalid_creation()
 {
-  char memory[10];
+  char memory[20];
   mc_span buffer = mc_span(memory, sizeof(memory));
   mc_result_ptr result = {0};
   
@@ -99,23 +99,26 @@ static int test_invalid_creation()
   if (MC_ERR_INVALID_ARGUMENT != result.result) {
     return MC_ERR_RUNTIME;
   }
+  
+  result = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16);
+  if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
+    return MC_ERR_BAD_ALLOC;
+  }
 
   return MC_SUCCESS;
 }
 
 static int test_correct_creation_i16()
 {
-  char memory[20];
-  mc_result_ptr result_ptr = {0};
-  mc_result_u32 result_u32 = {0};
+  int16_t memory[25];
   
-  result_ptr = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16);
+  mc_result_ptr result_ptr = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16);
   mc_sarray array = result_ptr.data;
   if ((MC_SUCCESS != result_ptr.result) || (NULL == array)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  result_u32 = mc_sarray_get_capacity(array);
+  mc_result_u32 result_u32 = mc_sarray_get_capacity(array);
   if ((MC_SUCCESS != result_u32.result) || (10 != result_u32.value)) {
     return MC_ERR_BAD_ALLOC;
   }
