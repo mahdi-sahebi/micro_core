@@ -15,10 +15,10 @@ void wnd_write(wnd_t* const wnd, mc_span buffer, id_t id)
   wnd->packet.header = HEADER;
   wnd->packet.type   = PKT_DATA;
   wnd->is_acked      = false;
-  wnd->packet.size   = buffer.size;
+  wnd->packet.size   = buffer.capacity;
   wnd->packet.id     = id;
   wnd->sent_time     = mc_now_u();
-  memcpy(wnd->packet.data, buffer.data, buffer.size);
+  memcpy(wnd->packet.data, buffer.data, buffer.capacity);
 }
 
 void* wnd_get_data(wnd_t* const wnd)
