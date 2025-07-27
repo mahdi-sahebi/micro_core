@@ -1,7 +1,6 @@
 #ifndef MC_ERROR_H_
 #define MC_ERROR_H_
 
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -16,14 +15,13 @@ typedef enum __attribute__((packed))
   MC_ERR_TIMEOUT,
   MC_ERR_INCOMPLETE,
   MC_ERR_RUNTIME
-  // TODO(MN): Not enough space. is it equal to MC_ERR_OUT_OF_RANGE?
-}mc_result;
+}mc_error;
 
 
 typedef struct
 {
-  uint32_t  value;
-  mc_result result;
+  uint32_t value;
+  mc_error result;
 }mc_result_u32;
 
 #define mc_result_u32(VALUE, ERROR)     (mc_result_u32){.value = (VALUE), .result = (ERROR)}
@@ -31,8 +29,8 @@ typedef struct
 
 typedef struct
 {
-  bool   value;
-  mc_result result;
+  bool     value;
+  mc_error result;
 }mc_result_bool;
 
 #define mc_result_bool(BOOL, ERROR)     (mc_result_bool){.value = (BOOL), .result = (ERROR)}
@@ -40,8 +38,8 @@ typedef struct
 
 typedef struct
 {
-  void*  data;
-  mc_result result;// TODO(MN): rename
+  void*    data;
+  mc_error result;
 }mc_result_ptr;
 
 #define mc_result_ptr(DATA, ERROR)      (mc_result_ptr){.data = (DATA), .result = (ERROR)}
