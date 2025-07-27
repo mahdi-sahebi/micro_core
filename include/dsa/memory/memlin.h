@@ -16,10 +16,10 @@ typedef struct _mc_memlin mc_memlin;
 
 // TODO(MN): warn_unused_result attribute for alloc memory APIs
 mc_result_ptr  mc_memlin_create(const mc_span buffer);
-mc_result      mc_memlin_destroy(mc_memlin** this);
+mc_error      mc_memlin_destroy(mc_memlin** this);
 
 mc_result_ptr  mc_memlin_alloc(mc_memlin* this, uint32_t size);
-mc_result      mc_memlin_clear(mc_memlin* this);
+mc_error      mc_memlin_clear(mc_memlin* this);
 
 mc_result_bool mc_memlin_is_empty(const mc_memlin* this);
 mc_result_bool mc_memlin_is_full(const mc_memlin* this);
