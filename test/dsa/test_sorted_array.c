@@ -80,28 +80,28 @@ static int test_invalid_creation()
   }
   
   result = mc_sarray_init(mc_span(memory, 0), sizeof(int16_t), 5, comparator_i16);
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
-    return MC_ERR_RUNTIME;
+  if (MC_ERR_BAD_ALLOC != result.result) {
+    return result.result;
   }
   
   result = mc_sarray_init(buffer, 0, 5, comparator_i16);
   if (MC_ERR_INVALID_ARGUMENT != result.result) {
-    return MC_ERR_RUNTIME;
+    return result.result;
   }
   
   result = mc_sarray_init(buffer, sizeof(int16_t), 0, comparator_i16);
   if (MC_ERR_INVALID_ARGUMENT != result.result) {
-    return MC_ERR_RUNTIME;
+    return result.result;
   }
   
   result = mc_sarray_init(buffer, sizeof(int16_t), 5, NULL);
   if (MC_ERR_INVALID_ARGUMENT != result.result) {
-    return MC_ERR_RUNTIME;
+    return result.result;
   }
   
   result = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16);
-  if ((MC_ERR_OUT_OF_RANGE != result.result) || (NULL != result.data)) {
-    return MC_ERR_OUT_OF_RANGE;
+  if ((MC_ERR_BAD_ALLOC != result.result) || (NULL != result.data)) {
+    return result.result;
   }
 
   return MC_SUCCESS;

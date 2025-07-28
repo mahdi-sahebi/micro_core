@@ -34,19 +34,18 @@ mc_result_u32 mc_sarray_required_size(uint32_t data_size, uint32_t capacity)// T
 
 mc_result_ptr mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capacity, mc_cmp_fn comparator)
 {
-  if (mc_span_is_null(buffer) || mc_span_is_empty(buffer) ||
-      (0 == capacity) || (0 == data_size) || (NULL == comparator)) {
+  if (mc_span_is_null(buffer) || (0 == capacity) || (0 == data_size) || (NULL == comparator)) {
     return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
-  const uint32_t size = sizeof(struct _mc_sarray) + (capacity * data_size);
-  if (buffer.capacity < size) {
-    return mc_result_ptr(NULL, MC_ERR_OUT_OF_RANGE);
+  const uint32_t required_size = sizeof(struct _mc_sarray) + (capacity * data_size);
+  if (mc_span_get_size(buffer) < required_size) {
+    return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
 
   mc_sarray this   = (mc_sarray)buffer.data;
   this->comparator = comparator;
-  this->capacity   = (size - sizeof(struct _mc_sarray)) / data_size;
+  this->capacity   = capacity;
   this->count      = 0;
   this->data_size  = data_size;
 

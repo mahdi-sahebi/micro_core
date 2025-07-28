@@ -16,6 +16,7 @@ typedef enum __attribute__((packed))
   MC_ERR_TIMEOUT,
   MC_ERR_INCOMPLETE,
   MC_ERR_RUNTIME
+  // TODO(MN): Not enough space. is it equal to MC_ERR_OUT_OF_RANGE?
 }mc_result;
 
 
