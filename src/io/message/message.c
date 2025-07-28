@@ -48,7 +48,7 @@ static void send_ack(mc_msg_t* const this, uint32_t id)
   }
   // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
 }
-#include <stdio.h>
+
 #include <inttypes.h>
 static uint32_t read_data(mc_msg_t* const this)
 {
@@ -108,9 +108,9 @@ static void send_unacked(mc_msg_t* const this)
 }
 
 mc_msg_t* mc_msg_new(
-  mc_io io, 
   uint16_t window_size, 
   uint8_t window_capacity, 
+  mc_io io,
   mc_io_receive_cb on_receive)
 {
   if ((NULL == io.recv) || (NULL == io.send) ||
