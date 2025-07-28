@@ -16,7 +16,7 @@ typedef enum __attribute__((packed))
 typedef mc_cmp (*mc_cmp_fn)(const void* a, const void* b);
 
 
-mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, uint16_t data_size, mc_cmp_fn comparator);
+mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, mc_cmp_fn comparator);
 
 
 #endif /* MC_ALG_ALGORITHM_H_ */
