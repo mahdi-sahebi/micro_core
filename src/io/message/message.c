@@ -115,7 +115,7 @@ mc_msg_t* mc_msg_new(
 {
   if ((NULL == io.recv) || (NULL == io.send) ||
       (0 == window_size) || (0 == window_capacity) || 
-      (window_capacity >= (sizeof(idx_t) * 8))) {
+      (window_capacity >= (sizeof(mc_msg_idx) * 8))) {
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
   }
 

@@ -10,7 +10,7 @@ void wnd_clear(wnd_t* const wnd)
   wnd->is_acked  = true;
 }
 
-void wnd_write(wnd_t* const wnd, mc_span buffer, id_t id)
+void wnd_write(wnd_t* const wnd, mc_span buffer, mc_msg_id id)
 {
   wnd->packet.header = HEADER;
   wnd->packet.type   = PKT_DATA;
