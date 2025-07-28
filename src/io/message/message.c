@@ -27,7 +27,7 @@
 
 struct _mc_msg_t
 { 
-  mc_io_t          io;
+  mc_io            io;
   mc_io_receive_cb on_receive;
   uint32_t         send_delay_us;
   wndpool_t*       rcv;// TODO(MN): Use array to reduce one pointer size
@@ -108,7 +108,7 @@ static void send_unacked(mc_msg_t* const this)
 }
 
 mc_msg_t* mc_msg_new(
-  mc_io_t io, 
+  mc_io io, 
   uint16_t window_size, 
   uint8_t window_capacity, 
   mc_io_receive_cb on_receive)

@@ -13,10 +13,10 @@ typedef struct
 {
   mc_io_recv_fn recv;
   mc_io_send_fn send;
-}mc_io_t;
+}mc_io;
 
 
-#define mc_io(RECV, SEND)     ((mc_io_t){.recv = RECV, .send = SEND})
+#define mc_io(RECV, SEND)     ((mc_io){.recv = RECV, .send = SEND})
 
 
 #endif /* MC_IO_H_ */
