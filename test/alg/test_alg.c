@@ -187,7 +187,7 @@ int main()
   printf("[search_invalid_arguments]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_invalid_arguments();
+    const mc_error result = search_invalid_arguments();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -199,7 +199,7 @@ int main()
   printf("[search_empty_buffer]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_empty_buffer();
+    const mc_error result = search_empty_buffer();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -211,7 +211,7 @@ int main()
   printf("[search_present]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_present();
+    const mc_error result = search_present();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -223,7 +223,7 @@ int main()
   printf("[search_not_present]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_not_present();
+    const mc_error result = search_not_present();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -235,7 +235,7 @@ int main()
   printf("[search_greater_than_all]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_greater_than_all();
+    const mc_error result = search_greater_than_all();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -247,7 +247,7 @@ int main()
   printf("[search_less_than_all]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_less_than_all();
+    const mc_error result = search_less_than_all();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -259,7 +259,7 @@ int main()
   printf("[search_first_duplicate]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_first_duplicate();
+    const mc_error result = search_first_duplicate();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -271,7 +271,7 @@ int main()
   printf("[search_element_end]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_element_end();
+    const mc_error result = search_element_end();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -283,7 +283,7 @@ int main()
   printf("[search_not_prepresent_with_duplicate]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_not_prepresent_with_duplicate();
+    const mc_error result = search_not_prepresent_with_duplicate();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -295,7 +295,7 @@ int main()
   printf("[search_large_array]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = search_large_array();
+    const mc_error result = search_large_array();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);

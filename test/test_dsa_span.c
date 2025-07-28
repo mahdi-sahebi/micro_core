@@ -137,7 +137,7 @@ int main()
 {
     printf("[MICRO CORE - DSA - SPAN - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
 
-    mc_result result = MC_SUCCESS;
+    mc_error result = MC_SUCCESS;
 
     result = span_create();
     if (MC_SUCCESS != result) {

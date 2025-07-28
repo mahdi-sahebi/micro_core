@@ -196,7 +196,7 @@ static int test_empty()
   }
   
   int16_t value = 42;
-  mc_result result = mc_sarray_insert(array, &value);
+  mc_error result = mc_sarray_insert(array, &value);
   if (MC_SUCCESS != result) {
     return result;
   }
@@ -224,7 +224,7 @@ static int test_insert_on_empty()
     10, 
     comparator_i16).data;
   int16_t value = 42;
-  mc_result result = mc_sarray_insert(array, &value);
+  mc_error result = mc_sarray_insert(array, &value);
   if (MC_SUCCESS != result) {
     return result;
   }
@@ -258,7 +258,7 @@ static int test_insert_ascending()
   for (uint16_t index = 0; index < capacity; index++) {
     int16_t x = (index * 100) + 600;
     
-    mc_result result = mc_sarray_insert(array, &x);
+    mc_error result = mc_sarray_insert(array, &x);
     if (MC_SUCCESS != result) {
       return result;
     }
@@ -292,7 +292,7 @@ static int test_insert_descending()
 
   for (uint16_t index = 0; index < capacity; index++) {
     int16_t x = -index * 10;
-    mc_result result = mc_sarray_insert(array, &x);
+    mc_error result = mc_sarray_insert(array, &x);
     if (MC_SUCCESS != result) {
       return result;
     }
@@ -326,7 +326,7 @@ static int test_insert_not_ordered()
   int16_t nums[] = {7, 19, 0, 9, -5, 67, 3, 4, -8, -8};
 
   for (uint16_t index = 0; index < capacity; index++) {
-    mc_result result = mc_sarray_insert(array, &nums[index]);
+    mc_error result = mc_sarray_insert(array, &nums[index]);
     if (MC_SUCCESS != result) {
       return result;
     }
@@ -357,7 +357,7 @@ static int test_insert_on_full()
     10, 
     comparator_i16).data;
   fill_i16(array);
-  mc_result result = mc_sarray_insert(array, &(int16_t){42});// TODO(MN): Define a micro
+  mc_error result = mc_sarray_insert(array, &(int16_t){42});// TODO(MN): Define a micro
   if (MC_ERR_OUT_OF_RANGE != result) {
     return result;
   }
@@ -412,7 +412,7 @@ static int test_find()
 
   uint8_t index = capacity;
   while (index--) {
-    const mc_result result = mc_sarray_remove(array, index);
+    const mc_error result = mc_sarray_remove(array, index);
     if (MC_SUCCESS != result){
       return result;
     }
@@ -440,7 +440,7 @@ static int test_clear_when_empty()
     10, 
     comparator_i16).data;
   
-  mc_result result = mc_sarray_clear(array);
+  mc_error result = mc_sarray_clear(array);
   if (MC_SUCCESS != result) {
     return result;
   }
@@ -465,7 +465,7 @@ static int test_clear()
   mc_sarray_insert(array, &(int16_t){514});
   mc_sarray_insert(array, &(int16_t){7});
 
-  mc_result result = mc_sarray_clear(array);
+  mc_error result = mc_sarray_clear(array);
   if (MC_SUCCESS != result) {
     return result;
   }
@@ -488,7 +488,7 @@ static int test_clear_when_full()
   
   fill_i16(array);
 
-  mc_result result = mc_sarray_clear(array);
+  mc_error result = mc_sarray_clear(array);
   if (MC_SUCCESS != result) {
     return result;
   }
@@ -510,7 +510,7 @@ static int test_remove_when_empty()
     10, 
     comparator_i16).data;
   
-  mc_result result = mc_sarray_remove(array, 0);
+  mc_error result = mc_sarray_remove(array, 0);
   if (MC_ERR_OUT_OF_RANGE != result) {
     return result;
   }
@@ -545,7 +545,7 @@ static int test_remove_descending()
 
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
-    mc_result result = mc_sarray_remove(array, index);
+    mc_error result = mc_sarray_remove(array, index);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;
     }
@@ -567,7 +567,7 @@ static int test_remove_ascending()
 
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
-    mc_result result = mc_sarray_remove(array, 0);
+    mc_error result = mc_sarray_remove(array, 0);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;
     }
@@ -590,7 +590,7 @@ static int test_remove_middle()
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
     const uint32_t mid = (mc_sarray_get_count(array).value - 1) / 2;
-    mc_result result = mc_sarray_remove(array, mid);
+    mc_error result = mc_sarray_remove(array, mid);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;
     }
@@ -611,7 +611,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_required_size();
+    const mc_error result = test_required_size();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -624,7 +624,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_invalid_creation();
+    const mc_error result = test_invalid_creation();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -637,7 +637,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_correct_creation_i16();
+    const mc_error result = test_correct_creation_i16();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -650,7 +650,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_correct_creation_str();
+    const mc_error result = test_correct_creation_str();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -663,7 +663,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_empty();
+    const mc_error result = test_empty();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -676,7 +676,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_insert_on_empty();
+    const mc_error result = test_insert_on_empty();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -689,7 +689,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_insert_ascending();
+    const mc_error result = test_insert_ascending();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -702,7 +702,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_insert_descending();
+    const mc_error result = test_insert_descending();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -715,7 +715,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_insert_not_ordered();
+    const mc_error result = test_insert_not_ordered();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -728,7 +728,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_insert_on_full();
+    const mc_error result = test_insert_on_full();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -741,7 +741,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_get();
+    const mc_error result = test_get();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -754,7 +754,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_find();
+    const mc_error result = test_find();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -767,7 +767,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_clear_when_empty();
+    const mc_error result = test_clear_when_empty();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -780,7 +780,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_clear();
+    const mc_error result = test_clear();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -793,7 +793,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_clear_when_full();
+    const mc_error result = test_clear_when_full();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -806,7 +806,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_remove_when_empty();
+    const mc_error result = test_remove_when_empty();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -819,7 +819,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_remove_descending();
+    const mc_error result = test_remove_descending();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -832,7 +832,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_remove_ascending();
+    const mc_error result = test_remove_ascending();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -845,7 +845,7 @@ int main()
   {
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_result result = test_remove_middle();
+    const mc_error result = test_remove_middle();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
