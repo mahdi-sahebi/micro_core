@@ -27,11 +27,11 @@
 
 struct _mc_msg_t
 { 
-  mc_io_t              io;
-  mc_msg_on_receive_fn on_receive;
-  uint32_t             send_delay_us;
-  wndpool_t*           rcv;// TODO(MN): Use array to reduce one pointer size
-  wndpool_t*           snd;
+  mc_io_t          io;
+  mc_io_receive_cb on_receive;
+  uint32_t         send_delay_us;
+  wndpool_t*       rcv;// TODO(MN): Use array to reduce one pointer size
+  wndpool_t*       snd;
 };
 
 
@@ -109,14 +109,14 @@ static void send_unacked(mc_msg_t* const this)
 
 mc_msg_t* mc_msg_new(
   mc_io_t io, 
-  uint32_t window_size, 
-  uint8_t capacity, 
-  mc_msg_on_receive_fn on_receive)
+  uint16_t window_size, 
+  uint8_t window_capacity, 
+  mc_io_receive_cb on_receive)
 {
   // TODO(MN): Input checking. the minimum size of window_size
   if ((NULL == io.recv) || (NULL == io.send) ||
-      (0 == window_size) || (0 == capacity) || 
-      (capacity >= (sizeof(idx_t) * 8))) {
+      (0 == window_size) || (0 == window_capacity) || 
+      (window_capacity >= (sizeof(idx_t) * 8))) {
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
   }
 
@@ -124,7 +124,7 @@ mc_msg_t* mc_msg_new(
     return NULL;//MC_ERR_OUT_OF_RANGE;
   }
   
-  const uint32_t windows_size = capacity * (sizeof(wnd_t) + window_size);
+  const uint32_t windows_size = window_capacity * (sizeof(wnd_t) + window_size);
   /*                                                         temp window + all windows */
   const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
   mc_msg_t* const this = malloc(sizeof(mc_msg_t) + controllers_size);// TODO(MN): Remove as soon as possible
@@ -136,13 +136,13 @@ mc_msg_t* mc_msg_new(
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_msg_t));
   this->rcv->window_size = window_size;
   this->rcv->data_size   = window_size - sizeof(pkt_t);
-  this->rcv->capacity    = capacity;
+  this->rcv->capacity    = window_capacity;
   this->rcv->windows     = (wnd_t*)((char*)this->rcv->temp_window + window_size);
 
   this->snd              = (wndpool_t*)(char*)(this->rcv->windows) + windows_size;
   this->snd->window_size = window_size;
   this->snd->data_size   = window_size - sizeof(pkt_t);
-  this->snd->capacity    = capacity;
+  this->snd->capacity    = window_capacity;
   this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
 
   wndpool_clear(this->rcv);
