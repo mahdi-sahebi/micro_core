@@ -63,8 +63,8 @@ static uint32_t read_data(mc_msg_t* const this)
   }
  
   if (PKT_ACK == pkt->type) {
-    const mc_time_t sent_time = wndpool_get(this->snd, pkt->id)->sent_time;
-    const uint64_t elapsed_time = mc_now_u() - sent_time;
+    const mc_time_t sent_time_us = wndpool_get(this->snd, pkt->id)->sent_time_us;
+    const uint64_t elapsed_time = mc_now_u() - sent_time_us;
     this->send_delay_us = elapsed_time * 0.8;
     wndpool_ack(this->snd, pkt->id, NULL);
     return read_size;
@@ -102,7 +102,7 @@ static void send_unacked(mc_msg_t* const this)
 
     const uint32_t sent_size = this->io.send(&window->packet, this->snd->window_size);
     if (this->snd->window_size == sent_size) {
-      window->sent_time = mc_now_u();
+      window->sent_time_us = mc_now_u();
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
   }
 }
@@ -113,7 +113,6 @@ mc_msg_t* mc_msg_new(
   uint8_t window_capacity, 
   mc_io_receive_cb on_receive)
 {
-  // TODO(MN): Input checking. the minimum size of window_size
   if ((NULL == io.recv) || (NULL == io.send) ||
       (0 == window_size) || (0 == window_capacity) || 
       (window_capacity >= (sizeof(idx_t) * 8))) {
