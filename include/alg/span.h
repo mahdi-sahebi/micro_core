@@ -18,7 +18,7 @@ typedef struct
 #define mc_span(DATA, COUNT)                    mc_span_raw(DATA, COUNT, sizeof(char))
 #define mc_span_is_empty(SPAN)                  (0 == (SPAN).capacity)
 #define mc_span_is_null(SPAN)                   (NULL == (SPAN).data)
-
+#define mc_span_get_size(SPAN)                  ((SPAN).capacity * (SPAN).data_size)
 
 #endif /* MC_SPAN_H_ */
 
