@@ -8,7 +8,6 @@ set(HEADERS
   ${INCLUDE_DIRS}/alg/algorithm.h
 )
 set(SOURCES 
-  span.c
   algorithm.c
 )
 set(LIB ${PROJECT_NAME}_alg)
