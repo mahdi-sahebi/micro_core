@@ -59,7 +59,7 @@ static int span_fill_1()
     }
 
     /* Fill mask */
-    for (uint32_t index = 0; index < span.count; index++) {
+    for (uint32_t index = 0; index < span.capacity; index++) {
         ((char*)span.data)[index] = MASK;
     }
 
@@ -69,7 +69,7 @@ static int span_fill_1()
             if (CLEAR_MASK != buffer[index]) {
                 return MC_ERR_OUT_OF_RANGE;
             }
-        } else if ((START_INDEX <= index) && (index < START_INDEX + span.count)) {
+        } else if ((START_INDEX <= index) && (index < START_INDEX + span.capacity)) {
             if (MASK != buffer[index]) {
                 return MC_ERR_OUT_OF_RANGE;
             }
@@ -106,7 +106,7 @@ static int span_fill_2()
     }
 
     /* Fill mask */
-    for (uint32_t index = 0; index < span.count; index++) {
+    for (uint32_t index = 0; index < span.capacity; index++) {
         ((char*)span.data)[index] = MASK;
     }
 
@@ -116,7 +116,7 @@ static int span_fill_2()
             if (CLEAR_MASK != buffer[index]) {
                 return MC_ERR_OUT_OF_RANGE;
             }
-        } else if ((START_INDEX <= index) && (index < START_INDEX + span.count)) {
+        } else if ((START_INDEX <= index) && (index < START_INDEX + span.capacity)) {
             if (MASK != buffer[index]) {
                 return MC_ERR_OUT_OF_RANGE;
             }
