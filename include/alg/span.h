@@ -14,7 +14,7 @@ typedef struct
 }mc_span;
 
 
-#define mc_span_raw(ADDRESS, SIZE, DATA_SIZE)   (mc_span){.data = (char*)(ADDRESS), .capacity = (SIZE) / (DATA_SIZE), .data_size = (DATA_SIZE)}
+#define mc_span_raw(ADDRESS, SIZE, DATA_SIZE)   (mc_span){.data = (char*)(ADDRESS), .capacity = (0 == (DATA_SIZE)) ? 0 : ((SIZE) / (DATA_SIZE)), .data_size = (DATA_SIZE)}
 #define mc_span(ADDRESS, SIZE)                  mc_span_raw(ADDRESS, SIZE, sizeof(char))
 #define mc_span_is_empty(SPAN)                  (0 == (SPAN).capacity)
 #define mc_span_is_null(SPAN)                   (NULL == (SPAN).data)
