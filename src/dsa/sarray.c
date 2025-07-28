@@ -52,7 +52,7 @@ mc_result_ptr mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capaci
   return mc_result_ptr(this, MC_SUCCESS);
 }
 
-mc_result mc_sarray_clear(mc_sarray this)
+mc_error mc_sarray_clear(mc_sarray this)
 {
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;
@@ -133,7 +133,7 @@ mc_result_ptr mc_sarray_find(const mc_sarray this, const void* const data)
   return mc_result_ptr(found_data, MC_SUCCESS);
 }
 
-mc_result mc_sarray_insert(mc_sarray this, const void* data)
+mc_error mc_sarray_insert(mc_sarray this, const void* data)
 {
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;
@@ -173,7 +173,7 @@ mc_result mc_sarray_insert(mc_sarray this, const void* data)
   return MC_SUCCESS;
 }
 
-mc_result mc_sarray_remove(mc_sarray this, uint32_t index)
+mc_error mc_sarray_remove(mc_sarray this, uint32_t index)
 {
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;

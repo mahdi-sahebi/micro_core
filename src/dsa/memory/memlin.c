@@ -241,7 +241,7 @@ mc_result_ptr mc_memlin_create(const mc_span buffer)
     return mc_result_ptr(memory, MC_SUCCESS);
 }
 
-mc_result mc_memlin_destroy(mc_memlin** this)
+mc_error mc_memlin_destroy(mc_memlin** this)
 {
     if ((NULL == this) || (NULL == *this)) {
         return MC_ERR_INVALID_ARGUMENT;
@@ -267,7 +267,7 @@ mc_result_ptr mc_memlin_alloc(mc_memlin* this, uint32_t size)
     return mc_result_ptr(data, MC_SUCCESS);
 }
 
-mc_result mc_memlin_clear(mc_memlin* this)
+mc_error mc_memlin_clear(mc_memlin* this)
 {
     if (NULL == this) {
         return MC_ERR_INVALID_ARGUMENT;
