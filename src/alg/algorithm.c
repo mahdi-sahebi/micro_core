@@ -13,7 +13,7 @@ mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, uint16_t data
     return mc_result_ptr(NULL, MC_SUCCESS);
   }
 
-  const uint32_t count = buffer.size / data_size;
+  const uint32_t count = buffer.count / data_size;
   uint32_t bgn = 0;
   uint32_t end = count;
 

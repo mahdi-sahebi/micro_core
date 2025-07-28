@@ -223,7 +223,7 @@ static void* get_data(const void* const this, uint32_t index)
 
 mc_result_ptr mc_memlin_create(const mc_span buffer)
 {
-    if ((NULL == buffer.data) || (0 == buffer.size)) {
+    if ((NULL == buffer.data) || (0 == buffer.count)) {
         return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
     }
     
@@ -234,9 +234,9 @@ mc_result_ptr mc_memlin_create(const mc_span buffer)
     };
 
     mc_memlin* const memory = (mc_memlin*)buffer.data;// remove
-    const word_type word = get_word_type(buffer.size);
+    const word_type word = get_word_type(buffer.count);
     memory->word_size = word;
-    inits[word](memory, buffer.size);
+    inits[word](memory, buffer.count);
 
     return mc_result_ptr(memory, MC_SUCCESS);
 }

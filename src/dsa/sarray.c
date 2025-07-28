@@ -40,7 +40,7 @@ mc_result_ptr mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capaci
   }
 
   const uint32_t size = sizeof(struct _mc_sarray) + (capacity * data_size);
-  if (buffer.size < size) {
+  if (buffer.count < size) {
     return mc_result_ptr(NULL, MC_ERR_OUT_OF_RANGE);
   }
 
