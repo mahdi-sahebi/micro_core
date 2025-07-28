@@ -67,7 +67,7 @@ void wndpool_remove_first(wndpool_t* const this)
   }
 }
 
-void wndpool_remove_acked(wndpool_t* const this, mc_msg_on_receive_fn on_receive)
+void wndpool_remove_acked(wndpool_t* const this, mc_io_receive_cb on_receive)
 {
   while (is_first_acked(this)) {
     wnd_t* const window = get_window(this, this->bgn_index);
@@ -126,7 +126,7 @@ bool wndpool_push(wndpool_t* const this, const mc_span data)
   return true;
 }
 
-bool wndpool_ack(wndpool_t* const this, id_t id, mc_msg_on_receive_fn on_done)
+bool wndpool_ack(wndpool_t* const this, id_t id, mc_io_receive_cb on_done)
 {
   if (!wndpool_contains(this, id)) {
     return false;
