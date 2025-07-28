@@ -10,9 +10,10 @@
 enum definitions
 {
   INVALID_ID = -1,
-  HEADER     = 0xA5B3C7E9
+  HEADER     = 0xC7E9
 };
 
+typedef uint16_t hdr_t;
 typedef uint32_t id_t;
 typedef uint8_t idx_t;
 
@@ -24,7 +25,7 @@ typedef enum
 
 typedef struct 
 {
-  uint32_t   header;
+  hdr_t      header;
   pkt_type_t type;
   id_t       id;
   uint32_t   size;
@@ -33,9 +34,9 @@ typedef struct
 
 typedef struct 
 {
-  mc_time_t sent_time;// TODO(MN): Add postfix us
-  bool  is_acked;
-  pkt_t packet;
+  mc_time_t sent_time_us;
+  bool      is_acked;
+  pkt_t     packet;
 }wnd_t;
 
 
