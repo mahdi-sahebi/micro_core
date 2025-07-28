@@ -8,7 +8,7 @@
 typedef struct _mc_msg_t mc_msg_t;
 
 
-mc_msg_t* mc_msg_new(mc_io io, uint16_t window_size, uint8_t window_capacity, mc_io_receive_cb on_receive);
+mc_msg_t* mc_msg_new(uint16_t window_size, uint8_t window_capacity, mc_io io, mc_io_receive_cb on_receive);
 void      mc_msg_free(mc_msg_t** const msg);
 uint32_t  mc_msg_recv(mc_msg_t* const msg);
 uint32_t  mc_msg_send(mc_msg_t* const msg, void* data, uint32_t size);
