@@ -5,7 +5,7 @@
 mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, mc_cmp_fn comparator)
 {
   if ((NULL == data) || (NULL == comparator) || 
-      mc_span_is_null(buffer) || mc_span_isempty(buffer) || (0 == buffer.data_size)) {
+      mc_span_is_null(buffer) || mc_span_is_empty(buffer) || (0 == buffer.data_size)) {
     return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
@@ -13,7 +13,7 @@ mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, mc_cmp_fn com
     return mc_result_ptr(NULL, MC_SUCCESS);
   }
 
-  const uint32_t count = buffer.count / buffer.data_size;
+  const uint32_t count = buffer.capacity / buffer.data_size;
   uint32_t bgn = 0;
   uint32_t end = count;
 

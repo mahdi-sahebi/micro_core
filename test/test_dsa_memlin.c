@@ -90,7 +90,7 @@ static int get_capacity_8()
     return MC_ERR_BAD_ALLOC;
   }
 
-  if ((buffer.count - mc_memlin_get_meta_size(memory).value) != result.value) {
+  if ((buffer.capacity - mc_memlin_get_meta_size(memory).value) != result.value) {
     return MC_ERR_BAD_ALLOC;
   }
   
@@ -107,7 +107,7 @@ static int get_capacity_16()
     return MC_ERR_BAD_ALLOC;
   }
 
-  if ((buffer.count - mc_memlin_get_meta_size(memory).value) != result.value) {
+  if ((buffer.capacity - mc_memlin_get_meta_size(memory).value) != result.value) {
     return MC_ERR_BAD_ALLOC;
   }
   
@@ -124,7 +124,7 @@ static int get_capacity_32()
     return MC_ERR_BAD_ALLOC;
   }
 
-  if ((buffer.count - mc_memlin_get_meta_size(memory).value) != result.value) {
+  if ((buffer.capacity - mc_memlin_get_meta_size(memory).value) != result.value) {
     return MC_ERR_BAD_ALLOC;
   }
   

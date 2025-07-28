@@ -9,14 +9,14 @@
 typedef struct
 {
   char*    data;
-  uint32_t count;
+  uint32_t capacity;
   uint32_t data_size;
 }mc_span;
 
 
-#define mc_span_raw(DATA, COUNT, DATA_SIZE)     (mc_span){.data = (char*)(DATA), .count = (COUNT), .data_size = (DATA_SIZE)}
+#define mc_span_raw(DATA, COUNT, DATA_SIZE)     (mc_span){.data = (char*)(DATA), .capacity = (COUNT), .data_size = (DATA_SIZE)}
 #define mc_span(DATA, COUNT)                    mc_span_raw(DATA, COUNT, sizeof(char))
-#define mc_span_is_empty(SPAN)                  (0 == (SPAN).count)
+#define mc_span_is_empty(SPAN)                  (0 == (SPAN).capacity)
 #define mc_span_is_null(SPAN)                   (NULL == (SPAN).data)
 
 
