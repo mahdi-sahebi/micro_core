@@ -16,11 +16,11 @@
 typedef struct
 {
     void*    data;
-    uint32_t size;// u32? opt. rename to capacity
+    uint32_t count;// u32? opt. rename to capacity
 }mc_span;// TODO(MN): Rename to mc_buffer. add data_size. get_count()
 
 
-#define mc_span(DATA, SIZE)                 (mc_span){.data = (DATA), .size = (SIZE)}
+#define mc_span(DATA, SIZE)                 (mc_span){.data = (DATA), .count = (SIZE)}
 bool    mc_span_is_empty(mc_span buffer);
 bool    mc_span_is_null(mc_span buffer);
 
