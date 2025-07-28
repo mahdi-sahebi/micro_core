@@ -7,7 +7,7 @@
 #ifndef MC_SPAN_H_
 #define MC_SPAN_H_
 
-// TODO(MN): sub-span, rename to m buffer, is in range,...
+// TODO(MN):is in range,...
 // TODO(MN): Without API ?
 #include <stdbool.h>
 #include <stdint.h>
@@ -15,12 +15,14 @@
 
 typedef struct
 {
-    void*    data;
-    uint32_t count;// u32? opt. rename to capacity
-}mc_span;// TODO(MN): Rename to mc_buffer. add data_size. get_count()
+    char*    data;
+    uint32_t count;
+    uint32_t data_size;
+}mc_span;
 
 
-#define mc_span(DATA, SIZE)                 (mc_span){.data = (DATA), .count = (SIZE)}
+#define mc_span_raw(DATA, COUNT, DATA_SIZE)     (mc_span){.data = (char*)(DATA), .count = (COUNT), .data_size = (DATA_SIZE)}
+#define mc_span(DATA, COUNT)                    mc_span_raw(DATA, COUNT, sizeof(char))
 bool    mc_span_is_empty(mc_span buffer);
 bool    mc_span_is_null(mc_span buffer);
 
