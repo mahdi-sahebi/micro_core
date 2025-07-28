@@ -1,3 +1,4 @@
+// TODO(MN): Namespace mc_err
 #ifndef MC_DSA_SORTED_ARRAY_H_
 #define MC_DSA_SORTED_ARRAY_H_
 
