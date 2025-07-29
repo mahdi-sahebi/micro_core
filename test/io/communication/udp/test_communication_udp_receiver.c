@@ -7,16 +7,16 @@
 #include "core/error.h"
 #include "core/version.h"
 #include "core/time.h"
-#include "io/message/message.h"
-#include "test_message_udp_common.h"
-#include "test_message_udp_receiver.h"
+#include "io/communication/communication.h"
+#include "test_communication_udp_common.h"
+#include "test_communication_udp_receiver.h"
 
 
 static int ServerSocket = -1;
 static uint32_t ReceiveCounter = 0;
 static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
-static mc_msg_t* message = NULL;
+static mc_comm_t* message = NULL;
 
 
 static void server_create()
@@ -120,7 +120,7 @@ static void init(void* data)
   server_create();
   flush_receive_buffer();
 
-  message = mc_msg_new(16 + DATA_LEN * sizeof(uint32_t), 3, mc_io(server_read, server_write), on_receive);
+  message = mc_comm_new(16 + DATA_LEN * sizeof(uint32_t), 3, mc_io(server_read, server_write), on_receive);
 
   ReceiveCounter = 0;
   LastTickUS = mc_now_u();
@@ -128,7 +128,7 @@ static void init(void* data)
 
 static void deinit()
 {
-  mc_msg_free(&message);
+  mc_comm_free(&message);
   server_close();  
 }
 
@@ -142,7 +142,7 @@ static void wait_for_sender()
   const mc_time_t end_time = mc_now_u() + TEST_TIMEOUT_US;
 
   while (mc_now_u() < end_time) {
-    mc_msg_recv(message);
+    mc_comm_recv(message);
   }
 }
 
@@ -156,11 +156,11 @@ void* rcv_start(void* data)
       break;
     }
 
-    mc_msg_recv(message);
+    mc_comm_recv(message);
   }
 
-  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT_US)) {
-    printf("mc_msg_flush failed\n");
+  if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {
+    printf("mc_comm_flush failed\n");
     *Result = MC_ERR_TIMEOUT;
   }
 

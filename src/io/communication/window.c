@@ -1,7 +1,7 @@
 /* TODO(MN): const for all arguments
  */
 #include <string.h>
-#include "io/message/window.h"
+#include "io/communication/window.h"
 
 
 void wnd_clear(wnd_t* const wnd)
@@ -10,7 +10,7 @@ void wnd_clear(wnd_t* const wnd)
   wnd->is_acked  = true;
 }
 
-void wnd_write(wnd_t* const wnd, mc_span buffer, mc_msg_id id)
+void wnd_write(wnd_t* const wnd, mc_span buffer, mc_comm_id id)
 {
   wnd->packet.header = HEADER;
   wnd->packet.type   = PKT_DATA;

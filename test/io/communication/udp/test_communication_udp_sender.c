@@ -5,13 +5,13 @@
 #include <unistd.h>
 #include "core/error.h"
 #include "core/time.h"
-#include "io/message/message.h"
-#include "test_message_udp_common.h"
-#include "test_message_udp_sender.h"
+#include "io/communication/communication.h"
+#include "test_communication_udp_common.h"
+#include "test_communication_udp_sender.h"
 
 
 static int ClientSocket = -1;
-static mc_msg_t* message = NULL;
+static mc_comm_t* message = NULL;
 static uint32_t SendCounter = 0;
 static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
@@ -87,7 +87,7 @@ static void init(void* data)
   client_create();
   let_server_start();
 
-  message = mc_msg_new(
+  message = mc_comm_new(
     16 + DATA_LEN * sizeof(uint32_t),
     3,
     mc_io(client_read, client_write), 
@@ -96,7 +96,7 @@ static void init(void* data)
 
 static void deinit()
 {
-  mc_msg_free(&message);
+  mc_comm_free(&message);
   client_close();
   print_log();
 }
@@ -117,15 +117,15 @@ void* snd_start(void* data)
       break;
     }
     
-    if (sizeof(Buffer) != mc_msg_send(message, Buffer, sizeof(Buffer))) {
+    if (sizeof(Buffer) != mc_comm_send(message, Buffer, sizeof(Buffer))) {
       continue;
     }
 
     update_data(Buffer);
   }
   
-  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT_US)) {
-    printf("mc_msg_flush failed\n");
+  if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {
+    printf("mc_comm_flush failed\n");
     *Result = MC_ERR_TIMEOUT;
   }
 

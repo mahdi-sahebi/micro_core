@@ -2,7 +2,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
-#include "test_message_udp_common.h"
+#include "test_communication_udp_common.h"
 
 
 static uint32_t TestIterations = COMPLETE_COUNT;
