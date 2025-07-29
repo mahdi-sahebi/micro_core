@@ -7,7 +7,7 @@ endif()
 # Variables
 
 # Subdirectory
-add_subdirectory(message)
+add_subdirectory(communication)
 
 # Binray
 

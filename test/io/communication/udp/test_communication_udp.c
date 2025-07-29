@@ -52,10 +52,10 @@
 #include "core/error.h"
 #include "core/version.h"
 #include "core/time.h"
-#include "io/message/message.h"
-#include "test_message_udp_common.h"
-#include "test_message_udp_receiver.h"
-#include "test_message_udp_sender.h"
+#include "io/communication/communication.h"
+#include "test_communication_udp_common.h"
+#include "test_communication_udp_receiver.h"
+#include "test_communication_udp_sender.h"
 
 
 static uint32_t read_api(void* const data, uint32_t size)
@@ -70,29 +70,31 @@ static uint32_t write_api(const void* const data, uint32_t size)
 
 static int invalid_creation()
 {
-  mc_msg_t* message = NULL;
+  char memory[1024];
+  mc_span alloc_buffer = mc_span(memory, sizeof(memory));
+  mc_comm_t* message = NULL;
   
-  message = mc_msg_new(mc_io(NULL, write_api), DATA_LEN * sizeof(uint32_t), 3, NULL);
+  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(mc_io(read_api, NULL), DATA_LEN * sizeof(uint32_t), 3, NULL);
+  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(mc_io(read_api, write_api), 0, 3, NULL);
+  message = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(mc_io(read_api, write_api), 0, 0, NULL);
+  message = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_msg_new(mc_io(read_api, write_api), 1, 3, NULL);
+  message = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -102,16 +104,17 @@ static int invalid_creation()
 
 static int valid_creation()
 {
+  char memory[1024];
+  mc_span alloc_buffer = mc_span(memory, sizeof(memory));
   const uint32_t capcity = 3;
-  mc_msg_t* message = NULL;
+  mc_comm_t* message = NULL;
   
-  message = mc_msg_new(mc_io(read_api, write_api), 5 * sizeof(uint32_t), capcity, NULL);
+  message = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api), NULL);
   if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  mc_msg_free(&message);
-  if (NULL != message) {
+  if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }
 
@@ -196,7 +199,7 @@ static int full_duplex()
 
 int main()
 {
-  printf("[MICRO CORE %u.%u.%u - IO - MESSAGE]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
+  printf("[MICRO CORE %u.%u.%u - IO - COMMUNICATION]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
   mc_error result = MC_SUCCESS;
 
   printf("[invalid_creation]\n");
