@@ -13,9 +13,9 @@ enum definitions
   HEADER     = 0xC7E9
 };
 
-typedef uint16_t mc_msg_hdr;
-typedef uint32_t mc_msg_id;
-typedef uint8_t mc_msg_idx;
+typedef uint16_t mc_comm_hdr;
+typedef uint32_t mc_comm_id;
+typedef uint8_t mc_comm_idx;
 
 typedef enum __attribute__((packed))
 {
@@ -25,9 +25,9 @@ typedef enum __attribute__((packed))
 
 typedef struct 
 {
-  mc_msg_hdr header;
+  mc_comm_hdr header;
   pkt_type_t type;
-  mc_msg_id  id;
+  mc_comm_id  id;
   uint32_t   size;
   char       data[0];
 }pkt_t;// TODO(MN): Must be As size as window_size
@@ -41,7 +41,7 @@ typedef struct
 
 
 void     wnd_clear(wnd_t* const wnd);
-void     wnd_write(wnd_t* const wnd, mc_span buffer, mc_msg_id id);
+void     wnd_write(wnd_t* const wnd, mc_span buffer, mc_comm_id id);
 void*    wnd_get_data(wnd_t* const wnd);
 uint32_t wnd_get_data_size(const wnd_t* const wnd);
 void     wnd_ack(wnd_t* const wnd);
