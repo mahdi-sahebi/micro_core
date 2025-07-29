@@ -10,14 +10,14 @@
 
 typedef struct
 {
-  wnd_t*   windows;
-  uint32_t window_size;
-  uint32_t data_size;
-  mc_comm_id     bgn_id;
-  mc_comm_id     end_id;// TODO(MN): Remove
-  mc_comm_idx    bgn_index;
-  mc_comm_idx    capacity;
-  pkt_t    temp_window[0];
+  wnd_t*      windows;
+  uint32_t    window_size;
+  uint32_t    data_size;
+  mc_comm_id  bgn_id;
+  mc_comm_id  end_id;// TODO(MN): Remove
+  mc_comm_idx bgn_index;
+  mc_comm_idx capacity;
+  pkt_t       temp_window[0];
 }wndpool_t;
 
 typedef void (*wndpool_on_done_fn)(const mc_span data, mc_comm_id id);
