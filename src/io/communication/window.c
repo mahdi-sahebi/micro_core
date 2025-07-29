@@ -1,7 +1,7 @@
 /* TODO(MN): const for all arguments
  */
 #include <string.h>
-#include "io/message/window.h"
+#include "io/communication/window.h"
 
 
 void wnd_clear(wnd_t* const wnd)
@@ -10,14 +10,14 @@ void wnd_clear(wnd_t* const wnd)
   wnd->is_acked  = true;
 }
 
-void wnd_write(wnd_t* const wnd, mc_span buffer, id_t id)
+void wnd_write(wnd_t* const wnd, mc_span buffer, mc_comm_id id)
 {
   wnd->packet.header = HEADER;
   wnd->packet.type   = PKT_DATA;
   wnd->is_acked      = false;
   wnd->packet.size   = buffer.capacity;
   wnd->packet.id     = id;
-  wnd->sent_time     = mc_now_u();
+  wnd->sent_time_us  = mc_now_u();
   memcpy(wnd->packet.data, buffer.data, buffer.capacity);
 }
 
@@ -48,5 +48,5 @@ bool wnd_is_valid(const wnd_t* const wnd)
 
 bool wnd_is_timedout(const wnd_t* const wnd, uint32_t timeout_us)
 {
-  return (mc_now_u() > (wnd->sent_time + timeout_us));
+  return (mc_now_u() > (wnd->sent_time_us + timeout_us));
 }

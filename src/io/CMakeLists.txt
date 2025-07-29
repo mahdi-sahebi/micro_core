@@ -5,14 +5,14 @@
 set(LIB mcore_io)
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS 
-    ${INCLUDE_DIRS}/io/message/window.h
-    ${INCLUDE_DIRS}/io/message/window_pool.h
-    ${INCLUDE_DIRS}/io/message/message.h
+    ${INCLUDE_DIRS}/io/communication/window.h
+    ${INCLUDE_DIRS}/io/communication/window_pool.h
+    ${INCLUDE_DIRS}/io/communication/communication.h
 )
 set(SOURCES 
-    message/window.c
-    message/window_pool.c
-    message/message.c
+    communication/window.c
+    communication/window_pool.c
+    communication/communication.c
 )
 
 

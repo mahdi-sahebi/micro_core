@@ -5,17 +5,18 @@
 #include <unistd.h>
 #include "core/error.h"
 #include "core/time.h"
-#include "io/message/message.h"
-#include "test_message_udp_common.h"
-#include "test_message_udp_sender.h"
+#include "io/communication/communication.h"
+#include "test_communication_udp_common.h"
+#include "test_communication_udp_sender.h"
 
 
 static int ClientSocket = -1;
-static mc_msg_t* message = NULL;
+static mc_comm_t* message = NULL;
 static uint32_t SendCounter = 0;
 static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
 static uint32_t Buffer[DATA_LEN];
+static mc_span AllocBuffer = {0};
 
 
 static void client_create()
@@ -87,18 +88,19 @@ static void init(void* data)
   client_create();
   let_server_start();
 
-  message = mc_msg_new(
-    mc_io(client_read, client_write), 
-    16 + DATA_LEN * sizeof(uint32_t),
-    3,
-    NULL);
+  const uint32_t window_size = 16 + DATA_LEN * sizeof(uint32_t);
+  const uint32_t window_capacity = 3;
+  const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
+  AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
+
+  message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(client_read, client_write), NULL);
 }
 
 static void deinit()
 {
-  mc_msg_free(&message);
   client_close();
   print_log();
+  free(AllocBuffer.data);
 }
 
 static bool timed_out()
@@ -117,15 +119,15 @@ void* snd_start(void* data)
       break;
     }
     
-    if (sizeof(Buffer) != mc_msg_send(message, Buffer, sizeof(Buffer))) {
+    if (sizeof(Buffer) != mc_comm_send(message, Buffer, sizeof(Buffer))) {
       continue;
     }
 
     update_data(Buffer);
   }
   
-  if ((MC_SUCCESS == *Result) && !mc_msg_flush(message, TEST_TIMEOUT_US)) {
-    printf("mc_msg_flush failed\n");
+  if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {
+    printf("mc_comm_flush failed\n");
     *Result = MC_ERR_TIMEOUT;
   }
 

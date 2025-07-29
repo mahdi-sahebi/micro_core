@@ -10,37 +10,38 @@
 enum definitions
 {
   INVALID_ID = -1,
-  HEADER     = 0xA5B3C7E9
+  HEADER     = 0xC7E9
 };
 
-typedef uint32_t id_t;
-typedef uint8_t idx_t;
+typedef uint16_t mc_comm_hdr;
+typedef uint32_t mc_comm_id;
+typedef uint8_t mc_comm_idx;
 
-typedef enum 
+typedef enum
 {
   PKT_DATA = 0,
   PKT_ACK
 }pkt_type_t;
 
-typedef struct 
+typedef struct // TODO(MN): pads
 {
-  uint32_t   header;
-  pkt_type_t type;
-  id_t       id;
-  uint32_t   size;
-  char       data[0];
+  mc_comm_hdr header;
+  pkt_type_t  type;
+  mc_comm_id  id;
+  uint32_t    size;
+  char        data[0];
 }pkt_t;// TODO(MN): Must be As size as window_size
 
 typedef struct 
 {
-  mc_time_t sent_time;// TODO(MN): Add postfix us
-  bool  is_acked;
-  pkt_t packet;
+  mc_time_t sent_time_us;
+  bool      is_acked;// TODO(MN): Large pad
+  pkt_t     packet;
 }wnd_t;
 
 
 void     wnd_clear(wnd_t* const wnd);
-void     wnd_write(wnd_t* const wnd, mc_span buffer, id_t id);
+void     wnd_write(wnd_t* const wnd, mc_span buffer, mc_comm_id id);
 void*    wnd_get_data(wnd_t* const wnd);
 uint32_t wnd_get_data_size(const wnd_t* const wnd);
 void     wnd_ack(wnd_t* const wnd);
