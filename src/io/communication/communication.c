@@ -50,7 +50,6 @@ static void send_ack(mc_comm_t* const this, uint32_t id)
   // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
 }
 
-#include <inttypes.h>
 static uint32_t read_data(mc_comm_t* const this)
 {
   pkt_t* const pkt = this->rcv->temp_window;
@@ -108,26 +107,40 @@ static void send_unacked(mc_comm_t* const this)
   }
 }
 
+mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t window_capacity)
+{
+  if ((0 == window_capacity) || (0 == window_size)) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+  if ((window_capacity >= (sizeof(mc_comm_idx) * 8)) || (window_size < (sizeof(pkt_t) + 1))) {
+    return mc_result_u32(0, MC_ERR_BAD_ALLOC);
+  }
+
+  const uint32_t windows_size = window_capacity * (sizeof(wnd_t) + window_size);
+  /*                                                         temp window + all windows */
+  const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
+  const uint32_t size = sizeof(mc_comm_t) + controllers_size;
+  return mc_result_u32(size, MC_SUCCESS);
+}
+
 mc_comm_t* mc_comm_new(
+  // mc_span alloc_buffer,
   uint16_t window_size, 
   uint8_t window_capacity, 
   mc_io io,
   mc_io_receive_cb on_receive)
 {
-  if ((NULL == io.recv) || (NULL == io.send) ||
-      (0 == window_size) || (0 == window_capacity) || 
-      (window_capacity >= (sizeof(mc_comm_idx) * 8))) {
+  if ((NULL == io.recv) || (NULL == io.send)) {
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
   }
 
-  if (window_size < (sizeof(pkt_t) + 1)) {
-    return NULL;//MC_ERR_OUT_OF_RANGE;
+  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, window_capacity);
+  if ((MC_SUCCESS != result_u32.result)) {
+    return NULL;
   }
   
   const uint32_t windows_size = window_capacity * (sizeof(wnd_t) + window_size);
-  /*                                                         temp window + all windows */
-  const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
-  mc_comm_t* const this = malloc(sizeof(mc_comm_t) + controllers_size);// TODO(MN): Remove as soon as possible
+  mc_comm_t* const this = malloc(result_u32.value);
 
   this->io               = io;
   this->on_receive       = on_receive;

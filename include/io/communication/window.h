@@ -26,10 +26,10 @@ typedef enum __attribute__((packed))
 typedef struct 
 {
   mc_comm_hdr header;
-  pkt_type_t type;
+  pkt_type_t  type;
   mc_comm_id  id;
-  uint32_t   size;
-  char       data[0];
+  uint32_t    size;
+  char        data[0];
 }pkt_t;// TODO(MN): Must be As size as window_size
 
 typedef struct 
