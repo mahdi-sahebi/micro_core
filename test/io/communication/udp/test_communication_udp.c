@@ -70,29 +70,31 @@ static uint32_t write_api(const void* const data, uint32_t size)
 
 static int invalid_creation()
 {
+  char memory[1024];
+  mc_span alloc_buffer = mc_span(memory, sizeof(memory));
   mc_comm_t* message = NULL;
   
-  message = mc_comm_new(DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_new(DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL), NULL);
+  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_new(0, 3, mc_io(read_api, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_new(0, 0, mc_io(read_api, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_new(1, 3, mc_io(read_api, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api), NULL);
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -102,16 +104,17 @@ static int invalid_creation()
 
 static int valid_creation()
 {
+  char memory[1024];
+  mc_span alloc_buffer = mc_span(memory, sizeof(memory));
   const uint32_t capcity = 3;
   mc_comm_t* message = NULL;
   
-  message = mc_comm_new(5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api), NULL);
   if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  mc_comm_free(&message);
-  if (NULL != message) {
+  if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }
 
@@ -196,7 +199,7 @@ static int full_duplex()
 
 int main()
 {
-  printf("[MICRO CORE %u.%u.%u - IO - MESSAGE]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
+  printf("[MICRO CORE %u.%u.%u - IO - COMMUNICATION]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
   mc_error result = MC_SUCCESS;
 
   printf("[invalid_creation]\n");
