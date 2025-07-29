@@ -123,8 +123,8 @@ mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t window_capaci
   return mc_result_u32(size, MC_SUCCESS);
 }
 
-mc_comm_t* mc_comm_new(
-  // mc_span alloc_buffer,
+mc_comm_t* mc_comm_init(
+  mc_span alloc_buffer,
   uint16_t window_size, 
   uint8_t window_capacity, 
   mc_io io,
@@ -135,12 +135,12 @@ mc_comm_t* mc_comm_new(
   }
 
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, window_capacity);
-  if ((MC_SUCCESS != result_u32.result)) {
-    return NULL;
+  if ((MC_SUCCESS != result_u32.result) || (mc_span_get_size(alloc_buffer) < result_u32.value)) {
+    return NULL;// TODO(MN): MC_ERR_BAD_ALLOC
   }
   
   const uint32_t windows_size = window_capacity * (sizeof(wnd_t) + window_size);
-  mc_comm_t* const this = malloc(result_u32.value);
+  mc_comm_t* const this = (mc_comm_t*)alloc_buffer.data;
 
   this->io               = io;
   this->on_receive       = on_receive;
@@ -162,13 +162,6 @@ mc_comm_t* mc_comm_new(
   wndpool_clear(this->snd);
   
   return this;
-}
-
-void mc_comm_free(mc_comm_t** const this)
-{
-  // TODO(MN): Check inputs
-  free(*this);
-  *this = NULL;
 }
 
 uint32_t mc_comm_recv(mc_comm_t* const this)

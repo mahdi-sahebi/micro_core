@@ -17,6 +17,7 @@ static uint32_t ReceiveCounter = 0;
 static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
 static mc_comm_t* message = NULL;
+static mc_span AllocBuffer = {0};
 
 
 static void server_create()
@@ -120,7 +121,12 @@ static void init(void* data)
   server_create();
   flush_receive_buffer();
 
-  message = mc_comm_new(16 + DATA_LEN * sizeof(uint32_t), 3, mc_io(server_read, server_write), on_receive);
+  const uint32_t window_size = 16 + DATA_LEN * sizeof(uint32_t);
+  const uint32_t window_capacity = 3;
+  const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
+  AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
+
+  message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(server_read, server_write), on_receive);
 
   ReceiveCounter = 0;
   LastTickUS = mc_now_u();
@@ -128,8 +134,8 @@ static void init(void* data)
 
 static void deinit()
 {
-  mc_comm_free(&message);
-  server_close();  
+  server_close();
+  free(AllocBuffer.data);
 }
 
 static bool timed_out()
