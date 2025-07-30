@@ -74,7 +74,7 @@ static void init(void* data)
   client_create();
   let_server_start();
 
-  const uint32_t window_size = 16 + DATA_LEN * sizeof(uint32_t);
+  const uint32_t window_size = 37;
   const uint32_t window_capacity = 3;
   const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
