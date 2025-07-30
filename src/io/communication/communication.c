@@ -9,6 +9,7 @@
  * link: reliable link + io interface + crc
  * msg: link + authentication + ID based message passing
  * doc: packet order guaranteed
+ * Add timeout for recv and send
  */
 
 #include <stdlib.h>
@@ -112,7 +113,7 @@ mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t window_capaci
   if ((0 == window_capacity) || (0 == window_size)) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
-  if ((window_capacity >= (sizeof(mc_comm_idx) * 8)) || (window_size < (sizeof(pkt_t) + 1))) {
+  if ((window_capacity >= (1 << (sizeof(mc_comm_idx) * 8))) || (window_size < (sizeof(pkt_t) + 1))) {
     return mc_result_u32(0, MC_ERR_BAD_ALLOC);
   }
 
