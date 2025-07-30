@@ -12,10 +12,8 @@
 
 static int ClientSocket = -1;
 static mc_comm_t* message = NULL;
-static uint32_t SendCounter = 0;
 static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
-static uint32_t Buffer[DATA_LEN];
 static mc_span AllocBuffer = {0};
 
 
@@ -55,17 +53,6 @@ static void let_server_start()
   usleep(200000);
 }
 
-static void update_data(uint32_t* const Buffer)
-{
-  for (uint32_t index = 0; index < DATA_LEN; index++) {
-    Buffer[index] = (SendCounter * DATA_LEN) + index;
-  }
-
-  SendCounter++;
-  LastTickUS = mc_now_u();
-  usleep(100);
-}
-
 static void print_log()
 {
   const uint32_t recv_cnt = cfg_get_recv_counter();
@@ -84,7 +71,6 @@ static void init(void* data)
   Result = (uint32_t*)data;
   *Result = MC_SUCCESS;
   
-  SendCounter = 0;
   client_create();
   let_server_start();
 
@@ -105,19 +91,68 @@ static void deinit()
 
 static bool timed_out()
 {
-  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US);
+  if ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US) {
+    return true;
+  }
+
+  LastTickUS = mc_now_u();
+  return false;
+}
+
+static bool send_data(const void* data, uint32_t size)
+{
+  while (mc_comm_send(message, data, size) != size) {// TODO(MN): Pass timeout as an arg
+    if (timed_out()) {
+      *Result = MC_ERR_TIMEOUT;
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static bool send_data_1(uint32_t seed)
+{
+  char data[9] = {0};
+  const uint32_t size = sizeof(data);
+  sprintf(data, "!p%03u.?I", seed % 1000);
+
+  return send_data(data, size);
+}
+
+static bool send_data_2(uint32_t seed)
+{
+  uint32_t data[100] = {0};
+  const uint32_t random_count = (seed * 1664525) + 1013904223;
+  const uint8_t count = (random_count % 80) + 20;
+  const uint8_t size = count * sizeof(*data);
+
+  for (uint8_t index = 0; index < count; index++) {
+    data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
+  }
+
+  return send_data(data, size);
+}
+
+static bool send_data_3(uint32_t seed)
+{
+  bool data = (seed & 1);
+  const uint32_t size = sizeof(data);
+
+  return send_data(&data, size);
 }
 
 void* snd_start(void* data)
 {
   init(data);
-  update_data(Buffer);
 
-  while (SendCounter <= cfg_get_iterations()) {
-    if (timed_out()) {
-      *Result = MC_ERR_TIMEOUT;
+  for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
+    if (!send_data_1(counter) ||
+        !send_data_2(counter) ||
+        !send_data_3(counter)){
       break;
     }
+<<<<<<< HEAD
 
     mc_comm_update(message);
     
@@ -126,6 +161,8 @@ void* snd_start(void* data)
     }
 
     update_data(Buffer);
+=======
+>>>>>>> 9ba2568 ([TEST]: Dynamic and complex sending tests are added)
   }
   
   if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {

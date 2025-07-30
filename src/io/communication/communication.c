@@ -11,12 +11,16 @@
  * doc: packet order guaranteed
  * Add timeout for recv and send
  * Tests of sending N bytes so that N !+ K*W  W: window size
+<<<<<<< HEAD
  * 
  * 
  * Doc of update(): is an excellent design for bare-metal and OS compatibility. 
  * can be used inside of a timer callback or thread to not miss any data.
  * 
  * 
+=======
+ * Get comm interface.
+>>>>>>> 9ba2568 ([TEST]: Dynamic and complex sending tests are added)
  */
 
 #include <stdlib.h>

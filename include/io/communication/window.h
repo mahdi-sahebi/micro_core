@@ -14,7 +14,7 @@ enum definitions
 };
 
 typedef uint16_t mc_comm_hdr;
-typedef uint32_t mc_comm_id;
+typedef uint32_t mc_comm_id;// TODO(MN): pkt_id, pkt_hdr, pkt_idx
 typedef uint8_t mc_comm_idx;
 
 typedef enum
