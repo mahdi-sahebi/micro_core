@@ -8,6 +8,7 @@
 #include "window.h"
 #include "io/communication/communication.h"// TODO(MN): Remove for encapsulation
 
+
 typedef struct
 {
   wnd_t*      windows;
