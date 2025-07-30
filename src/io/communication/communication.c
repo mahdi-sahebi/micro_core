@@ -10,6 +10,7 @@
  * msg: link + authentication + ID based message passing
  * doc: packet order guaranteed
  * Add timeout for recv and send
+ * Tests of sending N bytes so that N !+ K*W  W: window size
  */
 
 #include <stdlib.h>

@@ -17,13 +17,13 @@ typedef uint16_t mc_comm_hdr;
 typedef uint32_t mc_comm_id;
 typedef uint8_t mc_comm_idx;
 
-typedef enum __attribute__((packed))
+typedef enum
 {
   PKT_DATA = 0,
   PKT_ACK
 }pkt_type_t;
 
-typedef struct 
+typedef struct // TODO(MN): pads
 {
   mc_comm_hdr header;
   pkt_type_t  type;
@@ -35,7 +35,7 @@ typedef struct
 typedef struct 
 {
   mc_time_t sent_time_us;
-  bool      is_acked;
+  bool      is_acked;// TODO(MN): Large pad
   pkt_t     packet;
 }wnd_t;
 
