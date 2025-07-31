@@ -74,27 +74,27 @@ static int invalid_creation()
   mc_span alloc_buffer = mc_span(memory, sizeof(memory));
   mc_comm_t* message = NULL;
   
-  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api));
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL), NULL);
+  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL));
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api));
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api));
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api));
   if (NULL != message) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -109,7 +109,7 @@ static int valid_creation()
   const uint32_t capcity = 3;
   mc_comm_t* message = NULL;
   
-  message = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api), NULL);
+  message = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api));
   if (NULL == message) {
     return MC_ERR_BAD_ALLOC;
   }
