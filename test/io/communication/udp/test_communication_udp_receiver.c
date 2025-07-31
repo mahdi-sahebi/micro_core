@@ -148,7 +148,7 @@ static void wait_for_sender()
   const mc_time_t end_time = mc_now_u() + TEST_TIMEOUT_US;
 
   while (mc_now_u() < end_time) {
-    mc_comm_recv(message);
+    mc_comm_update(message);
   }
 }
 
@@ -157,12 +157,12 @@ void* rcv_start(void* data)
   init(data);
 
   while (ReceiveCounter < cfg_get_iterations()) {
+    mc_comm_update(message);
+    
     if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
     }
-
-    mc_comm_recv(message);
   }
 
   if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {

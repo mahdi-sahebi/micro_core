@@ -114,6 +114,8 @@ void* snd_start(void* data)
   update_data(Buffer);
 
   while (SendCounter <= cfg_get_iterations()) {
+    mc_comm_update(message);
+
     if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
