@@ -57,19 +57,6 @@ static void flush_receive_buffer()
   }
 }
 
-static bool verify_data(const uint32_t* const buffer, uint32_t packet_id) 
-{
-  for (uint32_t index = 0; index < DATA_LEN; index++) {
-    const uint32_t expected = (packet_id * DATA_LEN) + index;
-    if (expected != buffer[index]) {
-        printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
-        return false;
-    }
-  }
-
-  return true;
-}
-
 static void print_progress(float progress)
 {
   const uint32_t BAR_LENGTH = 20;
@@ -92,23 +79,20 @@ static void print_progress(float progress)
   fflush(stdout);
 }
 
-static void on_receive(const void* const data, uint32_t size)
+static bool verify_data(const uint32_t* const buffer, uint32_t seed) 
 {
-  if ((DATA_LEN * sizeof(uint32_t)) != size) {
-    *Result = MC_ERR_RUNTIME;
-    return;
-  }
-
-  const uint32_t* const buffer = (uint32_t*)data;
-
-  if (!verify_data(buffer, ReceiveCounter)) {
-    *Result = MC_ERR_RUNTIME;
-    return;
+  for (uint32_t index = 0; index < DATA_LEN; index++) {
+    const uint32_t expected = (seed * DATA_LEN) + index;
+    if (expected != buffer[index]) {
+        printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
+        return false;
+    }
   }
 
   ReceiveCounter++;
   print_progress(ReceiveCounter / (float)cfg_get_iterations());
   LastTickUS = mc_now_u();
+  return true;
 }
 
 static void init(void* data)
@@ -126,7 +110,7 @@ static void init(void* data)
   const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
 
-  message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(server_read, server_write), on_receive);
+  message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(server_read, server_write));
 
   ReceiveCounter = 0;
   LastTickUS = mc_now_u();
@@ -148,13 +132,22 @@ static void wait_for_sender()
   const mc_time_t end_time = mc_now_u() + TEST_TIMEOUT_US;
 
   while (mc_now_u() < end_time) {
-    mc_comm_recv(message);
+    mc_comm_update(message);
   }
+}
+
+static void read_data(uint32_t seed)
+{
+
 }
 
 void* rcv_start(void* data)
 {
   init(data);
+
+  const uint32_t DATA_SIZE = DATA_LEN * sizeof(uint32_t);
+  char buffer[DATA_LEN * sizeof(uint32_t)];
+  uint32_t read_size = 0;
 
   while (ReceiveCounter < cfg_get_iterations()) {
     if (timed_out()) {
@@ -162,7 +155,19 @@ void* rcv_start(void* data)
       break;
     }
 
-    mc_comm_recv(message);
+    mc_comm_update(message);
+    
+    const uint32_t req_size = (DATA_SIZE - read_size);
+    const uint32_t size = mc_comm_recv(message, buffer + read_size, req_size);
+    read_size += size;
+    if (read_size == DATA_SIZE) {
+      if (!verify_data((uint32_t*)buffer, ReceiveCounter)) {
+        *Result = MC_ERR_RUNTIME;
+        break;
+      }
+
+      read_size = 0;
+    }
   }
 
   if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {

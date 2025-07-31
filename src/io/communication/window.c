@@ -1,4 +1,5 @@
 /* TODO(MN): const for all arguments
+ * Rename this module to segment
  */
 #include <string.h>
 #include "io/communication/window.h"
@@ -21,14 +22,14 @@ void wnd_write(wnd_t* const wnd, mc_span buffer, mc_comm_id id)
   memcpy(wnd->packet.data, buffer.data, buffer.capacity);
 }
 
-void* wnd_get_data(wnd_t* const wnd)
+char* wnd_get_data(wnd_t* const wnd)
 {
   return wnd->packet.data;
 }
 
 uint32_t wnd_get_data_size(const wnd_t* const wnd)
 {
-  return wnd->packet.size - sizeof(pkt_t);
+  return wnd->packet.size;
 }
 
 void wnd_ack(wnd_t* const wnd)
