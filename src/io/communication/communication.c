@@ -11,6 +11,12 @@
  * doc: packet order guaranteed
  * Add timeout for recv and send
  * Tests of sending N bytes so that N !+ K*W  W: window size
+ * 
+ * 
+ * Doc of update(): is an excellent design for bare-metal and OS compatibility. 
+ * can be used inside of a timer callback or thread to not miss any data.
+ * 
+ * 
  */
 
 #include <stdlib.h>
@@ -166,17 +172,27 @@ mc_comm_t* mc_comm_init(
   return this;
 }
 
+mc_error mc_comm_update(mc_comm_t* this)
+{
+  if (NULL == this) {
+    return MC_ERR_INVALID_ARGUMENT;
+  }
+
+  read_data(this);
+  send_unacked(this);
+  return MC_SUCCESS;
+}
+
 uint32_t mc_comm_recv(mc_comm_t* const this)
 {
-  const uint32_t size = read_data(this);
-  send_unacked(this);
-  return size;
+  mc_comm_update(this);// TODO(MN): Remove from here. It's bad to call from ISR
+  return 0;
 }
 
 uint32_t mc_comm_send(mc_comm_t* const this, void* data, uint32_t size)
 {
   // TODO(MN): if size > this->window_size
-  mc_comm_recv(this);
+  mc_comm_update(this);// TODO(MN): Remove from here. It's bad to call from ISR
 
   if (wndpool_is_full(this->snd)) {
     return 0; // TODO(MN): Error
@@ -194,7 +210,7 @@ bool mc_comm_flush(mc_comm_t* const this, uint32_t timeout_us)
   const mc_time_t bgn_time_us = mc_now_u();
 
   while (!wndpool_is_empty(this->snd) || !wndpool_is_empty(this->rcv)) {
-    mc_comm_recv(this);
+    mc_comm_update(this);
 
     if ((mc_now_u() - bgn_time_us) > timeout_us) {
       return false;
