@@ -79,21 +79,20 @@ static void print_progress(float progress)
   fflush(stdout);
 }
 
-static bool verify_data(const uint32_t* const buffer, uint32_t seed) 
-{
-  for (uint32_t index = 0; index < DATA_LEN; index++) {
-    const uint32_t expected = (seed * DATA_LEN) + index;
-    if (expected != buffer[index]) {
-        printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
-        return false;
-    }
-  }
+// static bool verify_data(const uint32_t* const buffer, uint32_t seed) 
+// {
+//   for (uint32_t index = 0; index < DATA_LEN; index++) {
+//     const uint32_t expected = (seed * DATA_LEN) + index;
+//     if (expected != buffer[index]) {
+//         printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
+//         return false;
+//     }
+//   }
 
-  ReceiveCounter++;
-  print_progress(ReceiveCounter / (float)cfg_get_iterations());
-  LastTickUS = mc_now_u();
-  return true;
-}
+//   ReceiveCounter++;
+//   print_progress(ReceiveCounter / (float)cfg_get_iterations());
+//   return true;
+// }
 
 static void init(void* data)
 {
@@ -105,7 +104,7 @@ static void init(void* data)
   server_create();
   flush_receive_buffer();
 
-  const uint32_t window_size = 16 + DATA_LEN * sizeof(uint32_t);
+  const uint32_t window_size = 37;
   const uint32_t window_capacity = 3;
   const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
@@ -116,9 +115,23 @@ static void init(void* data)
   LastTickUS = mc_now_u();
 }
 
+static void print_log()
+{
+  const uint32_t recv_cnt = cfg_get_recv_counter();
+  const uint32_t send_cnt = cfg_get_send_counter();
+  const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
+  const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
+  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
+        recv_cnt, send_cnt, 
+        recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
+        send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
+      );
+}
+
 static void deinit()
 {
   server_close();
+  print_log();
   free(AllocBuffer.data);
 }
 
@@ -136,38 +149,107 @@ static void wait_for_sender()
   }
 }
 
-static void read_data(uint32_t seed)
+static bool recv_data(void* data, uint32_t size)
 {
+  if(mc_comm_recv(message, data, size) != size) { // TODO(MN): timed_out()
+    *Result = MC_ERR_TIMEOUT;
+    return false;
+  }
 
+  LastTickUS = mc_now_u();
+  return true;
+}
+
+static bool recv_data_1(uint32_t seed)
+{
+  char data[9] = {0};
+  const uint32_t size = sizeof(data);
+  
+  if (!recv_data(data, size)) {
+    printf("[ERR Data 1] Incomplete receiving\n");
+    return false;
+  }
+
+  if (0 != memcmp(&data[0], "!p", 2)) {
+    printf("[ERR Data 1] wrong data received\n");
+    return false;
+  }
+
+  if (0 != memcmp(&data[5], ".?I", 3)) {
+    printf("[ERR Data 1] wrong data received\n");
+    return false;
+  }
+
+  char num_text[4] = {0};
+  sprintf(num_text, "%03u", seed % 1000);
+  if (0 != memcmp(num_text, &data[2], 3)) {
+    printf("[ERR Data 1] wrong data received\n");
+    return false;
+  }
+
+  return true;
+}
+
+static bool recv_data_2(uint32_t seed)
+{
+  uint32_t data[40] = {0};
+  const uint32_t random_count = (seed * 1664525) + 1013904223;
+  const uint32_t count = (random_count % 35) + 5;
+  const uint32_t size = count * sizeof(*data);
+
+  if (!recv_data(data, size)) {
+    printf("[ERR Data 2] Incomplete receiving\n");
+    return false;
+  }
+
+  for (uint32_t index = 0; index < count; index++) {
+    const uint32_t expected = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
+    if (data[index] != expected) {
+      printf("[ERR Data 2] Received: %u, Expected: %u\n", data[index], expected);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static bool recv_data_3(uint32_t seed)
+{
+  bool data = false;
+
+  if (!recv_data(&data, sizeof(data))) {
+    printf("[ERR Data 3] Incomplete receiving\n");
+    return false;
+  }
+
+  if ((seed & 1) != data) {
+    printf("[ERR Data 1] wrong data received\n");
+    return false;
+  }
+
+  return true;
 }
 
 void* rcv_start(void* data)
 {
   init(data);
 
-  const uint32_t DATA_SIZE = DATA_LEN * sizeof(uint32_t);
-  char buffer[DATA_LEN * sizeof(uint32_t)];
-  uint32_t read_size = 0;
+  for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
+    mc_comm_update(message);
 
-  while (ReceiveCounter < cfg_get_iterations()) {
-    if (timed_out()) {
+    // if (timed_out()) {
+    //   *Result = MC_ERR_TIMEOUT;
+    //   break;
+    // }
+
+    if (!recv_data_1(ReceiveCounter) || 
+        !recv_data_2(ReceiveCounter) || 
+        !recv_data_3(ReceiveCounter)) {
       *Result = MC_ERR_TIMEOUT;
       break;
     }
-
-    mc_comm_update(message);
     
-    const uint32_t req_size = (DATA_SIZE - read_size);
-    const uint32_t size = mc_comm_recv(message, buffer + read_size, req_size);
-    read_size += size;
-    if (read_size == DATA_SIZE) {
-      if (!verify_data((uint32_t*)buffer, ReceiveCounter)) {
-        *Result = MC_ERR_RUNTIME;
-        break;
-      }
-
-      read_size = 0;
-    }
+    print_progress(ReceiveCounter++ / (float)cfg_get_iterations());
   }
 
   if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {
