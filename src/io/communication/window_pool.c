@@ -86,7 +86,7 @@ static void remove_acked(wndpool_t* const this, mc_io_receive_cb on_receive)
 }
 
 // TODO(MN): rename to wndpool_push
-bool wndpool_insert(wndpool_t* const this, const mc_span data, const mc_comm_id id)
+bool wndpool_insert(wndpool_t* const this, mc_span data, mc_comm_id id)
 {
   if (!wndpool_contains(this, id)) {
     return false;
@@ -100,7 +100,7 @@ bool wndpool_insert(wndpool_t* const this, const mc_span data, const mc_comm_id 
   return true;
 }
 
-uint32_t wndpool_read(wndpool_t* const this, void* data, uint32_t size)
+uint32_t wndpool_pop(wndpool_t* const this, void* data, uint32_t size)
 {
   if (!is_first_acked(this)) {
     return 0;
@@ -143,9 +143,9 @@ uint8_t wndpool_get_capacity(const wndpool_t* const this)
 bool wndpool_push(wndpool_t* const this, const mc_span data)
 {
   if (wndpool_is_full(this)) {
-    return false;
+    return false; // TODO(MN): Error
   }
-  
+
   wnd_t* const window = wndpool_get(this, this->end_id);
   wnd_write(window, data, this->end_id);
   this->end_id++;

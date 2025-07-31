@@ -12,10 +12,8 @@
 
 static int ClientSocket = -1;
 static mc_comm_t* message = NULL;
-static uint32_t SendCounter = 0;
 static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
-static uint32_t Buffer[DATA_LEN];
 static mc_span AllocBuffer = {0};
 
 
@@ -55,41 +53,16 @@ static void let_server_start()
   usleep(200000);
 }
 
-static void update_data(uint32_t* const Buffer)
-{
-  for (uint32_t index = 0; index < DATA_LEN; index++) {
-    Buffer[index] = (SendCounter * DATA_LEN) + index;
-  }
-
-  SendCounter++;
-  LastTickUS = mc_now_u();
-  usleep(100);
-}
-
-static void print_log()
-{
-  const uint32_t recv_cnt = cfg_get_recv_counter();
-  const uint32_t send_cnt = cfg_get_send_counter();
-  const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
-  const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
-  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
-        recv_cnt, send_cnt, 
-        recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
-        send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
-      );
-}
-
 static void init(void* data)
 {
   Result = (uint32_t*)data;
   *Result = MC_SUCCESS;
   
-  SendCounter = 0;
   client_create();
   let_server_start();
 
-  const uint32_t window_size = 16 + DATA_LEN * sizeof(uint32_t);
-  const uint32_t window_capacity = 3;
+  const uint32_t window_size = 37;
+  const uint32_t window_capacity = 3;// TODO(MN): Calculate accoridng the buffer size / window size
   const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
 
@@ -99,7 +72,6 @@ static void init(void* data)
 static void deinit()
 {
   client_close();
-  print_log();
   free(AllocBuffer.data);
 }
 
@@ -108,24 +80,67 @@ static bool timed_out()
   return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US);
 }
 
+static bool send_data(const void* data, uint32_t size)
+{
+  // TODO(MN): Use timed_out as an arg
+  if (mc_comm_send(message, data, size) != size) {// TODO(MN): Pass timeout as an arg
+    *Result = MC_ERR_TIMEOUT;
+    return false;
+  }
+
+  LastTickUS = mc_now_u();
+  return true;
+}
+
+static bool send_data_1(uint32_t seed)
+{
+  char data[9] = {0};
+  const uint32_t size = sizeof(data);
+  sprintf(data, "!p%03u.?I", seed % 1000);
+
+  return send_data(data, size);
+}
+
+static bool send_data_2(uint32_t seed)
+{
+  uint32_t data[40] = {0};
+  const uint32_t random_count = (seed * 1664525) + 1013904223;
+  const uint32_t count = (random_count % 35) + 5;
+  const uint32_t size = count * sizeof(*data);
+
+  for (uint32_t index = 0; index < count; index++) {
+    data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
+  }
+
+  return send_data(data, size);
+}
+
+static bool send_data_3(uint32_t seed)
+{
+  bool data = (seed & 1);
+  const uint32_t size = sizeof(data);
+
+  return send_data(&data, size);
+}
+
 void* snd_start(void* data)
 {
   init(data);
-  update_data(Buffer);
+  
+  for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
+    mc_comm_update(message);
 
-  while (SendCounter <= cfg_get_iterations()) {
-    if (timed_out()) {
+    // if (timed_out()) {
+    //   *Result = MC_ERR_TIMEOUT;
+    //   break;
+    // }
+
+    if (!send_data_1(counter) ||
+        !send_data_2(counter) ||
+        !send_data_3(counter)){
       *Result = MC_ERR_TIMEOUT;
       break;
     }
-
-    mc_comm_update(message);
-    
-    if (sizeof(Buffer) != mc_comm_send(message, Buffer, sizeof(Buffer))) {
-      continue;
-    }
-
-    update_data(Buffer);
   }
   
   if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {

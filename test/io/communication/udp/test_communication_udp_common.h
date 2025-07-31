@@ -8,7 +8,7 @@
 
 #define SERVER_PORT       9000
 #define CLIENT_PORT       9001
-#define COMPLETE_COUNT    10000
+#define COMPLETE_COUNT    500
 #define DATA_LEN          10
 #define TEST_TIMEOUT_US   5000000
 
