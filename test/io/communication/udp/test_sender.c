@@ -12,7 +12,6 @@
 
 static int ClientSocket = -1;
 static mc_comm_t* message = NULL;
-static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
 static mc_span AllocBuffer = {0};
 
@@ -75,20 +74,12 @@ static void deinit()
   free(AllocBuffer.data);
 }
 
-static bool timed_out()
-{
-  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US);
-}
-
 static bool send_data(const void* data, uint32_t size)
 {
-  // TODO(MN): Use timed_out as an arg
-  if (mc_comm_send(message, data, size) != size) {// TODO(MN): Pass timeout as an arg
+  if (mc_comm_send(message, data, size, TEST_TIMEOUT_US) != size) {
     *Result = MC_ERR_TIMEOUT;
     return false;
   }
-
-  LastTickUS = mc_now_u();
   return true;
 }
 
@@ -129,11 +120,6 @@ void* snd_start(void* data)
   
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
     mc_comm_update(message);
-
-    // if (timed_out()) {
-    //   *Result = MC_ERR_TIMEOUT;
-    //   break;
-    // }
 
     if (!send_data_string(counter)        ||
         !send_data_variadic_size(counter) ||  /* Smaller and larger than window size */

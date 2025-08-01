@@ -179,7 +179,7 @@ mc_error mc_comm_update(mc_comm_t* this)
   return MC_SUCCESS;
 }
 
-uint32_t mc_comm_recv(mc_comm_t* const this, void* data, uint32_t size, uint32_t timeout_us)
+uint32_t mc_comm_recv(mc_comm_t* this, void* data, uint32_t size, uint32_t timeout_us)
 {
   uint32_t read_size = 0;
   const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
@@ -200,10 +200,10 @@ uint32_t mc_comm_recv(mc_comm_t* const this, void* data, uint32_t size, uint32_t
   return read_size;
 }
 
-uint32_t mc_comm_send(mc_comm_t* const this, const void* data, uint32_t size)
+uint32_t mc_comm_send(mc_comm_t* this, const void* data, uint32_t size, uint32_t timeout_us)
 {
-  // TODO(MN): if size > this->window_size
   uint32_t sent_size = 0;
+  const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
 
   while (size) {
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(pkt_t));
@@ -217,12 +217,16 @@ uint32_t mc_comm_send(mc_comm_t* const this, const void* data, uint32_t size)
     } else {
       mc_comm_update(this);// TODO(MN): pure function without any check
     }
+    
+    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > (bgn_time + timeout_us))) {
+      break;// TODO(MN): Error of timeout
+    }
   }
   
   return sent_size;
 }
 
-bool mc_comm_flush(mc_comm_t* const this, uint32_t timeout_us)
+bool mc_comm_flush(mc_comm_t* this, uint32_t timeout_us)
 {
   const mc_time_t bgn_time_us = mc_now_u();
 
