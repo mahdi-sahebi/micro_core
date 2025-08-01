@@ -82,10 +82,10 @@ static bool timed_out()
 
 static bool send_data(const void* data, uint32_t size)
 {
-  mc_comm_update(message);
+  // mc_comm_update(message);
 
-  while (mc_comm_send(message, data, size) != size) {// TODO(MN): Pass timeout as an arg
-    mc_comm_update(message);
+  if (mc_comm_send(message, data, size) != size) {// TODO(MN): Pass timeout as an arg
+    // mc_comm_update(message);
 
     if (timed_out()) {
       // *Result = MC_ERR_TIMEOUT;
@@ -110,10 +110,10 @@ static bool send_data_2(uint32_t seed)
 {
   uint32_t data[100] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint8_t count = (random_count % 80) + 20;
-  const uint8_t size = count * sizeof(*data);
+  const uint32_t count = (random_count % 80) + 20;
+  const uint32_t size = count * sizeof(*data);
 
-  for (uint8_t index = 0; index < count; index++) {
+  for (uint32_t index = 0; index < count; index++) {
     data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
   }
 
