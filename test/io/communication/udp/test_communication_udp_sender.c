@@ -136,9 +136,9 @@ void* snd_start(void* data)
     mc_comm_update(message);
 
     if (
-      !send_data_1(counter)
+      // !send_data_1(counter)
       //  ||
-        // !send_data_2(counter)
+        !send_data_2(counter)
         //  ||
         // !send_data_3(counter)
       ){
