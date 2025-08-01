@@ -18,7 +18,7 @@ static mc_wnd_idx get_index(const wndpool_t* const this, const mc_pkt_id id)
 
 static wnd_t* get_window(const wndpool_t* const this, const mc_wnd_idx index)
 {
-  return (wnd_t*)((char*)(this->windows) + (index * (sizeof(wnd_t) + this->data_size)));// TODO(MN): Rcv/snd
+  return (wnd_t*)((char*)(this->windows) + (index * (this->window_size + (sizeof(wnd_t) - sizeof(mc_pkt)))));// TODO(MN): Rcv/snd
 }
 
 static bool is_first_acked(const wndpool_t* const this)
