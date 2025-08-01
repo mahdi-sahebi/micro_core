@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 typedef uint64_t mc_time_t;
+#define MC_TIMEOUT_MAX      (uint32_t)-1
 
 mc_time_t mc_now();
 mc_time_t mc_now_u();
