@@ -1,5 +1,9 @@
 #include <stdlib.h>
+#include <string.h>
 #include "io/communication/window_pool.h"
+
+
+#define MIN(A, B)           ((A) <= (B) ? (A) : (B))
 
 
 static mc_comm_idx get_index(const wndpool_t* const this, const mc_comm_id id)
@@ -55,7 +59,7 @@ wnd_t* wndpool_get(wndpool_t* const this, mc_comm_id id)
   return get_window(this, get_index(this, id));
 }
 
-void wndpool_remove_first(wndpool_t* const this)
+static void remove_first(wndpool_t* const this)
 {
   wnd_clear(get_window(this, this->bgn_index));
 
@@ -67,7 +71,7 @@ void wndpool_remove_first(wndpool_t* const this)
   }
 }
 
-void wndpool_remove_acked(wndpool_t* const this, mc_io_receive_cb on_receive)
+static void remove_acked(wndpool_t* const this, mc_io_receive_cb on_receive)
 {
   while (is_first_acked(this)) {
     wnd_t* const window = get_window(this, this->bgn_index);
@@ -77,10 +81,11 @@ void wndpool_remove_acked(wndpool_t* const this, mc_io_receive_cb on_receive)
     }
 
     wnd_clear(window);
-    wndpool_remove_first(this);
+    remove_first(this);
   }
 }
 
+// TODO(MN): rename to wndpool_push
 bool wndpool_insert(wndpool_t* const this, const mc_span data, const mc_comm_id id)
 {
   if (!wndpool_contains(this, id)) {
@@ -93,6 +98,28 @@ bool wndpool_insert(wndpool_t* const this, const mc_span data, const mc_comm_id 
   window->is_acked = true;
 
   return true;
+}
+
+uint32_t wndpool_read(wndpool_t* const this, void* data, uint32_t size)
+{
+  if (!is_first_acked(this)) {
+    return 0;
+  }
+
+  // TODO(MN): reading less than window size caues window drop!
+  // Store the last read bytes. requires the continuous data pools
+  // Separate the wnd(s) meta data and data buffers
+  wnd_t* const window = wndpool_get(this, this->bgn_id);
+  const uint32_t read_size = MIN(wnd_get_data_size(window) - this->last_read_size, size);
+  memcpy(data, wnd_get_data(window) + this->last_read_size, read_size);
+
+  this->last_read_size += read_size;
+  if (this->last_read_size >= wnd_get_data_size(window)) {
+    this->last_read_size = 0;
+    remove_first(this);
+  }
+  
+  return read_size;
 }
 
 uint8_t wndpool_get_count(const wndpool_t* const this)
@@ -141,8 +168,11 @@ bool wndpool_ack(wndpool_t* const this, mc_comm_id id, mc_io_receive_cb on_done)
   }
 
   if (id == this->bgn_id) {
-    wndpool_remove_acked(this, on_done);
+    remove_acked(this, on_done);
   }
   
   return true;
 }
+
+
+#undef MIN

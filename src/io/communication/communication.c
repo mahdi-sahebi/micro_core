@@ -36,11 +36,10 @@
 
 struct _mc_comm_t
 { 
-  mc_io            io;
-  mc_io_receive_cb on_receive;
-  uint32_t         send_delay_us;
-  wndpool_t*       rcv;// TODO(MN): Use array to reduce one pointer size
-  wndpool_t*       snd;
+  mc_io      io;
+  uint32_t   send_delay_us;
+  wndpool_t* rcv;// TODO(MN): Use array to reduce one pointer size
+  wndpool_t* snd;
 };
 
 
@@ -83,16 +82,8 @@ static uint32_t read_data(mc_comm_t* const this)
     return 0;
   }
 
-  if (pkt->id > this->rcv->bgn_id) {
-    wndpool_insert(this->rcv, mc_span(pkt->data, pkt->size), pkt->id);
-    return read_size;
-  }
-
   send_ack(this, pkt->id);
-  wndpool_remove_first(this->rcv);
-  this->on_receive(pkt->data, pkt->size);
-  wndpool_remove_acked(this->rcv, this->on_receive);// TODO(MN): Merge with wndpool_ack
-
+  wndpool_insert(this->rcv, mc_span(pkt->data, pkt->size), pkt->id);
   return read_size;
 }
 
@@ -135,8 +126,7 @@ mc_comm_t* mc_comm_init(
   mc_span alloc_buffer,
   uint16_t window_size, 
   uint8_t window_capacity, 
-  mc_io io,
-  mc_io_receive_cb on_receive)
+  mc_io io)
 {
   if ((NULL == io.recv) || (NULL == io.send)) {
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
@@ -151,7 +141,6 @@ mc_comm_t* mc_comm_init(
   mc_comm_t* const this = (mc_comm_t*)alloc_buffer.data;
 
   this->io               = io;
-  this->on_receive       = on_receive;
   this->send_delay_us    = MIN_SEND_TIME_US;
 
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm_t));
@@ -183,17 +172,14 @@ mc_error mc_comm_update(mc_comm_t* this)
   return MC_SUCCESS;
 }
 
-uint32_t mc_comm_recv(mc_comm_t* const this)
+uint32_t mc_comm_recv(mc_comm_t* const this, void* data, uint32_t size)
 {
-  mc_comm_update(this);// TODO(MN): Remove from here. It's bad to call from ISR
-  return 0;
+  return wndpool_read(this->rcv, data, size);
 }
 
 uint32_t mc_comm_send(mc_comm_t* const this, void* data, uint32_t size)
 {
   // TODO(MN): if size > this->window_size
-  mc_comm_update(this);// TODO(MN): Remove from here. It's bad to call from ISR
-
   if (wndpool_is_full(this->snd)) {
     return 0; // TODO(MN): Error
   }
