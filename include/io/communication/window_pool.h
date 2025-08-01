@@ -11,13 +11,12 @@
 
 typedef uint8_t mc_wnd_idx;
 
-typedef struct
+typedef struct __attribute__((packed))
 {
   wnd_t*     windows;
-  uint16_t   window_size;
-  uint16_t   data_size;// TODO(MN): ?min size. delete
   mc_pkt_id  bgn_id;
   mc_pkt_id  end_id;// TODO(MN): Remove
+  uint16_t   window_size;
   uint16_t   last_read_size;
   mc_wnd_idx bgn_index;
   mc_wnd_idx capacity;

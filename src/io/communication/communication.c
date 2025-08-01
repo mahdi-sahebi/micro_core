@@ -153,13 +153,11 @@ mc_comm* mc_comm_init(
 
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm));
   this->rcv->window_size = window_size;
-  this->rcv->data_size   = window_size - sizeof(mc_pkt);
   this->rcv->capacity    = windows_capacity;
   this->rcv->windows     = (wnd_t*)((char*)this->rcv->temp_window + window_size);
 
   this->snd              = (wndpool_t*)(char*)(this->rcv->windows) + windows_size;
   this->snd->window_size = window_size;
-  this->snd->data_size   = window_size - sizeof(mc_pkt);
   this->snd->capacity    = windows_capacity;
   this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
 
