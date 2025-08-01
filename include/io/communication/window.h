@@ -13,35 +13,34 @@ enum definitions
   HEADER     = 0xC7E9
 };
 
-typedef uint16_t mc_comm_hdr;
-typedef uint32_t mc_comm_id;// TODO(MN): pkt_id, pkt_hdr, pkt_idx
-typedef uint8_t mc_comm_idx;
+typedef uint16_t mc_pkt_hdr;
+typedef uint32_t mc_pkt_id;// TODO(MN): Handle overflow and decrese the size
 
 typedef enum
 {
   PKT_DATA = 0,
   PKT_ACK
-}pkt_type_t;
+}mc_pkt_type;
 
 typedef struct // TODO(MN): pads
 {
-  mc_comm_hdr header;
-  pkt_type_t  type;
-  mc_comm_id  id;
+  mc_pkt_hdr  header;
+  mc_pkt_type type;
+  mc_pkt_id   id;
   uint32_t    size;
   char        data[0];
-}pkt_t;// TODO(MN): Must be As size as window_size
+}mc_pkt;// TODO(MN): Must be As size as window_size
 
 typedef struct 
 {
   mc_time_t sent_time_us;
   bool      is_acked;// TODO(MN): Large pad
-  pkt_t     packet;
+  mc_pkt    packet;
 }wnd_t;
 
 
 void     wnd_clear(wnd_t* const wnd);
-void     wnd_write(wnd_t* const wnd, mc_span buffer, mc_comm_id id);
+void     wnd_write(wnd_t* const wnd, mc_span buffer, mc_pkt_id id);
 char*    wnd_get_data(wnd_t* const wnd);
 uint32_t wnd_get_data_size(const wnd_t* const wnd);
 void     wnd_ack(wnd_t* const wnd);
