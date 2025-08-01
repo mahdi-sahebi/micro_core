@@ -11,7 +11,7 @@
  * doc: packet order guaranteed
  * Add timeout for recv and send
  * Tests of sending N bytes so that N !+ K*W  W: window size
- * 
+ * Tests of timeout for send/recv
  * 
  * Doc of update(): is an excellent design for bare-metal and OS compatibility. 
  * can be used inside of a timer callback or thread to not miss any data.
@@ -179,10 +179,10 @@ mc_error mc_comm_update(mc_comm_t* this)
   return MC_SUCCESS;
 }
 
-uint32_t mc_comm_recv(mc_comm_t* const this, void* data, uint32_t size)
+uint32_t mc_comm_recv(mc_comm_t* this, void* data, uint32_t size, uint32_t timeout_us)
 {
   uint32_t read_size = 0;
-  const char* itr = data;
+  const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
 
   while (size) {
     mc_comm_update(this);
@@ -191,36 +191,42 @@ uint32_t mc_comm_recv(mc_comm_t* const this, void* data, uint32_t size)
 
     size -= seg_size;
     read_size += seg_size;
+
+    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > (bgn_time + timeout_us))) {
+      break;// TODO(MN): Error of timeout
+    }
   }
 
   return read_size;
 }
 
-uint32_t mc_comm_send(mc_comm_t* const this, const void* data, uint32_t size)
+uint32_t mc_comm_send(mc_comm_t* this, const void* data, uint32_t size, uint32_t timeout_us)
 {
-  // TODO(MN): if size > this->window_size
   uint32_t sent_size = 0;
-  const char* itr = data;
+  const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
 
   while (size) {
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(pkt_t));
 
     const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
-    if (wndpool_push(this->snd, mc_span(itr, seg_size))) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
+    if (wndpool_push(this->snd, mc_span((char*)data + sent_size, seg_size))) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
       this->io.send(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
 
-      itr += seg_size;// TODO(MN): API for + and - in span
-      size -= seg_size;
+      size -= seg_size;// TODO(MN): API for + and - in span
       sent_size += seg_size;
     } else {
       mc_comm_update(this);// TODO(MN): pure function without any check
+    }
+    
+    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > (bgn_time + timeout_us))) {
+      break;// TODO(MN): Error of timeout
     }
   }
   
   return sent_size;
 }
 
-bool mc_comm_flush(mc_comm_t* const this, uint32_t timeout_us)
+bool mc_comm_flush(mc_comm_t* this, uint32_t timeout_us)
 {
   const mc_time_t bgn_time_us = mc_now_u();
 
