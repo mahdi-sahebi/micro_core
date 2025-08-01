@@ -14,7 +14,6 @@
 
 static int ServerSocket = -1;
 static uint32_t ReceiveCounter = 0;
-static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
 static mc_comm_t* message = NULL;
 static mc_span AllocBuffer = {0};
@@ -79,21 +78,6 @@ static void print_progress(float progress)
   fflush(stdout);
 }
 
-// static bool verify_data(const uint32_t* const buffer, uint32_t seed) 
-// {
-//   for (uint32_t index = 0; index < DATA_LEN; index++) {
-//     const uint32_t expected = (seed * DATA_LEN) + index;
-//     if (expected != buffer[index]) {
-//         printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
-//         return false;
-//     }
-//   }
-
-//   ReceiveCounter++;
-//   print_progress(ReceiveCounter / (float)cfg_get_iterations());
-//   return true;
-// }
-
 static void init(void* data)
 {
   /* TODO(MN): Repetitive packet, invalid header, incomplete packet, miss packet pointer, use zero copy
@@ -103,16 +87,13 @@ static void init(void* data)
 
   server_create();
   flush_receive_buffer();
+  ReceiveCounter = 0;
 
   const uint32_t window_size = 37;
   const uint32_t window_capacity = 3;
   const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
-
   message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(server_read, server_write));
-
-  ReceiveCounter = 0;
-  LastTickUS = mc_now_u();
 }
 
 static void print_log()
@@ -135,11 +116,6 @@ static void deinit()
   free(AllocBuffer.data);
 }
 
-static bool timed_out()
-{
-  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US);
-}
-
 static void wait_for_sender()
 {
   const mc_time_t end_time = mc_now_u() + 500000 * ((cfg_get_loss_rate() / 10) + 1);
@@ -151,12 +127,11 @@ static void wait_for_sender()
 
 static bool recv_data(void* data, uint32_t size)
 {
-  if(mc_comm_recv(message, data, size) != size) { // TODO(MN): timed_out()
+  if(mc_comm_recv(message, data, size, TEST_TIMEOUT_US) != size) {
     *Result = MC_ERR_TIMEOUT;
     return false;
   }
 
-  LastTickUS = mc_now_u();
   return true;
 }
 
@@ -236,11 +211,6 @@ void* rcv_start(void* data)
 
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
     mc_comm_update(message);
-
-    // if (timed_out()) {
-    //   *Result = MC_ERR_TIMEOUT;
-    //   break;
-    // }
 
     if (!recv_data_string(ReceiveCounter)        || 
         !recv_data_variadic_size(ReceiveCounter) || /* Smaller and larger than window size */
