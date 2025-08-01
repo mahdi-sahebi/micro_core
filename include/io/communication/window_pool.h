@@ -36,7 +36,7 @@ wnd_t*   wndpool_get(wndpool_t* const this, mc_pkt_id id);
 uint8_t  wndpool_get_count(const wndpool_t* const this);
 uint8_t  wndpool_get_capacity(const wndpool_t* const this);
 uint32_t wndpool_pop(wndpool_t* const this, void* data, uint32_t size);
-bool     wndpool_insert(wndpool_t* const this, mc_span data, mc_pkt_id id);
+bool     wndpool_update(wndpool_t* const this, mc_span data, mc_pkt_id id);
 bool     wndpool_push(wndpool_t* const this, const mc_span data);
 bool     wndpool_ack(wndpool_t* const this, mc_pkt_id id, mc_io_receive_cb on_done);
 

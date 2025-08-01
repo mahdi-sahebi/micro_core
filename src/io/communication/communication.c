@@ -88,7 +88,7 @@ static uint32_t read_data(mc_comm* const this)
     return 0;
   }
 
-  if (wndpool_insert(this->rcv, mc_span(pkt->data, pkt->size), pkt->id)) {
+  if (wndpool_update(this->rcv, mc_span(pkt->data, pkt->size), pkt->id)) {
     send_ack(this, pkt->id);
   }
 
