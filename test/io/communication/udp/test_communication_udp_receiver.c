@@ -57,19 +57,6 @@ static void flush_receive_buffer()
   }
 }
 
-static bool verify_data(const uint32_t* const buffer, uint32_t packet_id) 
-{
-  for (uint32_t index = 0; index < DATA_LEN; index++) {
-    const uint32_t expected = (packet_id * DATA_LEN) + index;
-    if (expected != buffer[index]) {
-        printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
-        return false;
-    }
-  }
-
-  return true;
-}
-
 static void print_progress(float progress)
 {
   const uint32_t BAR_LENGTH = 20;
@@ -92,23 +79,20 @@ static void print_progress(float progress)
   fflush(stdout);
 }
 
-static void on_receive(const void* const data, uint32_t size)
+static bool verify_data(const uint32_t* const buffer, uint32_t seed) 
 {
-  if ((DATA_LEN * sizeof(uint32_t)) != size) {
-    *Result = MC_ERR_RUNTIME;
-    return;
-  }
-
-  const uint32_t* const buffer = (uint32_t*)data;
-
-  if (!verify_data(buffer, ReceiveCounter)) {
-    *Result = MC_ERR_RUNTIME;
-    return;
+  for (uint32_t index = 0; index < DATA_LEN; index++) {
+    const uint32_t expected = (seed * DATA_LEN) + index;
+    if (expected != buffer[index]) {
+        printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
+        return false;
+    }
   }
 
   ReceiveCounter++;
   print_progress(ReceiveCounter / (float)cfg_get_iterations());
   LastTickUS = mc_now_u();
+  return true;
 }
 
 static void init(void* data)
@@ -177,7 +161,11 @@ void* rcv_start(void* data)
     const uint32_t size = mc_comm_recv(message, buffer + read_size, req_size);
     read_size += size;
     if (read_size == DATA_SIZE) {
-      on_receive(buffer, read_size);
+      if (!verify_data((uint32_t*)buffer, ReceiveCounter)) {
+        *Result = MC_ERR_RUNTIME;
+        break;
+      }
+
       read_size = 0;
     }
   }
