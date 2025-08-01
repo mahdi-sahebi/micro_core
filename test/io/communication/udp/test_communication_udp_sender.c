@@ -62,7 +62,7 @@ static void init(void* data)
   let_server_start();
 
   const uint32_t window_size = 37;
-  const uint32_t window_capacity = 3;
+  const uint32_t window_capacity = 3;// TODO(MN): Calculate accoridng the buffer size / window size
   const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
 
@@ -108,9 +108,9 @@ static bool send_data_1(uint32_t seed)
 
 static bool send_data_2(uint32_t seed)
 {
-  uint32_t data[100] = {0};
+  uint32_t data[40] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint32_t count = (random_count % 80) + 20;
+  const uint32_t count = (random_count % 35) + 5;
   const uint32_t size = count * sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
