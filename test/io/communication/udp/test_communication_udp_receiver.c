@@ -79,21 +79,20 @@ static void print_progress(float progress)
   fflush(stdout);
 }
 
-static bool verify_data(const uint32_t* const buffer, uint32_t seed) 
-{
-  for (uint32_t index = 0; index < DATA_LEN; index++) {
-    const uint32_t expected = (seed * DATA_LEN) + index;
-    if (expected != buffer[index]) {
-        printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
-        return false;
-    }
-  }
+// static bool verify_data(const uint32_t* const buffer, uint32_t seed) 
+// {
+//   for (uint32_t index = 0; index < DATA_LEN; index++) {
+//     const uint32_t expected = (seed * DATA_LEN) + index;
+//     if (expected != buffer[index]) {
+//         printf("Error - Packet #%u - got %u, expected %u\n", index, buffer[index], expected);
+//         return false;
+//     }
+//   }
 
-  ReceiveCounter++;
-  print_progress(ReceiveCounter / (float)cfg_get_iterations());
-  LastTickUS = mc_now_u();
-  return true;
-}
+//   ReceiveCounter++;
+//   print_progress(ReceiveCounter / (float)cfg_get_iterations());
+//   return true;
+// }
 
 static void init(void* data)
 {
@@ -116,9 +115,23 @@ static void init(void* data)
   LastTickUS = mc_now_u();
 }
 
+static void print_log()
+{
+  const uint32_t recv_cnt = cfg_get_recv_counter();
+  const uint32_t send_cnt = cfg_get_send_counter();
+  const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
+  const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
+  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
+        recv_cnt, send_cnt, 
+        recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
+        send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
+      );
+}
+
 static void deinit()
 {
   server_close();
+  print_log();
   free(AllocBuffer.data);
 }
 
@@ -136,38 +149,79 @@ static void wait_for_sender()
   }
 }
 
-static void read_data(uint32_t seed)
+static bool recv_data(void* data, uint32_t size)
 {
+  uint32_t total_read_size = 0;
 
+  while (size) {
+    mc_comm_update(message);
+
+    // if (timed_out()) {
+    //   *Result = MC_ERR_TIMEOUT;
+    //   return false;
+    // }
+
+    const uint32_t read_size = mc_comm_recv(message, (char*)data + total_read_size, size);
+
+    if (0 != read_size ) {
+      LastTickUS = mc_now_u();
+    }
+
+    size -= read_size;
+  }
+
+  return true;
+}
+
+static bool recv_data_1(uint32_t seed)
+{
+  char data[9] = {0};
+  const uint32_t size = sizeof(data);
+  
+  if (!recv_data(data, size)) {
+    return false;
+  }
+
+  if (0 != memcmp(&data[0], "!p", 2)) {
+    return false;
+  }
+
+  if (0 != memcmp(&data[5], ".?I", 3)) {
+    return false;
+  }
+
+  char num_text[4] = {0};
+  sprintf(num_text, "%03u", seed % 1000);
+  if (0 != memcmp(num_text, &data[2], 3)) {
+    return false;
+  }
+
+  return true;
 }
 
 void* rcv_start(void* data)
 {
   init(data);
 
-  const uint32_t DATA_SIZE = DATA_LEN * sizeof(uint32_t);
-  char buffer[DATA_LEN * sizeof(uint32_t)];
-  uint32_t read_size = 0;
+  for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
+    mc_comm_update(message);
 
-  while (ReceiveCounter < cfg_get_iterations()) {
-    if (timed_out()) {
+    // if (timed_out()) {
+    //   *Result = MC_ERR_TIMEOUT;
+    //   break;
+    // }
+
+
+    if (
+        !recv_data_1(ReceiveCounter)
+        // || !recv_data_2(ReceiveCounter)
+        //  || !recv_data_3(ReceiveCounter)
+        ) {
       *Result = MC_ERR_TIMEOUT;
       break;
     }
-
-    mc_comm_update(message);
     
-    const uint32_t req_size = (DATA_SIZE - read_size);
-    const uint32_t size = mc_comm_recv(message, buffer + read_size, req_size);
-    read_size += size;
-    if (read_size == DATA_SIZE) {
-      if (!verify_data((uint32_t*)buffer, ReceiveCounter)) {
-        *Result = MC_ERR_RUNTIME;
-        break;
-      }
-
-      read_size = 0;
-    }
+    print_progress(ReceiveCounter++ / (float)cfg_get_iterations());
   }
 
   if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {

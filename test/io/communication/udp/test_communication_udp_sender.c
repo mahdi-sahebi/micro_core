@@ -53,19 +53,6 @@ static void let_server_start()
   usleep(200000);
 }
 
-static void print_log()
-{
-  const uint32_t recv_cnt = cfg_get_recv_counter();
-  const uint32_t send_cnt = cfg_get_send_counter();
-  const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
-  const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
-  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
-        recv_cnt, send_cnt, 
-        recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
-        send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
-      );
-}
-
 static void init(void* data)
 {
   Result = (uint32_t*)data;
@@ -85,29 +72,28 @@ static void init(void* data)
 static void deinit()
 {
   client_close();
-  print_log();
   free(AllocBuffer.data);
 }
 
 static bool timed_out()
 {
-  if ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US) {
-    return true;
-  }
-
-  LastTickUS = mc_now_u();
-  return false;
+  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US);
 }
 
 static bool send_data(const void* data, uint32_t size)
 {
+  mc_comm_update(message);
+
   while (mc_comm_send(message, data, size) != size) {// TODO(MN): Pass timeout as an arg
+    mc_comm_update(message);
+
     if (timed_out()) {
-      *Result = MC_ERR_TIMEOUT;
-      return false;
+      // *Result = MC_ERR_TIMEOUT;
+      // return false;
     }
   }
 
+  LastTickUS = mc_now_u();
   return true;
 }
 
@@ -145,24 +131,20 @@ static bool send_data_3(uint32_t seed)
 void* snd_start(void* data)
 {
   init(data);
-
+  
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
-    if (!send_data_1(counter) ||
-        !send_data_2(counter) ||
-        !send_data_3(counter)){
+    mc_comm_update(message);
+
+    if (
+      !send_data_1(counter)
+      //  ||
+        // !send_data_2(counter)
+        //  ||
+        // !send_data_3(counter)
+      ){
+      *Result = MC_ERR_TIMEOUT;
       break;
     }
-<<<<<<< HEAD
-
-    mc_comm_update(message);
-    
-    if (sizeof(Buffer) != mc_comm_send(message, Buffer, sizeof(Buffer))) {
-      continue;
-    }
-
-    update_data(Buffer);
-=======
->>>>>>> 9ba2568 ([TEST]: Dynamic and complex sending tests are added)
   }
   
   if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {
