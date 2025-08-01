@@ -93,7 +93,7 @@ static void init(void* data)
   const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
 
-  message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(client_read, client_write), NULL);
+  message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(client_read, client_write));
 }
 
 static void deinit()
@@ -114,12 +114,12 @@ void* snd_start(void* data)
   update_data(Buffer);
 
   while (SendCounter <= cfg_get_iterations()) {
-    mc_comm_update(message);
-
     if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
     }
+
+    mc_comm_update(message);
     
     if (sizeof(Buffer) != mc_comm_send(message, Buffer, sizeof(Buffer))) {
       continue;

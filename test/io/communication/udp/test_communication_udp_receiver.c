@@ -126,7 +126,7 @@ static void init(void* data)
   const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
 
-  message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(server_read, server_write), on_receive);
+  message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(server_read, server_write));
 
   ReceiveCounter = 0;
   LastTickUS = mc_now_u();
@@ -152,16 +152,33 @@ static void wait_for_sender()
   }
 }
 
+static void read_data(uint32_t seed)
+{
+
+}
+
 void* rcv_start(void* data)
 {
   init(data);
 
+  const uint32_t DATA_SIZE = DATA_LEN * sizeof(uint32_t);
+  char buffer[DATA_LEN * sizeof(uint32_t)];
+  uint32_t read_size = 0;
+
   while (ReceiveCounter < cfg_get_iterations()) {
-    mc_comm_update(message);
-    
     if (timed_out()) {
       *Result = MC_ERR_TIMEOUT;
       break;
+    }
+
+    mc_comm_update(message);
+    
+    const uint32_t req_size = (DATA_SIZE - read_size);
+    const uint32_t size = mc_comm_recv(message, buffer + read_size, req_size);
+    read_size += size;
+    if (read_size == DATA_SIZE) {
+      on_receive(buffer, read_size);
+      read_size = 0;
     }
   }
 
