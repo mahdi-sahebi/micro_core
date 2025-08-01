@@ -11,16 +11,13 @@
  * doc: packet order guaranteed
  * Add timeout for recv and send
  * Tests of sending N bytes so that N !+ K*W  W: window size
-<<<<<<< HEAD
  * 
  * 
  * Doc of update(): is an excellent design for bare-metal and OS compatibility. 
  * can be used inside of a timer callback or thread to not miss any data.
  * 
  * 
-=======
  * Get comm interface.
->>>>>>> 9ba2568 ([TEST]: Dynamic and complex sending tests are added)
  */
 
 #include <stdlib.h>
@@ -74,6 +71,10 @@ static uint32_t read_data(mc_comm_t* const this)
   }
  
   if (PKT_ACK == pkt->type) {
+    if (!wndpool_contains(this->snd, pkt->id)) {// TODO(MN): Test that not read to send ack to let sender sends more
+      return 0;
+    }
+
     const mc_time_t sent_time_us = wndpool_get(this->snd, pkt->id)->sent_time_us;
     const uint64_t elapsed_time = mc_now_u() - sent_time_us;
     this->send_delay_us = elapsed_time * 0.8;
@@ -86,8 +87,10 @@ static uint32_t read_data(mc_comm_t* const this)
     return 0;
   }
 
-  send_ack(this, pkt->id);
-  wndpool_insert(this->rcv, mc_span(pkt->data, pkt->size), pkt->id);
+  if (wndpool_insert(this->rcv, mc_span(pkt->data, pkt->size), pkt->id)) {
+    send_ack(this, pkt->id);
+  }
+
   return read_size;
 }
 
@@ -178,19 +181,18 @@ mc_error mc_comm_update(mc_comm_t* this)
 
 uint32_t mc_comm_recv(mc_comm_t* const this, void* data, uint32_t size)
 {
-  return wndpool_read(this->rcv, data, size);
+  return wndpool_pop(this->rcv, data, size);
 }
 
-uint32_t mc_comm_send(mc_comm_t* const this, void* data, uint32_t size)
+uint32_t mc_comm_send(mc_comm_t* const this, const void* data, uint32_t size)
 {
   // TODO(MN): if size > this->window_size
-  if (wndpool_is_full(this->snd)) {
-    return 0; // TODO(MN): Error
-  }
-  
+  uint32_t sent_size = 0;
+
   const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);
-  wndpool_push(this->snd, mc_span(data, size));
-  this->io.send(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  if (wndpool_push(this->snd, mc_span(data, size))) {
+    sent_size = this->io.send(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  }
   
   return size;
 }

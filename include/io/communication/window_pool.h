@@ -32,7 +32,7 @@ bool     wndpool_contains(wndpool_t* const this, mc_comm_id id);
 wnd_t*   wndpool_get(wndpool_t* const this, mc_comm_id id);
 uint8_t  wndpool_get_count(const wndpool_t* const this);
 uint8_t  wndpool_get_capacity(const wndpool_t* const this);
-uint32_t wndpool_read(wndpool_t* const this, void* data, uint32_t size);
+uint32_t wndpool_pop(wndpool_t* const this, void* data, uint32_t size);
 bool     wndpool_insert(wndpool_t* const this, const mc_span data, const mc_comm_id id);
 bool     wndpool_push(wndpool_t* const this, const mc_span data);
 bool     wndpool_ack(wndpool_t* const this, mc_comm_id id, mc_io_receive_cb on_done);
