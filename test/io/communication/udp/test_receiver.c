@@ -13,9 +13,8 @@
 
 
 static int ServerSocket = -1;
-static uint32_t ReceiveCounter = 0;
 static uint32_t* Result = NULL;
-static mc_comm_t* message = NULL;
+static mc_comm* message = NULL;
 static mc_span AllocBuffer = {0};
 
 
@@ -80,14 +79,13 @@ static void print_progress(float progress)
 
 static void init(void* data)
 {
-  /* TODO(MN): Repetitive packet, invalid header, incomplete packet, miss packet pointer, use zero copy
+  /* TODO(MN): invalid header, incomplete packet, miss packet pointer, use zero copy
    */
   Result = (uint32_t*)data;
   *Result = MC_SUCCESS;
 
   server_create();
   flush_receive_buffer();
-  ReceiveCounter = 0;
 
   const uint32_t window_size = 37;
   const uint32_t window_capacity = 3;
@@ -103,10 +101,10 @@ static void print_log()
   const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
   const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
   printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
-        recv_cnt, send_cnt, 
-        recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
-        send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
-      );
+      recv_cnt, send_cnt, 
+      recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
+      send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
+    );
 }
 
 static void deinit()
@@ -135,7 +133,7 @@ static bool recv_data(void* data, uint32_t size)
   return true;
 }
 
-static bool recv_data_string(uint32_t seed)
+static bool recv_string(uint32_t seed)
 {
   char data[9] = {0};
   const uint32_t size = sizeof(data);
@@ -165,7 +163,7 @@ static bool recv_data_string(uint32_t seed)
   return true;
 }
 
-static bool recv_data_variadic_size(uint32_t seed)
+static bool recv_variadic_size(uint32_t seed)
 {
   uint32_t data[30] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
@@ -188,7 +186,7 @@ static bool recv_data_variadic_size(uint32_t seed)
   return true;
 }
 
-static bool recv_data_tiny_size(uint32_t seed)
+static bool recv_tiny_size(uint32_t seed)
 {
   bool data = false;
 
@@ -212,14 +210,14 @@ void* rcv_start(void* data)
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
     mc_comm_update(message);
 
-    if (!recv_data_string(ReceiveCounter)        || 
-        !recv_data_variadic_size(ReceiveCounter) || /* Smaller and larger than window size */
-        !recv_data_tiny_size(ReceiveCounter)) {
+    if (!recv_string(counter)        || 
+        !recv_variadic_size(counter) || /* Smaller and larger than window size */
+        !recv_tiny_size(counter)) {
       *Result = MC_ERR_TIMEOUT;
       break;
     }
     
-    print_progress(ReceiveCounter++ / (float)cfg_get_iterations());
+    print_progress(counter / (float)cfg_get_iterations());
   }
 
   if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {

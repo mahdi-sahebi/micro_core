@@ -44,7 +44,7 @@ struct _mc_comm_t
 };
 
 
-static void send_ack(mc_comm_t* const this, uint32_t id)
+static void send_ack(mc_comm* const this, uint32_t id)
 {
   pkt_t* const pkt = this->snd->temp_window;
 
@@ -58,7 +58,7 @@ static void send_ack(mc_comm_t* const this, uint32_t id)
   // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
 }
 
-static uint32_t read_data(mc_comm_t* const this)
+static uint32_t read_data(mc_comm* const this)
 {
   pkt_t* const pkt = this->rcv->temp_window;
   const uint32_t read_size = this->io.recv(pkt, this->rcv->window_size);
@@ -94,7 +94,7 @@ static uint32_t read_data(mc_comm_t* const this)
   return read_size;
 }
 
-static void send_unacked(mc_comm_t* const this) 
+static void send_unacked(mc_comm* const this) 
 {
   const uint32_t end_id = this->snd->bgn_id + this->snd->capacity;
 
@@ -113,53 +113,53 @@ static void send_unacked(mc_comm_t* const this)
   }
 }
 
-mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t window_capacity)
+mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t windows_capacity)
 {
-  if ((0 == window_capacity) || (0 == window_size)) {
+  if ((0 == windows_capacity) || (0 == window_size)) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
-  if ((window_capacity >= (1 << (sizeof(mc_comm_idx) * 8))) || (window_size < (sizeof(pkt_t) + 1))) {
+  if ((windows_capacity >= (1 << (sizeof(mc_comm_idx) * 8))) || (window_size < (sizeof(pkt_t) + 1))) {
     return mc_result_u32(0, MC_ERR_BAD_ALLOC);
   }
 
-  const uint32_t windows_size = window_capacity * (sizeof(wnd_t) + window_size);
+  const uint32_t windows_size = windows_capacity * (sizeof(wnd_t) + window_size);
   /*                                                         temp window + all windows */
   const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
-  const uint32_t size = sizeof(mc_comm_t) + controllers_size;
+  const uint32_t size = sizeof(mc_comm) + controllers_size;
   return mc_result_u32(size, MC_SUCCESS);
 }
 
-mc_comm_t* mc_comm_init(
+mc_comm* mc_comm_init(
   mc_span alloc_buffer,
   uint16_t window_size, 
-  uint8_t window_capacity, 
+  uint8_t windows_capacity, 
   mc_io io)
 {
   if ((NULL == io.recv) || (NULL == io.send)) {
     return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
   }
 
-  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, window_capacity);
+  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, windows_capacity);
   if ((MC_SUCCESS != result_u32.result) || (mc_span_get_size(alloc_buffer) < result_u32.value)) {
     return NULL;// TODO(MN): MC_ERR_BAD_ALLOC
   }
   
-  const uint32_t windows_size = window_capacity * (sizeof(wnd_t) + window_size);
-  mc_comm_t* const this = (mc_comm_t*)alloc_buffer.data;
+  const uint32_t windows_size = windows_capacity * (sizeof(wnd_t) + window_size);
+  mc_comm* const this = (mc_comm*)alloc_buffer.data;
 
   this->io               = io;
   this->send_delay_us    = MIN_SEND_TIME_US;
 
-  this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm_t));
+  this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm));
   this->rcv->window_size = window_size;
   this->rcv->data_size   = window_size - sizeof(pkt_t);
-  this->rcv->capacity    = window_capacity;
+  this->rcv->capacity    = windows_capacity;
   this->rcv->windows     = (wnd_t*)((char*)this->rcv->temp_window + window_size);
 
   this->snd              = (wndpool_t*)(char*)(this->rcv->windows) + windows_size;
   this->snd->window_size = window_size;
   this->snd->data_size   = window_size - sizeof(pkt_t);
-  this->snd->capacity    = window_capacity;
+  this->snd->capacity    = windows_capacity;
   this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
 
   wndpool_clear(this->rcv);
@@ -168,7 +168,7 @@ mc_comm_t* mc_comm_init(
   return this;
 }
 
-mc_error mc_comm_update(mc_comm_t* this)
+mc_error mc_comm_update(mc_comm* this)
 {
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;
@@ -179,7 +179,7 @@ mc_error mc_comm_update(mc_comm_t* this)
   return MC_SUCCESS;
 }
 
-uint32_t mc_comm_recv(mc_comm_t* this, void* data, uint32_t size, uint32_t timeout_us)
+uint32_t mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeout_us)
 {
   uint32_t read_size = 0;
   const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
@@ -187,7 +187,7 @@ uint32_t mc_comm_recv(mc_comm_t* this, void* data, uint32_t size, uint32_t timeo
   while (size) {
     mc_comm_update(this);
 
-    const uint32_t seg_size = wndpool_pop(this->rcv, (char*)data + read_size, size);
+    const uint32_t seg_size = wndpool_pop(this->rcv, (char*)dst_data + read_size, size);
 
     size -= seg_size;
     read_size += seg_size;
@@ -200,7 +200,7 @@ uint32_t mc_comm_recv(mc_comm_t* this, void* data, uint32_t size, uint32_t timeo
   return read_size;
 }
 
-uint32_t mc_comm_send(mc_comm_t* this, const void* data, uint32_t size, uint32_t timeout_us)
+uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32_t timeout_us)
 {
   uint32_t sent_size = 0;
   const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
@@ -209,7 +209,7 @@ uint32_t mc_comm_send(mc_comm_t* this, const void* data, uint32_t size, uint32_t
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(pkt_t));
 
     const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
-    if (wndpool_push(this->snd, mc_span((char*)data + sent_size, seg_size))) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
+    if (wndpool_push(this->snd, mc_span((char*)src_data + sent_size, seg_size))) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
       this->io.send(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
 
       size -= seg_size;// TODO(MN): API for + and - in span
@@ -226,7 +226,7 @@ uint32_t mc_comm_send(mc_comm_t* this, const void* data, uint32_t size, uint32_t
   return sent_size;
 }
 
-bool mc_comm_flush(mc_comm_t* this, uint32_t timeout_us)
+bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
 {
   const mc_time_t bgn_time_us = mc_now_u();
 
