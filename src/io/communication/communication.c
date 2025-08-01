@@ -32,21 +32,22 @@
 
 #define MAX_SEND_TIME_US    3000000
 #define MIN_SEND_TIME_US    100
+// TODO(MN): Move to math module
 #define MIN(A, B)           ((A) <= (B) ? (A) : (B))
 #define MAX(A, B)           ((A) >= (B) ? (A) : (B))
 
 struct _mc_comm_t
 { 
   mc_io      io;
-  uint32_t   send_delay_us;
+  uint32_t   send_delay_us;// TODO(MN): Use u16 with 100X us resolution
   wndpool_t* rcv;// TODO(MN): Use array to reduce one pointer size
   wndpool_t* snd;
 };
 
 
-static void send_ack(mc_comm* const this, uint32_t id)
+static void send_ack(mc_comm* this, uint32_t id)
 {
-  pkt_t* const pkt = this->snd->temp_window;
+  mc_pkt* const pkt = this->snd->temp_window;
 
   pkt->header = HEADER;
   pkt->type   = PKT_ACK;
@@ -60,7 +61,7 @@ static void send_ack(mc_comm* const this, uint32_t id)
 
 static uint32_t read_data(mc_comm* const this)
 {
-  pkt_t* const pkt = this->rcv->temp_window;
+  mc_pkt* const pkt = this->rcv->temp_window;
   const uint32_t read_size = this->io.recv(pkt, this->rcv->window_size);
   if (0 == read_size) {// TODO(MN): Handle incomplete size(smaller or larger)
     return 0;
@@ -118,7 +119,7 @@ mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t windows_capac
   if ((0 == windows_capacity) || (0 == window_size)) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
-  if ((windows_capacity >= (1 << (sizeof(mc_comm_idx) * 8))) || (window_size < (sizeof(pkt_t) + 1))) {
+  if ((windows_capacity >= (1 << (sizeof(mc_wnd_idx) * 8))) || (window_size < (sizeof(mc_pkt) + 1))) {
     return mc_result_u32(0, MC_ERR_BAD_ALLOC);
   }
 
@@ -152,13 +153,13 @@ mc_comm* mc_comm_init(
 
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm));
   this->rcv->window_size = window_size;
-  this->rcv->data_size   = window_size - sizeof(pkt_t);
+  this->rcv->data_size   = window_size - sizeof(mc_pkt);
   this->rcv->capacity    = windows_capacity;
   this->rcv->windows     = (wnd_t*)((char*)this->rcv->temp_window + window_size);
 
   this->snd              = (wndpool_t*)(char*)(this->rcv->windows) + windows_size;
   this->snd->window_size = window_size;
-  this->snd->data_size   = window_size - sizeof(pkt_t);
+  this->snd->data_size   = window_size - sizeof(mc_pkt);
   this->snd->capacity    = windows_capacity;
   this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
 
@@ -206,7 +207,7 @@ uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32
   const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
 
   while (size) {
-    const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(pkt_t));
+    const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(mc_pkt));
 
     const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
     if (wndpool_push(this->snd, mc_span((char*)src_data + sent_size, seg_size))) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data

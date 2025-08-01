@@ -11,7 +11,7 @@ void wnd_clear(wnd_t* const wnd)
   wnd->is_acked  = true;
 }
 
-void wnd_write(wnd_t* const wnd, mc_span buffer, mc_comm_id id)
+void wnd_write(wnd_t* const wnd, mc_span buffer, mc_pkt_id id)
 {
   wnd->packet.header = HEADER;
   wnd->packet.type   = PKT_DATA;
@@ -34,7 +34,7 @@ uint32_t wnd_get_data_size(const wnd_t* const wnd)
 
 void wnd_ack(wnd_t* const wnd)
 {
-  wnd->is_acked  = true;
+  wnd->is_acked = true;
 }
 
 bool wnd_is_acked(const wnd_t* const wnd)
