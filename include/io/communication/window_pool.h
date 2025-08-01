@@ -14,8 +14,8 @@ typedef uint8_t mc_wnd_idx;
 typedef struct
 {
   wnd_t*     windows;
-  uint32_t   window_size;// TODO(MN): u16
-  uint32_t   data_size;// TODO(MN): ?min size
+  uint16_t   window_size;
+  uint16_t   data_size;// TODO(MN): ?min size. delete
   mc_pkt_id  bgn_id;
   mc_pkt_id  end_id;// TODO(MN): Remove
   uint16_t   last_read_size;
