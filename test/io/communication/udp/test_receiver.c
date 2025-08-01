@@ -8,8 +8,8 @@
 #include "core/version.h"
 #include "core/time.h"
 #include "io/communication/communication.h"
-#include "test_communication_udp_common.h"
-#include "test_communication_udp_receiver.h"
+#include "test_common.h"
+#include "test_receiver.h"
 
 
 static int ServerSocket = -1;

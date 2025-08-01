@@ -6,8 +6,8 @@
 #include "core/error.h"
 #include "core/time.h"
 #include "io/communication/communication.h"
-#include "test_communication_udp_common.h"
-#include "test_communication_udp_sender.h"
+#include "test_common.h"
+#include "test_sender.h"
 
 
 static int ClientSocket = -1;
