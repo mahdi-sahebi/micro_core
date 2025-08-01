@@ -86,7 +86,7 @@ static void remove_acked(wndpool_t* const this, mc_io_receive_cb on_receive)
 }
 
 // TODO(MN): rename to wndpool_push
-bool wndpool_insert(wndpool_t* const this, const mc_span data, const mc_comm_id id)
+bool wndpool_insert(wndpool_t* const this, mc_span data, mc_comm_id id)
 {
   if (!wndpool_contains(this, id)) {
     return false;

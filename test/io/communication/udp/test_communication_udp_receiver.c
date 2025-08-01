@@ -152,6 +152,7 @@ static void wait_for_sender()
 static bool recv_data(void* data, uint32_t size)
 {
   uint32_t total_read_size = 0;
+  const char* itr = data;
 
   while (size) {
     mc_comm_update(message);
@@ -168,6 +169,7 @@ static bool recv_data(void* data, uint32_t size)
     }
 
     size -= read_size;
+    total_read_size += read_size;
   }
 
   return true;
@@ -203,15 +205,15 @@ static bool recv_data_2(uint32_t seed)
 {
   uint32_t data[100] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint8_t count = (random_count % 80) + 20;
-  const uint8_t size = count * sizeof(*data);
+  const uint32_t count = (random_count % 80) + 20;
+  const uint32_t size = count * sizeof(*data);
 
   if (!recv_data(data, size)) {
     printf("[ERR Data 2] Incomplete receiving\n");
     return false;
   }
 
-  for (uint8_t index = 0; index < count; index++) {
+  for (uint32_t index = 0; index < count; index++) {
     const uint32_t expected = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
     if (data[index] != expected) {
       printf("[ERR Data 2] Received: %u, Expected: %u\n", data[index], expected);
@@ -242,7 +244,7 @@ void* rcv_start(void* data)
         //  || !recv_data_3(ReceiveCounter)
         ) {
       *Result = MC_ERR_TIMEOUT;
-      break;
+      // break;
     }
     
     print_progress(ReceiveCounter++ / (float)cfg_get_iterations());

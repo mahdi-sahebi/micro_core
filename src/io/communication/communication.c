@@ -188,10 +188,20 @@ uint32_t mc_comm_send(mc_comm_t* const this, const void* data, uint32_t size)
 {
   // TODO(MN): if size > this->window_size
   uint32_t sent_size = 0;
+  const char* itr = data;
 
-  const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);
-  if (wndpool_push(this->snd, mc_span(data, size))) {
-    sent_size = this->io.send(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  while (size) {
+    const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(pkt_t));
+
+    const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
+    if (wndpool_push(this->snd, mc_span(itr, seg_size))) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
+      this->io.send(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+
+      itr += seg_size;// TODO(MN): API for + and - in span
+      size -= seg_size;
+    } else {
+      mc_comm_update(this);// TODO(MN): pure function without any check
+    }
   }
   
   return size;
