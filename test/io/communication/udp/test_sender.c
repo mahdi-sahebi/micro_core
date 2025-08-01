@@ -6,13 +6,12 @@
 #include "core/error.h"
 #include "core/time.h"
 #include "io/communication/communication.h"
-#include "test_communication_udp_common.h"
-#include "test_communication_udp_sender.h"
+#include "test_common.h"
+#include "test_sender.h"
 
 
 static int ClientSocket = -1;
 static mc_comm_t* message = NULL;
-static mc_time_t LastTickUS = 0;
 static uint32_t* Result = NULL;
 static mc_span AllocBuffer = {0};
 
@@ -75,24 +74,16 @@ static void deinit()
   free(AllocBuffer.data);
 }
 
-static bool timed_out()
-{
-  return ((mc_now_u() - LastTickUS) > TEST_TIMEOUT_US);
-}
-
 static bool send_data(const void* data, uint32_t size)
 {
-  // TODO(MN): Use timed_out as an arg
-  if (mc_comm_send(message, data, size) != size) {// TODO(MN): Pass timeout as an arg
+  if (mc_comm_send(message, data, size, TEST_TIMEOUT_US) != size) {
     *Result = MC_ERR_TIMEOUT;
     return false;
   }
-
-  LastTickUS = mc_now_u();
   return true;
 }
 
-static bool send_data_1(uint32_t seed)
+static bool send_data_string(uint32_t seed)
 {
   char data[9] = {0};
   const uint32_t size = sizeof(data);
@@ -101,11 +92,11 @@ static bool send_data_1(uint32_t seed)
   return send_data(data, size);
 }
 
-static bool send_data_2(uint32_t seed)
+static bool send_data_variadic_size(uint32_t seed)
 {
-  uint32_t data[40] = {0};
+  uint32_t data[30] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint32_t count = (random_count % 35) + 5;
+  const uint32_t count = (random_count % 28) + 2;
   const uint32_t size = count * sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
@@ -115,7 +106,7 @@ static bool send_data_2(uint32_t seed)
   return send_data(data, size);
 }
 
-static bool send_data_3(uint32_t seed)
+static bool send_data_tiny_size(uint32_t seed)
 {
   bool data = (seed & 1);
   const uint32_t size = sizeof(data);
@@ -130,14 +121,9 @@ void* snd_start(void* data)
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
     mc_comm_update(message);
 
-    // if (timed_out()) {
-    //   *Result = MC_ERR_TIMEOUT;
-    //   break;
-    // }
-
-    if (!send_data_1(counter) ||
-        !send_data_2(counter) ||
-        !send_data_3(counter)){
+    if (!send_data_string(counter)        ||
+        !send_data_variadic_size(counter) ||  /* Smaller and larger than window size */
+        !send_data_tiny_size(counter)){
       *Result = MC_ERR_TIMEOUT;
       break;
     }

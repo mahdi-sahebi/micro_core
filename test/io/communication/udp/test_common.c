@@ -2,7 +2,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
-#include "test_communication_udp_common.h"
+#include "test_common.h"
 
 
 static uint32_t TestIterations = COMPLETE_COUNT;
@@ -84,6 +84,11 @@ void cfg_set_repetitive_send(bool enable)
 void cfg_set_loss_rate(uint8_t rate)
 {
   LossRate = rate;
+}
+
+uint8_t cfg_get_loss_rate()
+{
+  return LossRate;
 }
 
 void cfg_set_iterations(uint32_t iterations)
