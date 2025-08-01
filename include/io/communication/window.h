@@ -21,13 +21,13 @@ enum definitions
 typedef uint16_t mc_pkt_hdr;
 typedef uint32_t mc_pkt_id;// TODO(MN): Handle overflow and decrese the size
 
-typedef enum
+typedef enum __attribute__((packed))
 {
   PKT_DATA = 0,
-  PKT_ACK
+  PKT_ACK 
 }mc_pkt_type;
 
-typedef struct __attribute__((packed))// TODO(MN): pads
+typedef struct __attribute__((packed))
 {
   mc_pkt_hdr  header;
   mc_pkt_type type;// TODO(MN) : 1;
