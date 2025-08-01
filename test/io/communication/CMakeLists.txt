@@ -20,10 +20,10 @@ set(TEST test_message_udp)
 
 # Binray
 add_executable(${TEST} 
-  udp/test_communication_udp_common.c   udp/test_communication_udp_common.h
-  udp/test_communication_udp_sender.c   udp/test_communication_udp_sender.h
-  udp/test_communication_udp_receiver.c udp/test_communication_udp_receiver.h
-  udp/test_communication_udp.c
+  udp/test_common.c   udp/test_common.h
+  udp/test_sender.c   udp/test_sender.h
+  udp/test_receiver.c udp/test_receiver.h
+  udp/test.c
 )
 
 

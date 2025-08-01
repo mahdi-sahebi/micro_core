@@ -53,9 +53,9 @@
 #include "core/version.h"
 #include "core/time.h"
 #include "io/communication/communication.h"
-#include "test_communication_udp_common.h"
-#include "test_communication_udp_receiver.h"
-#include "test_communication_udp_sender.h"
+#include "test_common.h"
+#include "test_receiver.h"
+#include "test_sender.h"
 
 
 static uint32_t read_api(void* const data, uint32_t size)
@@ -201,7 +201,7 @@ int main()
 {
   printf("[MICRO CORE %u.%u.%u - IO - COMMUNICATION]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
   mc_error result = MC_SUCCESS;
-
+/**/
   printf("[invalid_creation]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
