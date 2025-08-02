@@ -192,9 +192,9 @@ static bool recv_data_1(uint32_t seed)
 
 static bool recv_data_2(uint32_t seed)
 {
-  uint32_t data[40] = {0};
+  uint32_t data[30] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint32_t count = (random_count % 35) + 5;
+  const uint32_t count = (random_count % 28) + 2;
   const uint32_t size = count * sizeof(*data);
 
   if (!recv_data(data, size)) {
