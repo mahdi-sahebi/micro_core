@@ -156,6 +156,7 @@ static bool recv_data(void* data, uint32_t size)
     return false;
   }
 
+  LastTickUS = mc_now_u();
   return true;
 }
 
@@ -241,16 +242,11 @@ void* rcv_start(void* data)
     //   break;
     // }
 
-
-    if (
-        // !recv_data_1(ReceiveCounter)
-        // || 
-        // !recv_data_2(ReceiveCounter)
-        //  || 
-         !recv_data_3(ReceiveCounter)
-        ) {
+    if (!recv_data_1(ReceiveCounter) || 
+        !recv_data_2(ReceiveCounter) || 
+        !recv_data_3(ReceiveCounter)) {
       *Result = MC_ERR_TIMEOUT;
-      // break;
+      break;
     }
     
     print_progress(ReceiveCounter++ / (float)cfg_get_iterations());
