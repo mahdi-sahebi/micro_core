@@ -142,7 +142,7 @@ static bool timed_out()
 
 static void wait_for_sender()
 {
-  const mc_time_t end_time = mc_now_u() + TEST_TIMEOUT_US;
+  const mc_time_t end_time = mc_now_u() + 500000;
 
   while (mc_now_u() < end_time) {
     mc_comm_update(message);
