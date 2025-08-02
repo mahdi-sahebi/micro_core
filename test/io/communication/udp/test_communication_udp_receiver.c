@@ -151,25 +151,9 @@ static void wait_for_sender()
 
 static bool recv_data(void* data, uint32_t size)
 {
-  uint32_t total_read_size = 0;
-  const char* itr = data;
-
-  while (size) {
-    mc_comm_update(message);
-
-    if (timed_out()) {
-    //   *Result = MC_ERR_TIMEOUT;
-    //   return false;
-    }
-
-    const uint32_t read_size = mc_comm_recv(message, (char*)data + total_read_size, size);
-
-    if (0 != read_size) {
-      LastTickUS = mc_now_u();
-    }
-
-    size -= read_size;
-    total_read_size += read_size;
+  if(mc_comm_recv(message, data, size) != size) { // TODO(MN): timed_out()
+    *Result = MC_ERR_TIMEOUT;
+    return false;
   }
 
   return true;
