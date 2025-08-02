@@ -181,7 +181,19 @@ mc_error mc_comm_update(mc_comm_t* this)
 
 uint32_t mc_comm_recv(mc_comm_t* const this, void* data, uint32_t size)
 {
-  return wndpool_pop(this->rcv, data, size);
+  uint32_t read_size = 0;
+  const char* itr = data;
+
+  while (size) {
+    mc_comm_update(this);
+
+    const uint32_t seg_size = wndpool_pop(this->rcv, (char*)data + read_size, size);
+
+    size -= seg_size;
+    read_size += seg_size;
+  }
+
+  return read_size;
 }
 
 uint32_t mc_comm_send(mc_comm_t* const this, const void* data, uint32_t size)
