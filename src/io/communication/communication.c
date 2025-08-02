@@ -199,12 +199,13 @@ uint32_t mc_comm_send(mc_comm_t* const this, const void* data, uint32_t size)
 
       itr += seg_size;// TODO(MN): API for + and - in span
       size -= seg_size;
+      sent_size += seg_size;
     } else {
       mc_comm_update(this);// TODO(MN): pure function without any check
     }
   }
   
-  return size;
+  return sent_size;
 }
 
 bool mc_comm_flush(mc_comm_t* const this, uint32_t timeout_us)
