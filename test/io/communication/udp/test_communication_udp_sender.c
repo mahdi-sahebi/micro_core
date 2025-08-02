@@ -82,12 +82,10 @@ static bool timed_out()
 
 static bool send_data(const void* data, uint32_t size)
 {
+  // TODO(MN): Use timed_out as an arg
   if (mc_comm_send(message, data, size) != size) {// TODO(MN): Pass timeout as an arg
-
-    // if (timed_out()) {
-      *Result = MC_ERR_TIMEOUT;
-      return false;
-    // }
+    *Result = MC_ERR_TIMEOUT;
+    return false;
   }
 
   LastTickUS = mc_now_u();
@@ -132,13 +130,14 @@ void* snd_start(void* data)
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
     mc_comm_update(message);
 
-    if (
-      // !send_data_1(counter)
-      //  ||
-        // !send_data_2(counter)
-        //  ||
-        !send_data_3(counter)
-      ){
+    // if (timed_out()) {
+    //   *Result = MC_ERR_TIMEOUT;
+    //   break;
+    // }
+
+    if (!send_data_1(counter) ||
+        !send_data_2(counter) ||
+        !send_data_3(counter)){
       *Result = MC_ERR_TIMEOUT;
       break;
     }
