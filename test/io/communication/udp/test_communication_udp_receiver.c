@@ -165,20 +165,24 @@ static bool recv_data_1(uint32_t seed)
   const uint32_t size = sizeof(data);
   
   if (!recv_data(data, size)) {
+    printf("[ERR Data 1] Incomplete receiving\n");
     return false;
   }
 
   if (0 != memcmp(&data[0], "!p", 2)) {
+    printf("[ERR Data 1] wrong data received\n");
     return false;
   }
 
   if (0 != memcmp(&data[5], ".?I", 3)) {
+    printf("[ERR Data 1] wrong data received\n");
     return false;
   }
 
   char num_text[4] = {0};
   sprintf(num_text, "%03u", seed % 1000);
   if (0 != memcmp(num_text, &data[2], 3)) {
+    printf("[ERR Data 1] wrong data received\n");
     return false;
   }
 
@@ -208,6 +212,23 @@ static bool recv_data_2(uint32_t seed)
   return true;
 }
 
+static bool recv_data_3(uint32_t seed)
+{
+  bool data = false;
+
+  if (!recv_data(&data, sizeof(data))) {
+    printf("[ERR Data 3] Incomplete receiving\n");
+    return false;
+  }
+
+  if ((seed & 1) != data) {
+    printf("[ERR Data 1] wrong data received\n");
+    return false;
+  }
+
+  return true;
+}
+
 void* rcv_start(void* data)
 {
   init(data);
@@ -224,8 +245,9 @@ void* rcv_start(void* data)
     if (
         // !recv_data_1(ReceiveCounter)
         // || 
-        !recv_data_2(ReceiveCounter)
-        //  || !recv_data_3(ReceiveCounter)
+        // !recv_data_2(ReceiveCounter)
+        //  || 
+         !recv_data_3(ReceiveCounter)
         ) {
       *Result = MC_ERR_TIMEOUT;
       // break;
