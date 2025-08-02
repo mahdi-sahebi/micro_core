@@ -135,9 +135,9 @@ void* snd_start(void* data)
     if (
       // !send_data_1(counter)
       //  ||
-        !send_data_2(counter)
+        // !send_data_2(counter)
         //  ||
-        // !send_data_3(counter)
+        !send_data_3(counter)
       ){
       *Result = MC_ERR_TIMEOUT;
       break;
