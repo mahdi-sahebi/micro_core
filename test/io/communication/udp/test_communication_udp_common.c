@@ -86,6 +86,11 @@ void cfg_set_loss_rate(uint8_t rate)
   LossRate = rate;
 }
 
+uint8_t cfg_get_loss_rate()
+{
+  return LossRate;
+}
+
 void cfg_set_iterations(uint32_t iterations)
 {
   TestIterations = iterations;

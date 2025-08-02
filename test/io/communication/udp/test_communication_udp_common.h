@@ -18,6 +18,7 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size);
 
 void     cfg_set_repetitive_send(bool enable);
 void     cfg_set_loss_rate(uint8_t rate);
+uint8_t  cfg_get_loss_rate();
 void     cfg_set_iterations(uint32_t iterations);
 uint32_t cfg_get_iterations();
 uint32_t cfg_get_recv_counter();
