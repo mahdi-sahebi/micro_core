@@ -82,15 +82,12 @@ static bool timed_out()
 
 static bool send_data(const void* data, uint32_t size)
 {
-  // mc_comm_update(message);
-
   if (mc_comm_send(message, data, size) != size) {// TODO(MN): Pass timeout as an arg
-    // mc_comm_update(message);
 
-    if (timed_out()) {
-      // *Result = MC_ERR_TIMEOUT;
-      // return false;
-    }
+    // if (timed_out()) {
+      *Result = MC_ERR_TIMEOUT;
+      return false;
+    // }
   }
 
   LastTickUS = mc_now_u();
