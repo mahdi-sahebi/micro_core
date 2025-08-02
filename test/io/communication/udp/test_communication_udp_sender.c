@@ -92,7 +92,7 @@ static bool send_data(const void* data, uint32_t size)
   return true;
 }
 
-static bool send_data_1(uint32_t seed)
+static bool send_data_string(uint32_t seed)
 {
   char data[9] = {0};
   const uint32_t size = sizeof(data);
@@ -101,7 +101,7 @@ static bool send_data_1(uint32_t seed)
   return send_data(data, size);
 }
 
-static bool send_data_2(uint32_t seed)
+static bool send_data_variadic_size(uint32_t seed)
 {
   uint32_t data[30] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
@@ -115,7 +115,7 @@ static bool send_data_2(uint32_t seed)
   return send_data(data, size);
 }
 
-static bool send_data_3(uint32_t seed)
+static bool send_data_tiny_size(uint32_t seed)
 {
   bool data = (seed & 1);
   const uint32_t size = sizeof(data);
@@ -135,9 +135,9 @@ void* snd_start(void* data)
     //   break;
     // }
 
-    if (!send_data_1(counter) ||
-        !send_data_2(counter) ||
-        !send_data_3(counter)){
+    if (!send_data_string(counter)        ||
+        !send_data_variadic_size(counter) ||  /* Smaller and larger than window size */
+        !send_data_tiny_size(counter)){
       *Result = MC_ERR_TIMEOUT;
       break;
     }

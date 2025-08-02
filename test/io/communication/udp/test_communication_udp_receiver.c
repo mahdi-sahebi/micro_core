@@ -160,7 +160,7 @@ static bool recv_data(void* data, uint32_t size)
   return true;
 }
 
-static bool recv_data_1(uint32_t seed)
+static bool recv_data_string(uint32_t seed)
 {
   char data[9] = {0};
   const uint32_t size = sizeof(data);
@@ -190,7 +190,7 @@ static bool recv_data_1(uint32_t seed)
   return true;
 }
 
-static bool recv_data_2(uint32_t seed)
+static bool recv_data_variadic_size(uint32_t seed)
 {
   uint32_t data[30] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
@@ -213,7 +213,7 @@ static bool recv_data_2(uint32_t seed)
   return true;
 }
 
-static bool recv_data_3(uint32_t seed)
+static bool recv_data_tiny_size(uint32_t seed)
 {
   bool data = false;
 
@@ -242,9 +242,9 @@ void* rcv_start(void* data)
     //   break;
     // }
 
-    if (!recv_data_1(ReceiveCounter) || 
-        !recv_data_2(ReceiveCounter) || 
-        !recv_data_3(ReceiveCounter)) {
+    if (!recv_data_string(ReceiveCounter)        || 
+        !recv_data_variadic_size(ReceiveCounter) || /* Smaller and larger than window size */
+        !recv_data_tiny_size(ReceiveCounter)) {
       *Result = MC_ERR_TIMEOUT;
       break;
     }
