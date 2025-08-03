@@ -10,7 +10,6 @@ set(HEADERS
     ${INCLUDE_DIRS}/io/communication/communication.h
 )
 set(SOURCES 
-    communication/window.c
     communication/window_pool.c
     communication/communication.c
 )
