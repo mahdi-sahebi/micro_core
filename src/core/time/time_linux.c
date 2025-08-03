@@ -13,7 +13,7 @@ mc_time_t mc_now()
 
 mc_time_t mc_now_u()
 {
-  return mc_now() / 1000;
+  return mc_now() / 1000;// TODO(MN): Use macro and use bitwise operation instead of division
 }
 
 mc_time_t mc_now_m()
