@@ -15,7 +15,7 @@
  * 
  * Doc of update(): is an excellent design for bare-metal and OS compatibility. 
  * can be used inside of a timer callback or thread to not miss any data.
- * 
+ * Test of 1bit corruption and check test
  * 
  * Get comm interface.
  */
@@ -52,7 +52,9 @@ static void send_ack(mc_comm* this, uint32_t id)
   pkt->header = HEADER;
   pkt->type   = PKT_ACK;
   pkt->id     = id;
-  
+  pkt->crc    = 0x0000;
+  pkt->crc    = mc_alg_crc16_ccitt(mc_span(pkt, this->snd->window_size)).value;
+
   if (this->io.send(pkt, this->rcv->window_size) != this->rcv->window_size) {
     // TODO(MN): Handle. Is it ok to 
   }
@@ -70,6 +72,14 @@ static uint32_t read_data(mc_comm* const this)
   if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
     return 0; // [INVALID] Bad header/type received. 
   }
+
+  const uint16_t received_crc = pkt->crc;
+  pkt->crc = 0x0000;
+  const uint16_t crc = mc_alg_crc16_ccitt(mc_span(pkt, this->rcv->window_size)).value;
+  if (received_crc != crc) {
+    return 0;// Data corruption
+  }
+
  
   if (PKT_ACK == pkt->type) {
     if (!wndpool_contains(this->snd, pkt->id)) {// TODO(MN): Test that not read to send ack to let sender sends more
@@ -120,7 +130,7 @@ mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t windows_capac
     return mc_result_u32(0, MC_ERR_BAD_ALLOC);
   }
 
-  const uint32_t windows_size = windows_capacity * (sizeof(wnd_t) + window_size);
+  const uint32_t windows_size = windows_capacity * wnd_get_size(window_size);
   /*                                                         temp window + all windows */
   const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
   const uint32_t size = sizeof(mc_comm) + controllers_size;
@@ -142,7 +152,7 @@ mc_comm* mc_comm_init(
     return NULL;// TODO(MN): MC_ERR_BAD_ALLOC
   }
   
-  const uint32_t windows_size = windows_capacity * (sizeof(wnd_t) + window_size);
+  const uint32_t windows_size = windows_capacity * wnd_get_size(window_size);
   mc_comm* const this = (mc_comm*)alloc_buffer.data;
 
   this->io               = io;
