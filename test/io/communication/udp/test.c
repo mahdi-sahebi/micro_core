@@ -72,7 +72,7 @@ static int invalid_creation()
 {
   char memory[1024];
   mc_span alloc_buffer = mc_span(memory, sizeof(memory));
-  mc_comm_t* message = NULL;
+  mc_comm* message = NULL;
   
   message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api));
   if (NULL != message) {
@@ -107,7 +107,7 @@ static int valid_creation()
   char memory[1024];
   mc_span alloc_buffer = mc_span(memory, sizeof(memory));
   const uint32_t capcity = 3;
-  mc_comm_t* message = NULL;
+  mc_comm* message = NULL;
   
   message = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api));
   if (NULL == message) {
