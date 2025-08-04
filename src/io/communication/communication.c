@@ -97,18 +97,15 @@ static uint32_t read_data(mc_comm* const this)
 
 static void send_unacked(mc_comm* const this) 
 {
-  const uint32_t end_id = this->snd->bgn_id + this->snd->capacity;
+  const mc_time_t now = mc_now_u();
 
-  for (uint32_t id = this->snd->bgn_id; id < end_id; id++) {
+  for (mc_pkt_id id = this->snd->bgn_id; id < this->snd->end_id; id++) {
     wnd_t* const window = wndpool_get(this->snd, id);
-    if (!wnd_is_valid(window) ||
-        wnd_is_acked(window) || 
-        !wnd_is_timedout(window, this->send_delay_us)) {
+    if (wnd_is_acked(window) || (now < (window->sent_time_us + this->send_delay_us))) {
       continue;
     }
 
-    const uint32_t sent_size = this->io.send(&window->packet, this->snd->window_size);
-    if (this->snd->window_size == sent_size) {
+    if (this->snd->window_size == this->io.send(&window->packet, this->snd->window_size)) {
       window->sent_time_us = mc_now_u();
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
   }
