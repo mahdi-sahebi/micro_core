@@ -71,15 +71,10 @@ static void remove_first(wndpool_t* const this)
   }
 }
 
-static void remove_acked(wndpool_t* const this, mc_io_receive_cb on_receive)
+static void remove_acked(wndpool_t* const this)
 {
   while (is_first_acked(this)) {
     wnd_t* const window = get_window(this, this->bgn_index);
-
-    if (NULL != on_receive) {
-      on_receive(wnd_get_data(window), window->packet.size);
-    }
-
     wnd_clear(window);
     remove_first(this);
   }
@@ -150,7 +145,7 @@ bool wndpool_push(wndpool_t* const this, const mc_span data)
   return true;
 }
 
-bool wndpool_ack(wndpool_t* const this, mc_pkt_id id, mc_io_receive_cb on_done)
+bool wndpool_ack(wndpool_t* const this, mc_pkt_id id)
 {  
   const uint32_t window_index = get_index(this, id);
   wnd_t* const window = get_window(this, window_index);
@@ -160,7 +155,7 @@ bool wndpool_ack(wndpool_t* const this, mc_pkt_id id, mc_io_receive_cb on_done)
   }
 
   if (id == this->bgn_id) {
-    remove_acked(this, on_done);
+    remove_acked(this);
   }
   
   return true;
