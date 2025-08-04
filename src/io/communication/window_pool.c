@@ -39,16 +39,6 @@ void wndpool_clear(wndpool_t* const this)
   this->bgn_index = 0;
 }
 
-bool wndpool_is_empty(wndpool_t* const this)
-{
-  return (0 == wndpool_get_count(this));
-}
-
-bool wndpool_is_full(wndpool_t* const this)
-{
-  return (wndpool_get_count(this) == this->capacity);
-}
-
 bool wndpool_contains(wndpool_t* const this, mc_pkt_id id)
 {
   return ((this->bgn_id <= id) && (id < this->bgn_id + this->capacity));
@@ -134,7 +124,7 @@ uint8_t wndpool_get_capacity(const wndpool_t* const this)
 
 bool wndpool_push(wndpool_t* const this, const mc_span data)
 {
-  if (wndpool_is_full(this)) {
+  if (wndpool_get_count(this) == this->capacity) {
     return false; // TODO(MN): Error
   }
 
