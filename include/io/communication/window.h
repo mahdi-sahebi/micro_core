@@ -45,6 +45,9 @@ typedef struct __attribute__((packed))
 
 
 
+#define wnd_get_size(WINDOW_SIZE)\
+  ((WINDOW_SIZE) + (sizeof(wnd_t) - sizeof(mc_pkt)))
+
 #define wnd_clear(WND)\
 do {\
   (WND)->packet.id = INVALID_ID;\

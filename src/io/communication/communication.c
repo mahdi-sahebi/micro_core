@@ -120,7 +120,7 @@ mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t windows_capac
     return mc_result_u32(0, MC_ERR_BAD_ALLOC);
   }
 
-  const uint32_t windows_size = windows_capacity * (sizeof(wnd_t) + window_size);
+  const uint32_t windows_size = windows_capacity * wnd_get_size(window_size);
   /*                                                         temp window + all windows */
   const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
   const uint32_t size = sizeof(mc_comm) + controllers_size;
@@ -142,7 +142,7 @@ mc_comm* mc_comm_init(
     return NULL;// TODO(MN): MC_ERR_BAD_ALLOC
   }
   
-  const uint32_t windows_size = windows_capacity * (sizeof(wnd_t) + window_size);
+  const uint32_t windows_size = windows_capacity * wnd_get_size(window_size);
   mc_comm* const this = (mc_comm*)alloc_buffer.data;
 
   this->io               = io;
