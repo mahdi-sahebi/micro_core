@@ -6,7 +6,6 @@
 #define MC_MESSAGE_WINDOW_POOL_H_
 
 #include "window.h"
-#include "io/communication/communication.h"// TODO(MN): Remove for encapsulation
 
 
 typedef uint8_t mc_wnd_idx;
@@ -23,19 +22,20 @@ typedef struct __attribute__((packed))
   mc_pkt     temp_window[0];
 }wndpool_t;
 
-typedef void (*wndpool_on_done_fn)(const mc_span data, mc_pkt_id id);
+typedef void (*wndpool_on_done_fn)(mc_span data, mc_pkt_id id);
+
 
 // TODO(MN): init API
 // TODO(MN): Remove unnecessary const
-void     wndpool_clear(wndpool_t* const this);
-bool     wndpool_contains(wndpool_t* const this, mc_pkt_id id);
-wnd_t*   wndpool_get(wndpool_t* const this, mc_pkt_id id);
-uint8_t  wndpool_get_count(const wndpool_t* const this);
-uint8_t  wndpool_get_capacity(const wndpool_t* const this);
-uint32_t wndpool_pop(wndpool_t* const this, void* data, uint32_t size);
-bool     wndpool_update(wndpool_t* const this, mc_span data, mc_pkt_id id);
-bool     wndpool_push(wndpool_t* const this, const mc_span data);
-bool     wndpool_ack(wndpool_t* const this, mc_pkt_id id);
+void     wndpool_clear(wndpool_t* this);
+bool     wndpool_contains(wndpool_t* this, mc_pkt_id id);
+wnd_t*   wndpool_get(wndpool_t* this, mc_pkt_id id);
+uint8_t  wndpool_get_count(const wndpool_t* this);
+uint8_t  wndpool_get_capacity(const wndpool_t* this);
+bool     wndpool_push(wndpool_t* this, mc_span data);
+uint32_t wndpool_pop(wndpool_t* this, void* data, uint32_t size);
+bool     wndpool_update(wndpool_t* this, mc_span data, mc_pkt_id id);
+bool     wndpool_ack(wndpool_t* this, mc_pkt_id id);
 
 
 #endif /* MC_MESSAGE_WINDOW_POOL_H_ */

@@ -185,7 +185,6 @@ uint32_t mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t tim
 
   while (size) {
     mc_comm_update(this);
-
     const uint32_t seg_size = wndpool_pop(this->rcv, (char*)dst_data + read_size, size);
 
     size -= seg_size;
@@ -205,6 +204,8 @@ uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32
   const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
 
   while (size) {
+    mc_comm_update(this);
+    // TODO(MN): pure function without any check
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(mc_pkt));
 
     const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
@@ -213,8 +214,6 @@ uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32
 
       size -= seg_size;// TODO(MN): API for + and - in span
       sent_size += seg_size;
-    } else {
-      mc_comm_update(this);// TODO(MN): pure function without any check
     }
     
     if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > (bgn_time + timeout_us))) {

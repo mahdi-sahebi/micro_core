@@ -6,7 +6,7 @@
 #define MIN(A, B)           ((A) <= (B) ? (A) : (B))
 
 
-static mc_wnd_idx get_index(const wndpool_t* const this, const mc_pkt_id id)
+static mc_wnd_idx get_index(const wndpool_t* this, const mc_pkt_id id)
 {
   int16_t dif = id - this->bgn_id;
   if (id < this->bgn_id) {
@@ -16,21 +16,23 @@ static mc_wnd_idx get_index(const wndpool_t* const this, const mc_pkt_id id)
   return (this->bgn_id + dif) % this->capacity;
 }
 
-static wnd_t* get_window(const wndpool_t* const this, const mc_wnd_idx index)
+static wnd_t* get_window(const wndpool_t* this, const mc_wnd_idx index)
 {
+  // TODO(MN): Optimize
   return (wnd_t*)((char*)(this->windows) + (index * (this->window_size + (sizeof(wnd_t) - sizeof(mc_pkt)))));// TODO(MN): Rcv/snd
 }
 
-static bool is_first_acked(const wndpool_t* const this)
+static bool is_first_acked(const wndpool_t* this)
 {
   const wnd_t* window = get_window(this, this->bgn_index);
   return wnd_is_valid(window) && wnd_is_acked(window);
 }
 
-void wndpool_clear(wndpool_t* const this)
+void wndpool_clear(wndpool_t* this)
 {
   // TODO(MN): Ignore this loop. separate data and meta list to exploit memcpy 
-  for (mc_wnd_idx index = 0; index < this->capacity; index++) {
+  mc_wnd_idx index = this->capacity;
+  while (index--) {
     wnd_clear(get_window(this, index));
   }
 
@@ -39,17 +41,17 @@ void wndpool_clear(wndpool_t* const this)
   this->bgn_index = 0;
 }
 
-bool wndpool_contains(wndpool_t* const this, mc_pkt_id id)
+bool wndpool_contains(wndpool_t* this, mc_pkt_id id)
 {
   return ((this->bgn_id <= id) && (id < this->bgn_id + this->capacity));
 }
 
-wnd_t* wndpool_get(wndpool_t* const this, mc_pkt_id id)
+wnd_t* wndpool_get(wndpool_t* this, mc_pkt_id id)
 {
   return get_window(this, get_index(this, id));
 }
 
-static void remove_first(wndpool_t* const this)
+static void remove_first(wndpool_t* this)
 {
   wnd_clear(get_window(this, this->bgn_index));
 
@@ -61,7 +63,7 @@ static void remove_first(wndpool_t* const this)
   }
 }
 
-static void remove_acked(wndpool_t* const this)
+static void remove_acked(wndpool_t* this)
 {
   while (is_first_acked(this)) {
     wnd_t* const window = get_window(this, this->bgn_index);
@@ -70,7 +72,7 @@ static void remove_acked(wndpool_t* const this)
   }
 }
 
-bool wndpool_update(wndpool_t* const this, mc_span data, mc_pkt_id id)
+bool wndpool_update(wndpool_t* this, mc_span data, mc_pkt_id id)
 {
   if (!wndpool_contains(this, id)) {
     return false;
@@ -84,7 +86,7 @@ bool wndpool_update(wndpool_t* const this, mc_span data, mc_pkt_id id)
   return true;
 }
 
-uint32_t wndpool_pop(wndpool_t* const this, void* data, uint32_t size)
+uint32_t wndpool_pop(wndpool_t* this, void* data, uint32_t size)
 {
   if (!is_first_acked(this)) {
     return 0;
@@ -106,7 +108,7 @@ uint32_t wndpool_pop(wndpool_t* const this, void* data, uint32_t size)
   return read_size;
 }
 
-uint8_t wndpool_get_count(const wndpool_t* const this)
+uint8_t wndpool_get_count(const wndpool_t* this)
 {
   uint8_t count = 0;
 
@@ -117,12 +119,12 @@ uint8_t wndpool_get_count(const wndpool_t* const this)
   return count;
 }
 
-uint8_t wndpool_get_capacity(const wndpool_t* const this)
+uint8_t wndpool_get_capacity(const wndpool_t* this)
 {
   return this->capacity;
 }
 
-bool wndpool_push(wndpool_t* const this, const mc_span data)
+bool wndpool_push(wndpool_t* this, mc_span data)
 {
   if (wndpool_get_count(this) == this->capacity) {
     return false; // TODO(MN): Error
@@ -135,7 +137,7 @@ bool wndpool_push(wndpool_t* const this, const mc_span data)
   return true;
 }
 
-bool wndpool_ack(wndpool_t* const this, mc_pkt_id id)
+bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
 {  
   const uint32_t window_index = get_index(this, id);
   wnd_t* const window = get_window(this, window_index);
