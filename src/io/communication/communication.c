@@ -79,7 +79,7 @@ static uint32_t read_data(mc_comm* const this)
     const mc_time_t sent_time_us = wndpool_get(this->snd, pkt->id)->sent_time_us;
     const uint64_t elapsed_time = mc_now_u() - sent_time_us;
     this->send_delay_us = elapsed_time * 0.8;
-    wndpool_ack(this->snd, pkt->id, NULL);
+    wndpool_ack(this->snd, pkt->id);
     return read_size;
   }
 
