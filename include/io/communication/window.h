@@ -19,7 +19,7 @@ enum definitions
 };
 
 typedef uint16_t mc_pkt_hdr;
-typedef uint32_t mc_pkt_id;// TODO(MN): Handle overflow and decrese the size
+typedef uint32_t mc_pkt_id;// TODO(MN): Reduce size. Handle overflow and decrese the size
 
 typedef enum __attribute__((packed))
 {
@@ -27,16 +27,17 @@ typedef enum __attribute__((packed))
   PKT_ACK 
 }mc_pkt_type;
 
-typedef struct __attribute__((packed))
+typedef struct __attribute__((packed))// TODO(MN): Pads
 {
   mc_pkt_hdr  header;
+  uint16_t    crc;
   mc_pkt_type type;// TODO(MN) : 1;
   mc_pkt_id   id;
-  uint32_t    size;
+  uint32_t    size;// TODO(MN): Reduce size
   char        data[0];
 }mc_pkt;// TODO(MN): Must be As size as window_size
 
-typedef struct __attribute__((packed))
+typedef struct __attribute__((packed))// TODO(MN): Pads
 {
   mc_time_t sent_time_us;
   bool      is_acked;// TODO(MN): 1 bit
@@ -57,6 +58,7 @@ do {\
 #define wnd_write(WND, BUFFER, ID)\
 do {\
   (WND)->packet.header = HEADER;\
+  (WND)->packet.crc    = 0x0000;\
   (WND)->packet.type   = PKT_DATA;\
   (WND)->is_acked      = false;\
   (WND)->packet.size   = (BUFFER).capacity;\

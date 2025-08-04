@@ -5,6 +5,7 @@
 #ifndef MC_MESSAGE_WINDOW_POOL_H_
 #define MC_MESSAGE_WINDOW_POOL_H_
 
+#include "alg/algorithm.h"
 #include "window.h"
 
 

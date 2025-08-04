@@ -81,6 +81,8 @@ bool wndpool_update(wndpool_t* this, mc_span data, mc_pkt_id id)
   const mc_wnd_idx index = get_index(this, id);
   wnd_t* const window = get_window(this, index);
   wnd_write(window, data, id);
+  window->packet.crc = 0x0000;
+  window->packet.crc = mc_alg_crc16_ccitt(mc_span(&window->packet, this->window_size)).value;
   window->is_acked = true;
 
   return true;
@@ -130,8 +132,10 @@ bool wndpool_push(wndpool_t* this, mc_span data)
     return false; // TODO(MN): Error
   }
 
-  wnd_t* const window = wndpool_get(this, this->end_id);
+  wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
   wnd_write(window, data, this->end_id);
+  window->packet.crc = 0x0000;
+  window->packet.crc = mc_alg_crc16_ccitt(mc_span(&window->packet, this->window_size)).value;
   this->end_id++;
 
   return true;

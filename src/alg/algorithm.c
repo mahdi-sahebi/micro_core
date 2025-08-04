@@ -38,10 +38,11 @@ mc_result_u32 mc_alg_crc16_ccitt(mc_span buffer)
   }
 
   uint32_t size = buffer.capacity * buffer.data_size;
+  const uint8_t* itr = buffer.data;
   uint16_t crc = 0xffff;
 
   while (size--) {
-      crc ^= (*buffer.data)++ << 8;
+      crc ^= *itr++ << 8;
       for (uint8_t i = 0; i < 8; i++) {
           crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : (crc << 1);
       }
