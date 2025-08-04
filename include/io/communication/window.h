@@ -77,8 +77,5 @@ do {\
 #define wnd_is_valid(WND)\
   (INVALID_ID != (WND)->packet.id)
 
-// #define wnd_is_timedout(WND, TIMEOUT_US)\
-//   (mc_now_u() > ((WND)->sent_time_us + (TIMEOUT_US)))
-
 
 #endif /* MC_IO_COMMUNICATION_WINDOW_H_ */

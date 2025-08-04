@@ -30,3 +30,22 @@ mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, mc_cmp_fn com
   void* element = (bgn != count) ? (buffer.data + (bgn * buffer.data_size)) : NULL;
   return mc_result_ptr(element, MC_SUCCESS);
 }
+
+mc_result_u32 mc_alg_crc16_ccitt(mc_span buffer)
+{
+  if (mc_span_is_null(buffer)) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+
+  uint32_t size = buffer.capacity * buffer.data_size;
+  uint16_t crc = 0xffff;
+
+  while (size--) {
+      crc ^= (*buffer.data)++ << 8;
+      for (uint8_t i = 0; i < 8; i++) {
+          crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : (crc << 1);
+      }
+  }
+  
+  return mc_result_u32(crc, MC_SUCCESS);
+}
