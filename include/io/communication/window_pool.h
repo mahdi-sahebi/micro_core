@@ -28,8 +28,6 @@ typedef void (*wndpool_on_done_fn)(const mc_span data, mc_pkt_id id);
 // TODO(MN): init API
 // TODO(MN): Remove unnecessary const
 void     wndpool_clear(wndpool_t* const this);
-bool     wndpool_is_empty(wndpool_t* const this);
-bool     wndpool_is_full(wndpool_t* const this);
 bool     wndpool_contains(wndpool_t* const this, mc_pkt_id id);
 wnd_t*   wndpool_get(wndpool_t* const this, mc_pkt_id id);
 uint8_t  wndpool_get_count(const wndpool_t* const this);

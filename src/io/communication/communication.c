@@ -229,14 +229,14 @@ bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
 {
   const mc_time_t bgn_time_us = mc_now_u();
 
-  while (!wndpool_is_empty(this->snd) || !wndpool_is_empty(this->rcv)) {
+  while (wndpool_get_count(this->snd) || wndpool_get_count(this->rcv)) {
     mc_comm_update(this);
 
     if ((mc_now_u() - bgn_time_us) > timeout_us) {
       return false;
     }
   }
-
+  // TODO(MN): Tiny delay to not network congestion
   return true;
 }
 
