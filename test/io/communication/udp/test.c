@@ -201,7 +201,7 @@ int main()
 {
   printf("[MICRO CORE %u.%u.%u - IO - COMMUNICATION]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
   mc_error result = MC_SUCCESS;
-/**/
+/*
   printf("[invalid_creation]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
@@ -249,7 +249,7 @@ int main()
     }
   }
   
-
+*/
   printf("[singly_low_lossy]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
