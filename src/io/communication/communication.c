@@ -17,6 +17,7 @@
  * can be used inside of a timer callback or thread to not miss any data.
  * Test of 1bit corruption and check test
  * 
+ * Flush at the end of recv/send?
  * Get comm interface.
  */
 
@@ -44,6 +45,122 @@ struct _mc_comm_t
   wndpool_t* snd;
 };
 
+typedef struct 
+{
+  mc_comm* this;
+  mc_span buffer;
+}pipeline_data;
+
+static mc_span protocol_send(mc_comm* this, mc_span buffer)
+{
+  return mc_span(NULL, 0);
+}
+
+static mc_span protocol_recv(mc_comm* this, mc_span buffer)
+{
+  if (buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
+    return mc_span(NULL, 0);
+  }
+
+  mc_pkt* const pkt = buffer.data;
+
+  if (PKT_ACK == pkt->type) {
+    if (!wndpool_contains(this->snd, pkt->id)) {// TODO(MN): Test that not read to send ack to let sender sends more
+      return mc_span(NULL, 0);
+    }
+
+    const mc_time_t sent_time_us = wndpool_get(this->snd, pkt->id)->sent_time_us;
+    const uint64_t elapsed_time = mc_now_u() - sent_time_us;
+    this->send_delay_us = elapsed_time * 0.8;
+    wndpool_ack(this->snd, pkt->id);
+    return mc_span(NULL, 0);// done
+  }
+
+  if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
+    send_ack(this, pkt->id);
+    return mc_span(NULL, 0);// done
+  }
+
+  if (wndpool_update(this->rcv, mc_span(pkt->data, pkt->size), pkt->id)) {
+    send_ack(this, pkt->id);
+  }
+
+  return buffer;
+}
+
+static mc_span frame_send(mc_comm* this, mc_span buffer)
+{
+  return mc_span(NULL, 0);
+}
+
+static mc_span frame_recv(mc_comm* this, mc_span buffer)
+{
+  if (buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
+    return mc_span(NULL, 0);
+  }
+
+  mc_pkt* const pkt = buffer.data;
+  if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
+    return mc_span(NULL, 0); // [INVALID] Bad header/type received. 
+  }
+
+  const uint16_t received_crc = pkt->crc;
+  pkt->crc = 0x0000;
+  const uint16_t crc = mc_alg_crc16_ccitt(mc_span(pkt, this->rcv->window_size)).value;
+  if (received_crc != crc) {
+    return mc_span(NULL, 0);// Data corruption
+  }
+
+  return buffer;
+}
+
+static mc_span io_send(mc_comm* this, mc_span buffer)
+{
+  // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+  const uint32_t sent_size = this->io.send(buffer.data, buffer.capacity);
+  return mc_span(buffer.data, sent_size);
+}
+
+static mc_span io_recv(mc_comm* this, mc_span buffer)
+{
+  const uint32_t read_size = this->io.recv(buffer.data, buffer.capacity);
+  // if (0 == read_size) {// TODO(MN): Handle incomplete size(smaller or larger)
+  //   return 0;
+  // }
+  return mc_span(buffer.data, read_size);
+}
+
+static mc_span pipeline_send(mc_comm* this, mc_span buffer)
+{
+  buffer = protocol_send(this, buffer);
+  if (NULL == buffer.data) {
+    return buffer;
+  }
+
+  buffer = frame_send(this, buffer);
+  if (NULL == buffer.data) {
+    return buffer;
+  }
+
+  buffer = io_send(this, buffer);
+  return buffer;
+}
+
+static mc_span pipeline_recv(mc_comm* this, mc_span buffer)
+{
+  buffer = io_recv(this, buffer);
+  if (NULL == buffer.data) {
+    return buffer;
+  }
+
+  buffer = frame_recv(this, buffer);
+  if (NULL == buffer.data) {
+    return buffer;
+  }
+
+  buffer = protocol_recv(this, buffer);
+  return buffer;
+}
 
 static void send_ack(mc_comm* this, uint32_t id)
 {
@@ -59,50 +176,6 @@ static void send_ack(mc_comm* this, uint32_t id)
     // TODO(MN): Handle. Is it ok to 
   }
   // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
-}
-
-static uint32_t read_data(mc_comm* const this)
-{
-  mc_pkt* const pkt = this->rcv->temp_window;
-  const uint32_t read_size = this->io.recv(pkt, this->rcv->window_size);
-  if (0 == read_size) {// TODO(MN): Handle incomplete size(smaller or larger)
-    return 0;
-  }
-
-  if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
-    return 0; // [INVALID] Bad header/type received. 
-  }
-
-  const uint16_t received_crc = pkt->crc;
-  pkt->crc = 0x0000;
-  const uint16_t crc = mc_alg_crc16_ccitt(mc_span(pkt, this->rcv->window_size)).value;
-  if (received_crc != crc) {
-    return 0;// Data corruption
-  }
-
- 
-  if (PKT_ACK == pkt->type) {
-    if (!wndpool_contains(this->snd, pkt->id)) {// TODO(MN): Test that not read to send ack to let sender sends more
-      return 0;
-    }
-
-    const mc_time_t sent_time_us = wndpool_get(this->snd, pkt->id)->sent_time_us;
-    const uint64_t elapsed_time = mc_now_u() - sent_time_us;
-    this->send_delay_us = elapsed_time * 0.8;
-    wndpool_ack(this->snd, pkt->id);
-    return read_size;
-  }
-
-  if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
-    send_ack(this, pkt->id);
-    return 0;
-  }
-
-  if (wndpool_update(this->rcv, mc_span(pkt->data, pkt->size), pkt->id)) {
-    send_ack(this, pkt->id);
-  }
-
-  return read_size;
 }
 
 static void send_unacked(mc_comm* const this) 
@@ -180,7 +253,7 @@ mc_error mc_comm_update(mc_comm* this)
     return MC_ERR_INVALID_ARGUMENT;
   }
 
-  read_data(this);
+  pipeline_recv(this, mc_span(this->rcv->temp_window, this->rcv->window_size));
   send_unacked(this);
   return MC_SUCCESS;
 }
@@ -217,7 +290,7 @@ uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32
 
     const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
     if (wndpool_push(this->snd, mc_span((char*)src_data + sent_size, seg_size))) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
-      this->io.send(&window->packet, this->snd->window_size); // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
+      io_send(this, mc_span(&window->packet, this->snd->window_size));
 
       size -= seg_size;// TODO(MN): API for + and - in span
       sent_size += seg_size;
