@@ -27,5 +27,5 @@ target_include_directories(${LIB}
 
 # Linking
 target_link_libraries(${LIB}
-    PRIVATE mcore_time
+    PRIVATE ${PROJECT_NAME}_time ${PROJECT_NAME}_alg
 )
