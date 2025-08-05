@@ -34,15 +34,14 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
   if (simulate_loss()) {
     static bool packetDrop = false;
     packetDrop = !packetDrop;
+    SendFailedCounter++;
 
     if (packetDrop) { /* Drop the packet */
-      SendFailedCounter++;
       return 0;
     } else {          /* Packet corruption */
       memcpy(SendBuffer, data, size);
       SendBuffer[29] ^= 1;
       sendto(socket_fd, SendBuffer, size, 0, (struct sockaddr*)&addr_in, addr_len);
-      SendCounter++;
       return size;
     }
   }
@@ -68,9 +67,9 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size)
   if (simulate_loss()) {
     packetDrop = true;
     bit_corruption = !bit_corruption;
+    RecvFailedCounter++;
     
     if (!bit_corruption) {
-      RecvFailedCounter++;
       return 0;
     }
   }
@@ -88,8 +87,9 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size)
   } else {
     if (packetDrop && bit_corruption) {
       ((uint8_t*)data)[29] ^= 1;
+    } else {
+      RecvCounter++;
     }
-    RecvCounter++;
   }
   
   return read_size;
