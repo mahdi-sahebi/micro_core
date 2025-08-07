@@ -19,6 +19,8 @@ typedef struct
 #define mc_span_is_empty(SPAN)                  (0 == (SPAN).capacity)
 #define mc_span_is_null(SPAN)                   (NULL == (SPAN).data)
 #define mc_span_get_size(SPAN)                  ((SPAN).capacity * (SPAN).data_size)
+// TODO(NM): At
+
 
 #endif /* MC_SPAN_H_ */
 

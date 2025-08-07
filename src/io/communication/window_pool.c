@@ -112,13 +112,14 @@ uint32_t wndpool_pop(wndpool_t* this, void* data, uint32_t size)
 
 uint8_t wndpool_get_count(const wndpool_t* this)
 {
-  uint8_t count = 0;
+  // uint8_t count = 0;
 
-  for (mc_wnd_idx index = 0; index < this->capacity; index++) {
-    count += wnd_is_valid(get_window(this, index));
-  }
+  // for (mc_wnd_idx index = 0; index < this->capacity; index++) {
+  //   count += wnd_is_valid(get_window(this, index));
+  // }
 
-  return count;
+  // return count;
+  return (this->end_id - this->bgn_id);
 }
 
 uint8_t wndpool_get_capacity(const wndpool_t* this)
