@@ -102,8 +102,8 @@ static void print_log()
   const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
   printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
       recv_cnt, send_cnt, 
-      recv_failed_cnt, 100 * (recv_failed_cnt / (float)(recv_cnt + recv_failed_cnt)),
-      send_failed_cnt, 100 * (send_failed_cnt / (float)(send_cnt + send_failed_cnt))
+      recv_failed_cnt, 100 * (recv_failed_cnt / (float)recv_cnt),
+      send_failed_cnt, 100 * (send_failed_cnt / (float)send_cnt)
     );
 }
 
