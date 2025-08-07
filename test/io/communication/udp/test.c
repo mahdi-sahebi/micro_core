@@ -2,6 +2,7 @@
  * like UDP, so we just implement a simple send and receive socket.
  * creation, invalid parameters, diff snd/rcv window sizes, ...
  * 
+ * Test of sending and receiving 0 bytes which is valid
  * [Test Log]
  * 
 [MICRO CORE 1.0.0 - IO - COMMUNICATION]
@@ -57,30 +58,31 @@ static int invalid_creation()
 {
   char memory[1024];
   mc_span alloc_buffer = mc_span(memory, sizeof(memory));
+  mc_result_ptr result_ptr = {0};
   mc_comm* message = NULL;
   
-  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
@@ -92,14 +94,9 @@ static int valid_creation()
   char memory[1024];
   mc_span alloc_buffer = mc_span(memory, sizeof(memory));
   const uint32_t capcity = 3;
-  mc_comm* message = NULL;
   
-  message = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api));
-  if (NULL == message) {
-    return MC_ERR_BAD_ALLOC;
-  }
-
-  if (NULL == message) {
+  const mc_result_ptr result = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api));
+  if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
