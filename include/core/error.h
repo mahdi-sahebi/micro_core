@@ -38,8 +38,8 @@ typedef struct
 
 typedef struct
 {
-  void*    data;
-  mc_error result;
+  void*    data;// TODO(MN): Use uintptr_t and have only one mc_result struct?
+  mc_error result;// TODO(MN): Rename to error for all types
 }mc_result_ptr;
 
 #define mc_result_ptr(DATA, ERROR)      (mc_result_ptr){.data = (DATA), .result = (ERROR)}
