@@ -274,6 +274,7 @@ mc_error mc_comm_update(mc_comm* this)
 
   pipeline_recv(this, mc_span(this->rcv->temp_window, this->rcv->window_size));
   send_unacked(this);
+
   return MC_SUCCESS;
 }
 
