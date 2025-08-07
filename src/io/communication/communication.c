@@ -151,7 +151,6 @@ static mc_span frame_recv(mc_comm* this, mc_span buffer)
 
 static mc_span io_send(mc_comm* this, mc_span buffer)
 {
-  // TODO(MN): Handle incomplete sending. also handle a timeout if fails continuously
   const uint32_t sent_size = this->io.send(buffer.data, buffer.capacity);
   return mc_span(buffer.data, sent_size);
 }
@@ -159,9 +158,6 @@ static mc_span io_send(mc_comm* this, mc_span buffer)
 static mc_span io_recv(mc_comm* this, mc_span buffer)
 {
   const uint32_t read_size = this->io.recv(buffer.data, buffer.capacity);
-  // if (0 == read_size) {// TODO(MN): Handle incomplete size(smaller or larger)
-  //   return 0;
-  // }
   return mc_span(buffer.data, read_size);
 }
 
@@ -281,16 +277,17 @@ mc_error mc_comm_update(mc_comm* this)
 uint32_t mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeout_us)
 {
   uint32_t read_size = 0;
-  const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
+  const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
 
   while (size) {
     mc_comm_update(this);
     const uint32_t seg_size = wndpool_pop(this->rcv, (char*)dst_data + read_size, size);
 
+    // TODO(MN): Style not equals to send
     size -= seg_size;
     read_size += seg_size;
 
-    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > (bgn_time + timeout_us))) {
+    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
       break;// TODO(MN): Error of timeout
     }
   }
@@ -301,7 +298,7 @@ uint32_t mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t tim
 uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32_t timeout_us)
 {
   uint32_t sent_size = 0;
-  const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
+  const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
 
   while (size) {
     // TODO(MN): pure function without any check
@@ -315,7 +312,7 @@ uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32
       sent_size += seg_size;
     }
     
-    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > (bgn_time + timeout_us))) {
+    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
       break;// TODO(MN): Error of timeout
     }
   }
