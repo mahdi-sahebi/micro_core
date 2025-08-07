@@ -20,10 +20,8 @@ static bool simulate_loss()
   return ((random() / (float)RAND_MAX) * 100) < LossRate;
 }
 
-uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
+static uint32_t base_socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {
-  uint8_t count = RepetitiveSendEnable ? 2 : 1;
-
   struct sockaddr_in addr_in = {
     .sin_family      = AF_INET,
     .sin_port        = htons(dst_port),
@@ -31,29 +29,62 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
   };
   socklen_t addr_len = sizeof(addr_in);
 
+  uint32_t sent_size = sendto(socket_fd, data, size, 0, (struct sockaddr*)&addr_in, addr_len);
+  if (-1 == sent_size) {
+    sent_size = 0;
+  }
+
+  return sent_size;
+}
+
+static uint32_t base_socket_read(int socket_fd, void* data, uint32_t size, char src_ip[INET_ADDRSTRLEN], uint16_t* src_port)
+{
+  struct sockaddr_in addr_in = {0};
+  socklen_t addr_len = sizeof(addr_in);
+  uint32_t read_size = recvfrom(socket_fd, data, size, 0, (struct sockaddr*)&addr_in, &addr_len);
+
+  if (-1 == read_size) {
+    read_size = 0;
+
+    if (NULL != src_port) {
+      *src_port = 0;
+      memset(src_ip, 0x00, INET_ADDRSTRLEN);
+    }
+  } else {
+    if (NULL != src_port) {
+      inet_ntop(AF_INET, &addr_in.sin_addr, src_ip, INET_ADDRSTRLEN);
+      *src_port = ntohs(addr_in.sin_port);
+    }
+  }
+  
+  return read_size;
+}
+
+uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
+{
+  uint8_t count = RepetitiveSendEnable ? 2 : 1;
+  const void* data_buffer = data;
+
   if (simulate_loss()) {
     static bool packetDrop = false;
     packetDrop = !packetDrop;
     SendFailedCounter++;
 
     if (packetDrop) { /* Drop the packet */
+      SendCounter++;
       return 0;
     } else {          /* Packet corruption */
       memcpy(SendBuffer, data, size);
+      data_buffer = SendBuffer;
       SendBuffer[29] ^= 1;
-      sendto(socket_fd, SendBuffer, size, 0, (struct sockaddr*)&addr_in, addr_len);
-      return size;
     }
   }
 
   uint32_t sent_size = 0;
-  while (count) {
-    if (sendto(socket_fd, data, size, 0, (struct sockaddr*)&addr_in, addr_len) == size) {
-      count--;
-      SendCounter++;
-    } else {
-      sent_size = 0;
-    }
+
+  while (count--) {
+    SendCounter++;
+    sent_size = base_socket_write(socket_fd, data_buffer, size, dst_ip, dst_port);
   }
 
   return sent_size;
@@ -61,6 +92,7 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
 
 uint32_t socket_read(int socket_fd, void* data, uint32_t size)
 {
+  RecvCounter++;
   static bool bit_corruption = false;
   bool packetDrop = false;
 
@@ -74,21 +106,11 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size)
     }
   }
   
-  struct sockaddr_in addr_in = {0};
-  socklen_t addr_len = sizeof(addr_in);
-  uint32_t read_size = recvfrom(socket_fd, data, size, 0, (struct sockaddr*)&addr_in, &addr_len);
+  uint32_t read_size = base_socket_read(socket_fd, data, size, NULL, NULL);
 
-  char sender_ip[INET_ADDRSTRLEN];
-  inet_ntop(AF_INET, &addr_in.sin_addr, sender_ip, INET_ADDRSTRLEN);
-  const uint16_t sender_port = ntohs(addr_in.sin_port);
-
-  if (-1 == read_size) {
-    read_size = 0;
-  } else {
+  if (0 != read_size) {
     if (packetDrop && bit_corruption) {
       ((uint8_t*)data)[29] ^= 1;
-    } else {
-      RecvCounter++;
     }
   }
   

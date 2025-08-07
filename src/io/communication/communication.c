@@ -19,6 +19,7 @@
  * 
  * Flush at the end of recv/send?
  * Get comm interface.
+ * Use one temp window for send/recv
  */
 
 #include <stdlib.h>
@@ -51,9 +52,28 @@ typedef struct
   mc_span buffer;
 }pipeline_data;
 
+
+
+static void send_ack(mc_comm* this, uint32_t id)
+{
+  mc_pkt* const pkt = this->snd->temp_window;
+
+  pkt->header = HEADER;
+  pkt->type   = PKT_ACK;
+  pkt->id     = id;
+  pkt->crc    = 0x0000;
+  pkt->crc    = mc_alg_crc16_ccitt(mc_span(pkt, this->snd->window_size)).value;
+
+  if (this->io.send(pkt, this->rcv->window_size) != this->rcv->window_size) {
+    // TODO(MN): Handle. Is it ok to 
+  }
+  // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
+}
+
 static mc_span protocol_send(mc_comm* this, mc_span buffer)
 {
-  return mc_span(NULL, 0);
+  mc_comm_update(this);
+  return buffer;//mc_span(NULL, 0);
 }
 
 static mc_span protocol_recv(mc_comm* this, mc_span buffer)
@@ -62,7 +82,7 @@ static mc_span protocol_recv(mc_comm* this, mc_span buffer)
     return mc_span(NULL, 0);
   }
 
-  mc_pkt* const pkt = buffer.data;
+  mc_pkt* const pkt = (mc_pkt*)buffer.data;
 
   if (PKT_ACK == pkt->type) {
     if (!wndpool_contains(this->snd, pkt->id)) {// TODO(MN): Test that not read to send ack to let sender sends more
@@ -90,6 +110,11 @@ static mc_span protocol_recv(mc_comm* this, mc_span buffer)
 
 static mc_span frame_send(mc_comm* this, mc_span buffer)
 {
+  const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
+  if (wndpool_push(this->snd, buffer)) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
+    return mc_span(&window->packet, this->snd->window_size);
+  }
+
   return mc_span(NULL, 0);
 }
 
@@ -99,7 +124,7 @@ static mc_span frame_recv(mc_comm* this, mc_span buffer)
     return mc_span(NULL, 0);
   }
 
-  mc_pkt* const pkt = buffer.data;
+  mc_pkt* const pkt = (mc_pkt*)buffer.data;
   if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
     return mc_span(NULL, 0); // [INVALID] Bad header/type received. 
   }
@@ -162,22 +187,6 @@ static mc_span pipeline_recv(mc_comm* this, mc_span buffer)
   return buffer;
 }
 
-static void send_ack(mc_comm* this, uint32_t id)
-{
-  mc_pkt* const pkt = this->snd->temp_window;
-
-  pkt->header = HEADER;
-  pkt->type   = PKT_ACK;
-  pkt->id     = id;
-  pkt->crc    = 0x0000;
-  pkt->crc    = mc_alg_crc16_ccitt(mc_span(pkt, this->snd->window_size)).value;
-
-  if (this->io.send(pkt, this->rcv->window_size) != this->rcv->window_size) {
-    // TODO(MN): Handle. Is it ok to 
-  }
-  // ("[PACKET %u] Sent ACK (Total ACKs sent: %u)\n",         seq, total_packets_received);
-}
-
 static void send_unacked(mc_comm* const this) 
 {
   const mc_time_t now = mc_now_u();
@@ -189,7 +198,7 @@ static void send_unacked(mc_comm* const this)
     }
 
     if (this->snd->window_size == this->io.send(&window->packet, this->snd->window_size)) {
-      window->sent_time_us = mc_now_u();
+      window->sent_time_us = now;//mc_now_u();
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
   }
 }
@@ -284,14 +293,17 @@ uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32
   const mc_time_t bgn_time = (MC_TIMEOUT_MAX != timeout_us) ? mc_now_u() : 0;
 
   while (size) {
-    mc_comm_update(this);
     // TODO(MN): pure function without any check
+
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(mc_pkt));
+    mc_span buffer = mc_span((char*)src_data + sent_size, seg_size);
 
-    const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
-    if (wndpool_push(this->snd, mc_span((char*)src_data + sent_size, seg_size))) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
-      io_send(this, mc_span(&window->packet, this->snd->window_size));
-
+    buffer = pipeline_send(this, buffer);
+    
+    if ((NULL != buffer.data))/**/ {
+      // if ((0 == mc_span_get_size(buffer))) {
+      //   printf("f\n");
+      // }
       size -= seg_size;// TODO(MN): API for + and - in span
       sent_size += seg_size;
     }
