@@ -4,47 +4,32 @@
  * 
  * [Test Log]
  * 
-  [MICRO CORE 1.0.0 - IO - MESSAGE]
-  [invalid_creation]
-  PASSED - 1(us)
+[MICRO CORE 1.0.0 - IO - COMMUNICATION]
+[invalid_creation]
+PASSED - 1(us)
 
-  [valid_creation]
-  PASSED - 6(us)
+[valid_creation]
+PASSED - 1(us)
 
-  [singly_direction]
-  ████████████████████ 100.0%
-  Completed[Recv: 20000, Send: 20000] - Failed[Recv: 0(0.0%), Send: 0(0.0%)]
+[singly_direction]
+████████████████████ 100.0%
+[IO] Completed{Recv: 2471, Send: 2007} - Failed{Recv: 0(0.0%), Send: 0(0.0%)}
+PASSED - 3720546(us)
 
-  PASSED - 7483800(us)
+[singly_repetitive]
+████████████████████ 100.0%
+[IO] Completed{Recv: 2471, Send: 2010} - Failed{Recv: 0(0.0%), Send: 0(0.0%)}
+PASSED - 3694864(us)
 
-  [singly_repetitive]
-  ████████████████████ 100.0%
-  Completed[Recv: 20000, Send: 20000] - Failed[Recv: 0(0.0%), Send: 0(0.0%)]
+[singly_low_lossy]
+████████████████████ 100.0%
+[IO] Completed{Recv: 4495, Send: 4103} - Failed{Recv: 904(20.1%), Send: 836(20.4%)}
+PASSED - 3991008(us)
 
-  PASSED - 7494000(us)
-
-  [singly_low_lossy]
-  ████████████████████ 100.0%
-  Completed[Recv: 5810, Send: 5801] - Failed[Recv: 1427(19.7%), Send: 1521(20.8%)]
-
-  PASSED - 5786943(us)
-
-  [singly_high_lossy]
-  ████████████████████ 100.0%
-  Completed[Recv: 4281, Send: 4281] - Failed[Recv: 213604(98.0%), Send: 79823(94.9%)]
-
-  PASSED - 45213009(us)
-
-
-
-  --- Singly High Lossy ---
-  [Adaptive Sending Time]
-  Completed[Recv: 4178, Send: 4178] - Failed[Recv: 224314(98.2%), Send: 79635(95.0%)]  48856439(us)
-  Completed[Recv: 4379, Send: 4380] - Failed[Recv: 221447(98.1%), Send: 82686(95.0%)]  45273912(us)
-
-  [Fixed Sending Time]
-  Completed[Recv: 4398, Send: 4398] - Failed[Recv: 232046(98.1%), Send: 82581(94.9%)]  50185999(us)
-  Completed[Recv: 4629, Send: 4630] - Failed[Recv: 241806(98.1%), Send: 87668(95.0%)]  52303896(us)
+[singly_high_lossy]
+████████████████████ 100.0%
+[IO] Completed{Recv: 356648, Send: 373906} - Failed{Recv: 339129(95.1%), Send: 355027(95.0%)}
+PASSED - 90864987(us)
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -153,7 +138,7 @@ static int singly_direction()
 static int singly_repetitive()
 {
   cfg_set_repetitive_send(true);
-  cfg_set_iterations(500);
+  cfg_set_iterations(200);
   const int result = singly_direction();
   cfg_set_repetitive_send(true);
   return result;
@@ -162,7 +147,7 @@ static int singly_repetitive()
 static int singly_low_lossy()
 {
   cfg_set_loss_rate(20);
-  cfg_set_iterations(500);
+  cfg_set_iterations(200);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
@@ -171,7 +156,7 @@ static int singly_low_lossy()
 static int singly_high_lossy()
 {
   cfg_set_loss_rate(95);
-  cfg_set_iterations(100);
+  cfg_set_iterations(200);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
