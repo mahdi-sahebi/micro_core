@@ -161,7 +161,7 @@ static mc_span io_recv(mc_comm* this, mc_span buffer)
   return mc_span(buffer.data, read_size);
 }
 
-static mc_span pipeline_send(mc_comm* this, mc_span buffer)
+static mc_span send_data(mc_comm* this, mc_span buffer)
 {
   buffer = protocol_send(this, buffer);
   if (NULL == buffer.data) {
@@ -177,7 +177,7 @@ static mc_span pipeline_send(mc_comm* this, mc_span buffer)
   return buffer;
 }
 
-static mc_span pipeline_recv(mc_comm* this, mc_span buffer)
+static mc_span recv_data(mc_comm* this, mc_span buffer)
 {
   buffer = io_recv(this, buffer);
   if (NULL == buffer.data) {
@@ -225,19 +225,19 @@ mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t windows_capac
   return mc_result_u32(size, MC_SUCCESS);
 }
 
-mc_comm* mc_comm_init(
+mc_result_ptr mc_comm_init(
   mc_span alloc_buffer,
   uint16_t window_size, 
   uint8_t windows_capacity, 
   mc_io io)
 {
   if ((NULL == io.recv) || (NULL == io.send)) {
-    return NULL;// TODO(MN): MC_ERR_INVALID_ARGUMENT;
+    return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, windows_capacity);
   if ((MC_SUCCESS != result_u32.result) || (mc_span_get_size(alloc_buffer) < result_u32.value)) {
-    return NULL;// TODO(MN): MC_ERR_BAD_ALLOC
+    return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
   
   const uint32_t windows_size = windows_capacity * wnd_get_size(window_size);
@@ -259,7 +259,7 @@ mc_comm* mc_comm_init(
   wndpool_clear(this->rcv);
   wndpool_clear(this->snd);
   
-  return this;
+  return mc_result_ptr(this, MC_SUCCESS);
 }
 
 mc_error mc_comm_update(mc_comm* this)
@@ -268,15 +268,20 @@ mc_error mc_comm_update(mc_comm* this)
     return MC_ERR_INVALID_ARGUMENT;
   }
 
-  pipeline_recv(this, mc_span(this->rcv->temp_window, this->rcv->window_size));
+  recv_data(this, mc_span(this->rcv->temp_window, this->rcv->window_size));
   send_unacked(this);
 
   return MC_SUCCESS;
 }
 
-uint32_t mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeout_us)
+mc_result_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeout_us)
 {
+  if ((NULL == this) || (NULL == dst_data)) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+
   uint32_t read_size = 0;
+  mc_error error = MC_SUCCESS;
   const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
 
   while (size) {
@@ -288,16 +293,22 @@ uint32_t mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t tim
     read_size += seg_size;
 
     if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
-      break;// TODO(MN): Error of timeout
+      error = MC_ERR_TIMEOUT;
+      break;
     }
   }
 
-  return read_size;
+  return mc_result_u32(read_size, error);
 }
 
-uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32_t timeout_us)
+mc_result_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32_t timeout_us)
 {
+  if ((NULL == this) || (NULL == src_data)) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+
   uint32_t sent_size = 0;
+  mc_error error = MC_SUCCESS;
   const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
 
   while (size) {
@@ -305,7 +316,7 @@ uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(mc_pkt));
     mc_span buffer = mc_span((char*)src_data + sent_size, seg_size);
 
-    buffer = pipeline_send(this, buffer);
+    buffer = send_data(this, buffer);
     
     if (NULL != buffer.data){
       size -= seg_size;// TODO(MN): API for + and - in span
@@ -313,26 +324,31 @@ uint32_t mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32
     }
     
     if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
-      break;// TODO(MN): Error of timeout
+      error = MC_ERR_TIMEOUT;
+      break;
     }
   }
   
-  return sent_size;
+  return mc_result_u32(sent_size, error);
 }
 
-bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
+mc_result_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
 {
+  if (NULL == this) {
+    return mc_result_bool(false, MC_ERR_INVALID_ARGUMENT);
+  }
+
   const mc_time_t end_time_us = mc_now_u() + timeout_us;
 
   while (wndpool_get_count(this->snd) || wndpool_get_count(this->rcv)) {
     mc_comm_update(this);
 
     if (mc_now_u() > end_time_us) {
-      return false;
+      return mc_result_bool(false, MC_ERR_TIMEOUT);
     }
   }
   // TODO(MN): Tiny delay to not network congestion
-  return true;
+  return mc_result_bool(true, MC_SUCCESS);
 }
 
 
