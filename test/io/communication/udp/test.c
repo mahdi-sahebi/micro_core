@@ -2,7 +2,6 @@
  * like UDP, so we just implement a simple send and receive socket.
  * creation, invalid parameters, diff snd/rcv window sizes, ...
  * 
- * Test of sending and receiving 0 bytes which is valid
  * [Test Log]
  * 
 [MICRO CORE 1.0.0 - IO - COMMUNICATION]
@@ -32,6 +31,7 @@ PASSED - 3991008(us)
 [IO] Completed{Recv: 356648, Send: 373906} - Failed{Recv: 339129(95.1%), Send: 355027(95.0%)}
 PASSED - 90864987(us)
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -159,21 +159,6 @@ static int singly_high_lossy()
   return result;
 }
 
-static int small_write()
-{
-  return MC_ERR_RUNTIME;
-}
-
-static int large_write()
-{
-  return MC_ERR_RUNTIME;
-}
-
-static int hulf_duplex()
-{
-  return MC_ERR_RUNTIME;
-}
-
 static int full_duplex()
 {
   return MC_ERR_RUNTIME;
@@ -255,45 +240,6 @@ int main()
   }
 
   /*
-  printf("[small_write]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = small_write();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
-    }
-  }
-
-
-  printf("[large_write]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = large_write();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
-    }
-  }
-
-
-  printf("[hulf_duplex]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = hulf_duplex();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
-    }
-  }
-
-
   printf("[full_duplex]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
