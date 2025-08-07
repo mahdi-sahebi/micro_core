@@ -52,7 +52,7 @@ static void let_server_start()
   usleep(200000);
 }
 
-static void init(void* data)
+static bool init(void* data)
 {
   Result = (uint32_t*)data;
   *Result = MC_SUCCESS;
@@ -62,10 +62,22 @@ static void init(void* data)
 
   const uint32_t window_size = 37;
   const uint32_t window_capacity = 3;// TODO(MN): Calculate accoridng the buffer size / window size
-  const uint32_t alloc_size = mc_comm_get_alloc_size(window_size, window_capacity).value;
+  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, window_capacity);
+  if (MC_SUCCESS != result_u32.result) {
+    *Result = result_u32.result;
+    return false;
+  }
+  const uint32_t alloc_size = result_u32.value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
 
-  message = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(client_read, client_write));
+  const mc_result_ptr result = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(client_read, client_write));
+  if (MC_SUCCESS != result.result) {
+    *Result = result.result;
+    return false;
+  }
+
+  message = result.data;;
+  return true;
 }
 
 static void deinit()
@@ -76,7 +88,8 @@ static void deinit()
 
 static bool send_data(const void* data, uint32_t size)
 {
-  if (mc_comm_send(message, data, size, TEST_TIMEOUT_US) != size) {
+  const mc_result_u32 result = mc_comm_send(message, data, size, TEST_TIMEOUT_US);
+  if ((MC_SUCCESS != result.result) || (result.value != size)) {
     *Result = MC_ERR_TIMEOUT;
     return false;
   }
@@ -116,10 +129,15 @@ static bool send_tiny_size(uint32_t seed)
 
 void* snd_start(void* data)
 {
-  init(data);
+  if (!init(data)) {
+    return NULL;
+  }
   
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
-    mc_comm_update(message);
+    if (MC_SUCCESS != mc_comm_update(message)) {
+      *Result = MC_ERR_TIMEOUT;
+      break;
+    }
 
     if (!send_string(counter)        ||
         !send_variadic_size(counter) ||  /* Smaller and larger than window size */
@@ -129,9 +147,12 @@ void* snd_start(void* data)
     }
   }
   
-  if ((MC_SUCCESS == *Result) && !mc_comm_flush(message, TEST_TIMEOUT_US)) {
-    printf("mc_comm_flush failed\n");
-    *Result = MC_ERR_TIMEOUT;
+  if (MC_SUCCESS == *Result) {
+    const mc_result_bool result = mc_comm_flush(message, TEST_TIMEOUT_US);
+    if ((MC_SUCCESS != result.result) || !result.value) {
+      printf("mc_comm_flush failed\n");
+      *Result = MC_ERR_TIMEOUT;
+    }
   }
 
   deinit();
