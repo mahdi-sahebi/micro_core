@@ -246,7 +246,6 @@ int main()
     }
   }
 
-
   printf("[singly_high_lossy]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
