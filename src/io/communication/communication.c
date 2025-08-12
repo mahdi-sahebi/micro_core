@@ -28,6 +28,7 @@
 #include <string.h>
 #include "core/error.h"
 #include "core/time.h"
+#include "pattern/mc_chain.h"
 #include "io/communication/window.h"
 #include "io/communication/window_pool.h"
 #include "io/communication/communication.h"
@@ -45,14 +46,9 @@ struct _mc_comm_t
   uint32_t   send_delay_us;// TODO(MN): Use u16 with 100X us resolution
   wndpool_t* rcv;// TODO(MN): Use array to reduce one pointer size
   wndpool_t* snd;
+  mc_chain*  recv_chain;
+  mc_chain*  send_chain;
 };
-
-typedef struct 
-{
-  mc_comm* this;
-  mc_span buffer;
-}pipeline_data;
-
 
 
 static bool send_buffer(mc_comm* this, const void* buffer, uint32_t size)
@@ -80,117 +76,91 @@ static void send_ack(mc_comm* this, uint32_t id)
   send_buffer(this, pkt, this->rcv->window_size);
 }
 
-static mc_span protocol_send(mc_comm* this, mc_span buffer)
+static mc_chain_data protocol_send(mc_chain_data data)
 {
-  mc_comm_update(this);
-  return buffer;//mc_span(NULL, 0);
+  mc_comm_update(data.arg);
+  return data;
 }
 
-static mc_span protocol_recv(mc_comm* this, mc_span buffer)
+static mc_chain_data protocol_recv(mc_chain_data data)
 {
-  if (buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
-    return mc_span(NULL, 0);
+  mc_comm* this = data.arg;
+  if (data.buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
+    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_INVALID_ARGUMENT);
   }
 
-  mc_pkt* const pkt = (mc_pkt*)buffer.data;
+  mc_pkt* const pkt = (mc_pkt*)data.buffer.data;
 
   if (PKT_ACK == pkt->type) {
     if (!wndpool_contains(this->snd, pkt->id)) {// TODO(MN): Test that not read to send ack to let sender sends more
-      return mc_span(NULL, 0);
+      return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_RUNTIME);
     }
     // TODO(MN): Not per ack
     const mc_time_t sent_time_us = wndpool_get(this->snd, pkt->id)->sent_time_us;
     const uint64_t elapsed_time = mc_now_u() - sent_time_us;
     this->send_delay_us = elapsed_time * 0.8;
     wndpool_ack(this->snd, pkt->id);
-    return mc_span(NULL, 0);// done
+    return mc_chain_data(data.arg, mc_span(NULL, 0), MC_ERR_RUNTIME);// done
   }
 
   if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
-    send_ack(this, pkt->id);
-    return mc_span(NULL, 0);// done
+    send_ack(data.arg, pkt->id);
+    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_RUNTIME);// done
   }
 
   if (wndpool_update(this->rcv, mc_span(pkt->data, pkt->size), pkt->id)) {
-    send_ack(this, pkt->id);
+    send_ack(data.arg, pkt->id);
   }
 
-  return buffer;
+  return data;
 }
 
-static mc_span frame_send(mc_comm* this, mc_span buffer)
+static mc_chain_data frame_send(mc_chain_data data)
 {
+  mc_comm* this = data.arg;
   const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
-  if (wndpool_push(this->snd, buffer)) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
-    return mc_span(&window->packet, this->snd->window_size);
+  if (wndpool_push(this->snd, data.buffer)) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
+    return mc_chain_data(data.arg, mc_span(&window->packet, this->snd->window_size), MC_SUCCESS);
   }
 
-  return mc_span(NULL, 0);
+  return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_OUT_OF_RANGE);// TODO(MN): Memroy not enough, 
 }
 
-static mc_span frame_recv(mc_comm* this, mc_span buffer)
+static mc_chain_data frame_recv(mc_chain_data data)
 {
-  if (buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
-    return mc_span(NULL, 0);
-  }
+  mc_comm* this = data.arg;
+  // TODO(MN): Check all inputs
+  // if (buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
+  //   return mc_span(NULL, 0);
+  // }
 
-  mc_pkt* const pkt = (mc_pkt*)buffer.data;
+  mc_pkt* const pkt = (mc_pkt*)data.buffer.data;
   if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
-    return mc_span(NULL, 0); // [INVALID] Bad header/type received. 
+    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_RUNTIME); // [INVALID] Bad header/type received. 
   }
 
   const uint16_t received_crc = pkt->crc;
   pkt->crc = 0x0000;
   const uint16_t crc = mc_alg_crc16_ccitt(mc_span(pkt, this->rcv->window_size)).value;
   if (received_crc != crc) {
-    return mc_span(NULL, 0);// Data corruption
+    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_RUNTIME);// TODO(MN): Data corruption
   }
 
-  return buffer;
+  return data;
 }
 
-static mc_span io_send(mc_comm* this, mc_span buffer)
+static mc_chain_data io_send(mc_chain_data data)
 {
-  const uint32_t sent_size = this->io.send(buffer.data, buffer.capacity);
-  return mc_span(buffer.data, sent_size);
+  mc_comm* this = data.arg;
+  const uint32_t sent_size = this->io.send(data.buffer.data, data.buffer.capacity);
+  return mc_chain_data(data.arg, mc_span(data.buffer.data, sent_size), MC_SUCCESS);
 }
 
-static mc_span io_recv(mc_comm* this, mc_span buffer)
+static mc_chain_data io_recv(mc_chain_data data)
 {
-  const uint32_t read_size = this->io.recv(buffer.data, buffer.capacity);
-  return mc_span(buffer.data, read_size);
-}
-
-static mc_span send_data(mc_comm* this, mc_span buffer)
-{
-  buffer = protocol_send(this, buffer);
-  if (NULL == buffer.data) {
-    return buffer;
-  }
-
-  buffer = frame_send(this, buffer);
-  if (NULL == buffer.data) {
-    return buffer;
-  }
-
-  buffer = io_send(this, buffer);
-  return buffer;
-}
-
-static mc_span recv_data(mc_comm* this, mc_span buffer)
-{
-  buffer = io_recv(this, buffer);
-  if (NULL == buffer.data) {
-    return buffer;
-  }
-
-  buffer = frame_recv(this, buffer);
-  if (NULL == buffer.data) {
-    return buffer;
-  }
-
-  buffer = protocol_recv(this, buffer);
-  return buffer;
+  mc_comm* this = data.arg;
+  const uint32_t read_size = this->io.recv(data.buffer.data, data.buffer.capacity);
+  return mc_chain_data(this, mc_span(data.buffer.data, read_size), MC_SUCCESS);
 }
 
 static void send_unacked(mc_comm* const this) 
@@ -221,7 +191,8 @@ mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t windows_capac
   const uint32_t windows_size = windows_capacity * wnd_get_size(window_size);
   /*                                                         temp window + all windows */
   const uint32_t controllers_size = 2 * (sizeof(wndpool_t) + window_size + windows_size);
-  const uint32_t size = sizeof(mc_comm) + controllers_size;
+  const uint32_t chains_size = mc_chain_get_alloc_size(3).value * 2;
+  const uint32_t size = sizeof(mc_comm) + controllers_size + chains_size;
   return mc_result_u32(size, MC_SUCCESS);
 }
 
@@ -246,7 +217,7 @@ mc_result_ptr mc_comm_init(
   this->io               = io;
   this->send_delay_us    = MIN_SEND_TIME_US;
 
-  this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm));
+  this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
   this->rcv->window_size = window_size;
   this->rcv->capacity    = windows_capacity;
   this->rcv->windows     = (wnd_t*)((char*)this->rcv->temp_window + window_size);
@@ -256,9 +227,20 @@ mc_result_ptr mc_comm_init(
   this->snd->capacity    = windows_capacity;
   this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
 
+  this->recv_chain       = (mc_chain*)(char*)(this->snd->windows) + windows_size;
+  this->send_chain       = (mc_chain*)(char*)(this->recv_chain) + mc_chain_get_alloc_size(3).value;
+
   wndpool_clear(this->rcv);
   wndpool_clear(this->snd);
   
+  mc_chain_push(this->recv_chain, io_recv);
+  mc_chain_push(this->recv_chain, frame_recv);
+  mc_chain_push(this->recv_chain, protocol_recv);
+  
+  mc_chain_push(this->send_chain, protocol_send);
+  mc_chain_push(this->send_chain, frame_send);
+  mc_chain_push(this->send_chain, io_send);
+
   return mc_result_ptr(this, MC_SUCCESS);
 }
 
@@ -268,10 +250,10 @@ mc_error mc_comm_update(mc_comm* this)
     return MC_ERR_INVALID_ARGUMENT;
   }
 
-  recv_data(this, mc_span(this->rcv->temp_window, this->rcv->window_size));
+  const mc_chain_data data = mc_chain_run(this->recv_chain, mc_chain_data(this, mc_span(this->rcv->temp_window, this->rcv->window_size), MC_SUCCESS));
   send_unacked(this);
 
-  return MC_SUCCESS;
+  return data.error;
 }
 
 mc_result_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeout_us)
@@ -312,14 +294,13 @@ mc_result_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, u
   const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
 
   while (size) {
-    // TODO(MN): pure function without any check
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(mc_pkt));
     mc_span buffer = mc_span((char*)src_data + sent_size, seg_size);
 
-    buffer = send_data(this, buffer);
+    mc_chain_data data = mc_chain_run(this->send_chain, mc_chain_data(this, buffer, MC_SUCCESS));
     
-    if (NULL != buffer.data){
-      size -= seg_size;// TODO(MN): API for + and - in span
+    if ((MC_SUCCESS == data.error) || (NULL != data.buffer.data)){
+      size -= seg_size;
       sent_size += seg_size;
     }
     
@@ -347,7 +328,7 @@ mc_result_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
       return mc_result_bool(false, MC_ERR_TIMEOUT);
     }
   }
-  // TODO(MN): Tiny delay to not network congestion
+  
   return mc_result_bool(true, MC_SUCCESS);
 }
 

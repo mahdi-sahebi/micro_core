@@ -1,8 +1,6 @@
 #include <pattern/mc_chain.h>
 
 
-#define mc_chain_data(THIS, BUFFER, ERROR)\
-  (mc_chain_data){.arg = (THIS), .buffer = (BUFFER), .error = (ERROR)}
 
 mc_result_u32 mc_chain_get_alloc_size(uint8_t capacity)
 {
@@ -63,6 +61,3 @@ mc_chain_data mc_chain_run(mc_chain* this, mc_chain_data data)
 
   return data;
 }
-
-
-#undef mc_chain_data
