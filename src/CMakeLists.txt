@@ -25,6 +25,7 @@ target_link_libraries(${LIB}
   INTERFACE
   mcore_core
   mcore_alg
+  mcore_pattern
   mcore_io
 )
 

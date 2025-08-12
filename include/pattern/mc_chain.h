@@ -12,21 +12,21 @@ typedef struct
   mc_error error;
 }mc_chain_data;
 
-// typedef mc_chain_data (*mc_chain_
-typedef struct
+typedef mc_chain_data (*mc_chain_cb)(mc_chain_data);
+
+typedef struct __attribute__((packed))
 {
-  uint8_t 
-}mc_chain
+  uint8_t     capacity;
+  uint8_t     count;
+  mc_chain_cb nodes[0];
+}mc_chain;
 
-#define mc_chain_data(THIS, BUFFER, ERROR)\
-  (mc_chain_data){.this = (THIS), .buffer = (BUFFER), .error = (ERROR)}
 
-#define mc_chain_return_on_error(DATA)\
-  do {\
-    if (MC_SUCCESS != (DATA).error) {\
-      return (DATA);\
-    }\
-  } while (0)
+mc_result_u32 mc_chain_get_alloc_size(uint8_t capacity);
+mc_result_ptr mc_chain_init(mc_span alloc_buffer, uint8_t capacity);
+mc_error      mc_chain_clear(mc_chain* this);
+mc_error      mc_chain_push(mc_chain* this, mc_chain_cb node);
+mc_chain_data mc_chain_run(mc_chain* this, mc_chain_data data);
 
 
 #endif /* MC_PATTERN_CHAIN_H_ */
