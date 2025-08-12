@@ -2,6 +2,7 @@
 add_subdirectory(core)
 add_subdirectory(alg)
 add_subdirectory(dsa)
+add_subdirectory(pattern)
 add_subdirectory(io)
 
 
