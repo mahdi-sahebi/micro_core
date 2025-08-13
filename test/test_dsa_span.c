@@ -8,7 +8,7 @@
 
 static int span_create()
 {
-    mc_span span = mc_span(NULL, 0);
+    mc_span span = mc_span_null();
 
     if (&span == NULL) {
         return MC_ERR_BAD_ALLOC;
@@ -19,7 +19,7 @@ static int span_create()
 
 static int span_is_null()
 {
-    mc_span span = mc_span(NULL, 0);
+    mc_span span = mc_span_null();
 
     if (!mc_span_is_null(span)) {
         return MC_ERR_BAD_ALLOC;
@@ -30,7 +30,7 @@ static int span_is_null()
 
 static int span_is_empty()
 {
-    mc_span span = mc_span(NULL, 0);
+    mc_span span = mc_span_null();
 
     if (!mc_span_is_empty(span)) {
         return MC_ERR_BAD_ALLOC;

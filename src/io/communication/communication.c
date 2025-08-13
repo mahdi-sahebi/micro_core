@@ -100,7 +100,7 @@ static mc_chain_data protocol_recv(mc_chain_data data)
     const uint64_t elapsed_time = mc_now_u() - sent_time_us;
     this->send_delay_us = elapsed_time * 0.8;
     wndpool_ack(this->snd, pkt->id);
-    return mc_chain_data(data.arg, mc_span(NULL, 0), MC_ERR_RUNTIME);// done
+    return mc_chain_data(data.arg, mc_span_null(), MC_ERR_RUNTIME);// done
   }
 
   if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
@@ -217,6 +217,7 @@ mc_result_ptr mc_comm_init(
   this->io               = io;
   this->send_delay_us    = MIN_SEND_TIME_US;
 
+  // TODO(MN): Define all buffers
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
   this->rcv->window_size = window_size;
   this->rcv->capacity    = windows_capacity;
