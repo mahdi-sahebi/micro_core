@@ -24,7 +24,10 @@ typedef struct __attribute__((packed))
 
 #define mc_chain_data(THIS, BUFFER, ERROR)\
   (mc_chain_data){.arg = (THIS), .buffer = (BUFFER), .error = (ERROR)}
-  
+
+#define mc_chain_data_error(ERROR)\
+  mc_chain_data(NULL, mc_span(NULL, 0), ERROR)
+
 mc_result_u32 mc_chain_get_alloc_size(uint8_t capacity);
 mc_result_ptr mc_chain_init(mc_span alloc_buffer, uint8_t capacity);
 mc_error      mc_chain_clear(mc_chain* this);

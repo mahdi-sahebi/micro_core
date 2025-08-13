@@ -86,14 +86,14 @@ static mc_chain_data protocol_recv(mc_chain_data data)
 {
   mc_comm* this = data.arg;
   if (data.buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
-    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_INVALID_ARGUMENT);
+    return mc_chain_data_error(MC_ERR_INVALID_ARGUMENT);
   }
 
   mc_pkt* const pkt = (mc_pkt*)data.buffer.data;
 
   if (PKT_ACK == pkt->type) {
     if (!wndpool_contains(this->snd, pkt->id)) {// TODO(MN): Test that not read to send ack to let sender sends more
-      return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_RUNTIME);
+      return mc_chain_data_error(MC_ERR_RUNTIME);
     }
     // TODO(MN): Not per ack
     const mc_time_t sent_time_us = wndpool_get(this->snd, pkt->id)->sent_time_us;
@@ -105,7 +105,7 @@ static mc_chain_data protocol_recv(mc_chain_data data)
 
   if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
     send_ack(data.arg, pkt->id);
-    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_RUNTIME);// done
+    return mc_chain_data_error(MC_ERR_RUNTIME);// done
   }
 
   if (wndpool_update(this->rcv, mc_span(pkt->data, pkt->size), pkt->id)) {
@@ -123,27 +123,27 @@ static mc_chain_data frame_send(mc_chain_data data)
     return mc_chain_data(data.arg, mc_span(&window->packet, this->snd->window_size), MC_SUCCESS);
   }
 
-  return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_OUT_OF_RANGE);// TODO(MN): Memroy not enough, 
+  return mc_chain_data_error(MC_ERR_OUT_OF_RANGE);// TODO(MN): Memroy not enough, 
 }
 
 static mc_chain_data frame_recv(mc_chain_data data)
 {
   mc_comm* this = data.arg;
   // TODO(MN): Check all inputs
-  // if (buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
-  //   return mc_span(NULL, 0);
-  // }
+  if (data.buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
+    return mc_chain_data_error(MC_ERR_INCOMPLETE);
+  }
 
   mc_pkt* const pkt = (mc_pkt*)data.buffer.data;
   if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
-    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_RUNTIME); // [INVALID] Bad header/type received. 
+    return mc_chain_data_error(MC_ERR_RUNTIME); // [INVALID] Bad header/type received. 
   }
 
   const uint16_t received_crc = pkt->crc;
   pkt->crc = 0x0000;
   const uint16_t crc = mc_alg_crc16_ccitt(mc_span(pkt, this->rcv->window_size)).value;
   if (received_crc != crc) {
-    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_RUNTIME);// TODO(MN): Data corruption
+    return mc_chain_data_error(MC_ERR_RUNTIME);// TODO(MN): Data corruption
   }
 
   return data;
