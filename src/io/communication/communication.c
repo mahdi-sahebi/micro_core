@@ -100,7 +100,7 @@ static mc_chain_data protocol_recv(mc_chain_data data)
     const uint64_t elapsed_time = mc_now_u() - sent_time_us;
     this->send_delay_us = elapsed_time * 0.8;
     wndpool_ack(this->snd, pkt->id);
-    return mc_chain_data(data.arg, mc_span_null(), MC_ERR_RUNTIME);// done
+    return mc_chain_data(data.arg, mc_span(NULL, 0), MC_ERR_RUNTIME);// done
   }
 
   if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
@@ -228,12 +228,25 @@ mc_result_ptr mc_comm_init(
   this->snd->capacity    = windows_capacity;
   this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
 
-  this->recv_chain       = (mc_chain*)(char*)(this->snd->windows) + windows_size;
-  this->send_chain       = (mc_chain*)(char*)(this->recv_chain) + mc_chain_get_alloc_size(3).value;
+  const mc_span recv_chain_buffer = mc_span(this->snd->windows, windows_size);
+  const mc_span send_chain_buffer = mc_span(mc_span_end(recv_chain_buffer), mc_chain_get_alloc_size(3).value);
 
   wndpool_clear(this->rcv);
   wndpool_clear(this->snd);
   
+  mc_result_ptr result = {0};
+  result = mc_chain_init(recv_chain_buffer, 3);
+  if (MC_SUCCESS != result.result) {
+    return mc_result_ptr(NULL, result.result);
+  }
+  this->recv_chain = (mc_chain*)result.data;
+
+  result = mc_chain_init(send_chain_buffer, 3);
+  if (MC_SUCCESS != result.result) {
+    return mc_result_ptr(NULL, result.result);
+  }
+  this->send_chain = (mc_chain*)result.data;
+
   mc_chain_push(this->recv_chain, io_recv);
   mc_chain_push(this->recv_chain, frame_recv);
   mc_chain_push(this->recv_chain, protocol_recv);
