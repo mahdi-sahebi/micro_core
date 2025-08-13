@@ -52,7 +52,7 @@ mc_error mc_chain_push(mc_chain* this, mc_chain_cb node)
 mc_chain_data mc_chain_run(mc_chain* this, mc_chain_data data)
 {
   if (NULL == this) {
-    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_INVALID_ARGUMENT);
+    return mc_chain_data(NULL, mc_span_null(), MC_ERR_INVALID_ARGUMENT);
   }
 
   for (uint8_t index = 0; (index < this->count) && (MC_SUCCESS != data.error); index++) {

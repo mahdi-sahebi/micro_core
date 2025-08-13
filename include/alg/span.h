@@ -21,6 +21,7 @@ typedef struct
 #define mc_span_get_size(BUFFER)                ((BUFFER).capacity * (BUFFER).data_size)
 #define mc_span_bgn(BUFFER)                     ((BUFFER).data)
 #define mc_span_end(BUFFER)                     ((BUFFER).data + mc_span_get_size(BUFFER))
+#define mc_span_null()                          mc_span(NULL, 0)
 // TODO(NM): At
 
 
