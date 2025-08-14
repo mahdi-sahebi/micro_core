@@ -1,5 +1,5 @@
+// TODO(MN): Don't store the nodes. get array of APIs and args in run()
 #include <pattern/mc_chain.h>
-
 
 
 mc_result_u32 mc_chain_get_alloc_size(uint8_t capacity)
@@ -34,9 +34,9 @@ mc_error mc_chain_clear(mc_chain* this)
   return MC_SUCCESS;
 }
 
-mc_error mc_chain_push(mc_chain* this, mc_chain_cb node)
+mc_error mc_chain_push(mc_chain* this, mc_chain_cb api, void* arg)
 {
-  if ((NULL == this) || (NULL == node)) {
+  if ((NULL == this) || (NULL == api)) {
     return MC_ERR_INVALID_ARGUMENT;
   }
 
@@ -44,19 +44,26 @@ mc_error mc_chain_push(mc_chain* this, mc_chain_cb node)
     return MC_ERR_OUT_OF_RANGE;
   }
 
-  this->nodes[this->count] = node;
+  this->nodes[this->count] = 
+  (mc_chain_node){
+    .api = api,
+    .arg = arg
+  };
   this->count++;
   return MC_SUCCESS;
 }
 
-mc_chain_data mc_chain_run(mc_chain* this, mc_chain_data data)
+mc_chain_data mc_chain_run(mc_chain* this, mc_span buffer)
 {
   if (NULL == this) {
-    return mc_chain_data(NULL, mc_span(NULL, 0), MC_ERR_INVALID_ARGUMENT);
+    return mc_chain_data_error(MC_ERR_INVALID_ARGUMENT);
   }
 
-  for (uint8_t index = 0; (index < this->count) && (MC_SUCCESS != data.error); index++) {
-    data = this->nodes[index](data);
+  mc_chain_data data = mc_chain_data(buffer, MC_SUCCESS);
+
+  for (uint8_t index = 0; (index < this->count) && (MC_SUCCESS == data.error); index++) {
+    mc_chain_node* const node = &this->nodes[index];
+    data = node->api(data.buffer, node->arg);
   }
 
   return data;
