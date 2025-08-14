@@ -31,6 +31,9 @@
 #include "pattern/mc_chain.h"
 #include "io/communication/window.h"
 #include "io/communication/window_pool.h"
+#include "mc_transceiver.h"
+#include "mc_frame.h"
+#include "mc_protocol.h"
 #include "io/communication/communication.h"
 
 
@@ -149,19 +152,6 @@ static mc_chain_data frame_recv(mc_chain_data data)
   return data;
 }
 
-static mc_chain_data io_send(mc_chain_data data)
-{
-  mc_comm* this = data.arg;
-  const uint32_t sent_size = this->io.send(data.buffer.data, data.buffer.capacity);
-  return mc_chain_data(data.arg, mc_span(data.buffer.data, sent_size), MC_SUCCESS);
-}
-
-static mc_chain_data io_recv(mc_chain_data data)
-{
-  mc_comm* this = data.arg;
-  const uint32_t read_size = this->io.recv(data.buffer.data, data.buffer.capacity);
-  return mc_chain_data(this, mc_span(data.buffer.data, read_size), MC_SUCCESS);
-}
 
 static void send_unacked(mc_comm* const this) 
 {
@@ -247,13 +237,13 @@ mc_result_ptr mc_comm_init(
   }
   this->send_chain = (mc_chain*)result.data;
 
-  mc_chain_push(this->recv_chain, io_recv);
+  mc_chain_push(this->recv_chain, mc_transceiver_recv);
   mc_chain_push(this->recv_chain, frame_recv);
   mc_chain_push(this->recv_chain, protocol_recv);
   
   mc_chain_push(this->send_chain, protocol_send);
   mc_chain_push(this->send_chain, frame_send);
-  mc_chain_push(this->send_chain, io_send);
+  mc_chain_push(this->send_chain, mc_transceiver_send);
 
   return mc_result_ptr(this, MC_SUCCESS);
 }
@@ -311,9 +301,9 @@ mc_result_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, u
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(mc_pkt));
     mc_span buffer = mc_span((char*)src_data + sent_size, seg_size);
 
-    mc_chain_data data = mc_chain_run(this->send_chain, mc_chain_data(this, buffer, MC_SUCCESS));
+    mc_chain_data data = mc_chain_run(this->send_chain, mc_chain_data(&this->io, buffer, MC_SUCCESS));
     
-    if ((MC_SUCCESS == data.error) || (NULL != data.buffer.data)){
+    if (MC_SUCCESS == data.error){
       size -= seg_size;
       sent_size += seg_size;
     }
