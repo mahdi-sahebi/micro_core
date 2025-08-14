@@ -5,7 +5,6 @@
 #include <alg/span.h>
 
 
-
 typedef struct
 {
   mc_span  buffer;
@@ -29,7 +28,7 @@ typedef struct  // TODO(MN): Remove pads. Align array
 
 
 // TODO(MN): Don't get error
-#define mc_chain_data(BUFFER, ERROR)\ 
+#define mc_chain_data(BUFFER, ERROR)\
   (mc_chain_data){.buffer = (BUFFER), .error = (ERROR)}
 
 #define mc_chain_data_error(ERROR)\
