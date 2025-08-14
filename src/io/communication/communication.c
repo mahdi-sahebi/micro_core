@@ -103,7 +103,7 @@ static mc_chain_data protocol_recv(mc_chain_data data)
     const uint64_t elapsed_time = mc_now_u() - sent_time_us;
     this->send_delay_us = elapsed_time * 0.8;
     wndpool_ack(this->snd, pkt->id);
-    return mc_chain_data(data.arg, mc_span(NULL, 0), MC_ERR_RUNTIME);// done
+    return mc_chain_data_error(MC_ERR_RUNTIME);// done
   }
 
   if (pkt->id < this->rcv->bgn_id) {// TODO(MN): Handle overflow
@@ -123,7 +123,7 @@ static mc_chain_data frame_send(mc_chain_data data)
   mc_comm* this = data.arg;
   const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
   if (wndpool_push(this->snd, data.buffer)) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
-    return mc_chain_data(data.arg, mc_span(&window->packet, this->snd->window_size), MC_SUCCESS);
+    return mc_chain_data(mc_span(&window->packet, this->snd->window_size), MC_SUCCESS);
   }
 
   return mc_chain_data_error(MC_ERR_OUT_OF_RANGE);// TODO(MN): Memroy not enough, 
@@ -237,13 +237,13 @@ mc_result_ptr mc_comm_init(
   }
   this->send_chain = (mc_chain*)result.data;
 
-  mc_chain_push(this->recv_chain, mc_transceiver_recv);
+  mc_chain_push(this->recv_chain, mc_transceiver_recv, &this->io);
   mc_chain_push(this->recv_chain, frame_recv);
   mc_chain_push(this->recv_chain, protocol_recv);
   
   mc_chain_push(this->send_chain, protocol_send);
   mc_chain_push(this->send_chain, frame_send);
-  mc_chain_push(this->send_chain, mc_transceiver_send);
+  mc_chain_push(this->send_chain, mc_transceiver_send, &this->io);
 
   return mc_result_ptr(this, MC_SUCCESS);
 }
