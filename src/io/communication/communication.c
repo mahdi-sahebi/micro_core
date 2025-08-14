@@ -118,40 +118,6 @@ static mc_chain_data protocol_recv(mc_chain_data data)
   return data;
 }
 
-static mc_chain_data frame_send(mc_chain_data data)
-{
-  mc_comm* this = data.arg;
-  const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
-  if (wndpool_push(this->snd, data.buffer)) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
-    return mc_chain_data(mc_span(&window->packet, this->snd->window_size), MC_SUCCESS);
-  }
-
-  return mc_chain_data_error(MC_ERR_OUT_OF_RANGE);// TODO(MN): Memroy not enough, 
-}
-
-static mc_chain_data frame_recv(mc_chain_data data)
-{
-  mc_comm* this = data.arg;
-  // TODO(MN): Check all inputs
-  if (data.buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
-    return mc_chain_data_error(MC_ERR_INCOMPLETE);
-  }
-
-  mc_pkt* const pkt = (mc_pkt*)data.buffer.data;
-  if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
-    return mc_chain_data_error(MC_ERR_RUNTIME); // [INVALID] Bad header/type received. 
-  }
-
-  const uint16_t received_crc = pkt->crc;
-  pkt->crc = 0x0000;
-  const uint16_t crc = mc_alg_crc16_ccitt(mc_span(pkt, this->rcv->window_size)).value;
-  if (received_crc != crc) {
-    return mc_chain_data_error(MC_ERR_RUNTIME);// TODO(MN): Data corruption
-  }
-
-  return data;
-}
-
 
 static void send_unacked(mc_comm* const this) 
 {
@@ -238,11 +204,11 @@ mc_result_ptr mc_comm_init(
   this->send_chain = (mc_chain*)result.data;
 
   mc_chain_push(this->recv_chain, mc_transceiver_recv, &this->io);
-  mc_chain_push(this->recv_chain, frame_recv);
+  mc_chain_push(this->recv_chain, mc_frame_recv, this->rcv);
   mc_chain_push(this->recv_chain, protocol_recv);
   
   mc_chain_push(this->send_chain, protocol_send);
-  mc_chain_push(this->send_chain, frame_send);
+  mc_chain_push(this->send_chain, mc_frame_send, this->snd);
   mc_chain_push(this->send_chain, mc_transceiver_send, &this->io);
 
   return mc_result_ptr(this, MC_SUCCESS);
