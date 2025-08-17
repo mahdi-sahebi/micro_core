@@ -6,7 +6,7 @@ mc_chain_data mc_frame_send(mc_span buffer, void* arg)
 {
   wndpool_t* const send_pool = (wndpool_t*)arg;
 
-  const wnd_t* const window = wndpool_get(send_pool, send_pool->end_id);// TODO(MN): Bad design
+   const wnd_t* const window = wndpool_get(send_pool, send_pool->end_id);// TODO(MN): Bad design
   if (wndpool_push(send_pool, buffer)) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
     return mc_chain_data(mc_span(&window->packet, send_pool->window_size), MC_SUCCESS);
   }
@@ -21,6 +21,7 @@ mc_chain_data mc_frame_recv(mc_span buffer, void* arg)
   // TODO(MN): Check all inputs
   if (buffer.capacity != recv_pool->window_size) {// TODO(MN): Full check
     return mc_chain_data_error(MC_ERR_INCOMPLETE);
+    // return mc_chain_data(buffer, MC_SUCCESS);
   }
 
   mc_pkt* const pkt = (mc_pkt*)buffer.data;
