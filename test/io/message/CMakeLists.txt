@@ -24,5 +24,5 @@ target_include_directories(${TEST} PRIVATE ${INCLUDE_DIRS})
 
 
 # Linking
-target_link_libraries(${TEST} PRIVATE mcore_msg)
+target_link_libraries(${TEST} PRIVATE mcore_time mcore_msg)
 
