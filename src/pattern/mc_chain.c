@@ -8,7 +8,7 @@ mc_result_u32 mc_chain_get_alloc_size(uint8_t capacity)
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  const uint32_t size = sizeof(mc_chain) + (sizeof(mc_chain_cb) * capacity);
+  const uint32_t size = sizeof(mc_chain) + (sizeof(mc_chain_node) * capacity);
   return mc_result_u32(size, MC_SUCCESS);
 }
 

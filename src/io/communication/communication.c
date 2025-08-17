@@ -93,8 +93,9 @@ mc_result_ptr mc_comm_init(
   this->snd->capacity    = windows_capacity;
   this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
 
-  const mc_span recv_chain_buffer = mc_span(this->snd->windows, windows_size);
-  const mc_span send_chain_buffer = mc_span(mc_span_end(recv_chain_buffer), mc_chain_get_alloc_size(3).value);
+  const uint32_t chain_size = mc_chain_get_alloc_size(3).value;
+  const mc_span recv_chain_buffer = mc_span(this->snd->windows + windows_size, chain_size);
+  const mc_span send_chain_buffer = mc_span(mc_span_end(recv_chain_buffer), chain_size);
 
   wndpool_clear(this->rcv);
   wndpool_clear(this->snd);
@@ -129,10 +130,10 @@ mc_error mc_comm_update(mc_comm* this)
     return MC_ERR_INVALID_ARGUMENT;
   }
 
-  const mc_chain_data data = mc_chain_run(this->recv_chain, mc_span(this->rcv->temp_window, this->rcv->window_size));
+   const mc_chain_data data = mc_chain_run(this->recv_chain, mc_span(this->rcv->temp_window, this->rcv->window_size));
   // send_unacked(this);
 
-  return data.error;
+  return MC_SUCCESS;
 }
 
 mc_result_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeout_us)
