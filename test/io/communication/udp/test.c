@@ -31,6 +31,7 @@ PASSED - 3991008(us)
 [IO] Completed{Recv: 356648, Send: 373906} - Failed{Recv: 339129(95.1%), Send: 355027(95.0%)}
 PASSED - 90864987(us)
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -57,30 +58,31 @@ static int invalid_creation()
 {
   char memory[1024];
   mc_span alloc_buffer = mc_span(memory, sizeof(memory));
+  mc_result_ptr result_ptr = {0};
   mc_comm* message = NULL;
   
-  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  message = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api));
-  if (NULL != message) {
+  result_ptr = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api));
+  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
@@ -92,14 +94,9 @@ static int valid_creation()
   char memory[1024];
   mc_span alloc_buffer = mc_span(memory, sizeof(memory));
   const uint32_t capcity = 3;
-  mc_comm* message = NULL;
   
-  message = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api));
-  if (NULL == message) {
-    return MC_ERR_BAD_ALLOC;
-  }
-
-  if (NULL == message) {
+  const mc_result_ptr result = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api));
+  if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
@@ -160,21 +157,6 @@ static int singly_high_lossy()
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
-}
-
-static int small_write()
-{
-  return MC_ERR_RUNTIME;
-}
-
-static int large_write()
-{
-  return MC_ERR_RUNTIME;
-}
-
-static int hulf_duplex()
-{
-  return MC_ERR_RUNTIME;
 }
 
 static int full_duplex()
@@ -258,45 +240,6 @@ int main()
   }
 
   /*
-  printf("[small_write]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = small_write();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
-    }
-  }
-
-
-  printf("[large_write]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = large_write();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
-    }
-  }
-
-
-  printf("[hulf_duplex]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = hulf_duplex();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
-    }
-  }
-
-
   printf("[full_duplex]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
