@@ -14,7 +14,7 @@ set(TEST ${PROJECT_NAME}_test_alg)
 # Subdirectory
 
 
-# Binray
+# Binary
 add_executable(${TEST} ${HEADERS} ${SOURCES})
 
 

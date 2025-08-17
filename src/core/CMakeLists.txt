@@ -6,7 +6,7 @@ add_subdirectory(time)
 set(LIB ${PROJECT_NAME}_core)
 
 
-# Binray
+# Binary
 add_library(${LIB} INTERFACE)
 
 

@@ -4,14 +4,20 @@ if (NOT BUILD_TEST_IO)
   exit()
 endif()
 
+
 # Variables
+
 
 # Subdirectory
 add_subdirectory(communication)
+add_subdirectory(message)
 
-# Binray
+
+# Binary
+
 
 # Include
+
 
 # Linking
 

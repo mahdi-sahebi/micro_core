@@ -12,13 +12,17 @@ endif()
 
 # Variables
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
+<<<<<<< HEAD
 set(TEST test_comm_udp)
+=======
+set(TEST test_udp_comm)
+>>>>>>> a01d4ec ([ADD]: Test resources are added)
 
 
 # Subdirectory
 
 
-# Binray
+# Binary
 add_executable(${TEST} 
   udp/test_common.c   udp/test_common.h
   udp/test_sender.c   udp/test_sender.h
