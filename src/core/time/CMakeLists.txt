@@ -11,7 +11,7 @@ if (UNIX)
 endif()
 
 
-# Binray
+# Binary
 add_library(${LIB} STATIC ${SOURCES} ${HEADERS})
 
 

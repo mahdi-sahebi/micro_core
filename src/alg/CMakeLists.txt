@@ -13,7 +13,7 @@ set(SOURCES
 set(LIB ${PROJECT_NAME}_alg)
 
 
-# Binray
+# Binary
 add_library(${LIB} STATIC ${SOURCES} ${HEADERS})
 
 

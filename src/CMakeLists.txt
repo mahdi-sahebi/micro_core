@@ -13,7 +13,7 @@ set(HEADERS ${INCLUDE_DIRS}/io.h)# TODO(MN): Must be general and not io
 set(SOURCES )
 
 
-# Binray
+# Binary
 add_library(${LIB} INTERFACE ${SOURCES} ${HEADERS})
 
 
