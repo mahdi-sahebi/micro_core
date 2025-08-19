@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "alg/span.h"
+#include "alg/mc_buffer.h"
 #include "dsa/sarray.h"
 
 
@@ -32,14 +32,14 @@ mc_result_u32 mc_sarray_required_size(uint32_t data_size, uint32_t capacity)// T
   return mc_result_u32(sizeof(struct _mc_sarray) + (capacity * data_size), MC_SUCCESS);
 }
 
-mc_result_ptr mc_sarray_init(mc_span buffer, uint32_t data_size, uint32_t capacity, mc_cmp_fn comparator)
+mc_result_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_cmp_fn comparator)
 {
-  if (mc_span_is_null(buffer) || (0 == capacity) || (0 == data_size) || (NULL == comparator)) {
+  if (mc_buffer_is_null(buffer) || (0 == capacity) || (0 == data_size) || (NULL == comparator)) {
     return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
   const uint32_t required_size = sizeof(struct _mc_sarray) + (capacity * data_size);
-  if (mc_span_get_size(buffer) < required_size) {
+  if (mc_buffer_get_size(buffer) < required_size) {
     return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
 

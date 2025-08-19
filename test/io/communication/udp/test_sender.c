@@ -13,7 +13,7 @@
 static int ClientSocket = -1;
 static mc_comm* message = NULL;
 static uint32_t* Result = NULL;
-static mc_span AllocBuffer = {0};
+static mc_buffer AllocBuffer = {0};
 
 
 static void client_create()
@@ -68,7 +68,7 @@ static bool init(void* data)
     return false;
   }
   const uint32_t alloc_size = result_u32.value;
-  AllocBuffer = mc_span(malloc(alloc_size), alloc_size);
+  AllocBuffer = mc_buffer(malloc(alloc_size), alloc_size);
 
   const mc_result_ptr result = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(client_read, client_write));
   if (MC_SUCCESS != result.error) {

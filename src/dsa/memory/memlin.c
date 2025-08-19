@@ -221,7 +221,7 @@ static void* get_data(const void* const this, uint32_t index)
     return getter[get_word_size(this)](this, index);
 }
 
-mc_result_ptr mc_memlin_create(const mc_span buffer)
+mc_result_ptr mc_memlin_create(const mc_buffer buffer)
 {
     if ((NULL == buffer.data) || (0 == buffer.capacity)) {// TODO(MN): API
         return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);

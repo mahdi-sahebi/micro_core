@@ -8,14 +8,14 @@ not fragmentable
 */
 
 #include <core/error.h>
-#include <alg/span.h>
+#include <alg/mc_buffer.h>
 
 
 typedef struct _mc_memlin mc_memlin;
 
 
 // TODO(MN): warn_unused_result attribute for alloc memory APIs
-mc_result_ptr  mc_memlin_create(const mc_span buffer);
+mc_result_ptr  mc_memlin_create(const mc_buffer buffer);
 mc_error      mc_memlin_destroy(mc_memlin** this);
 
 mc_result_ptr  mc_memlin_alloc(mc_memlin* this, uint32_t size);
