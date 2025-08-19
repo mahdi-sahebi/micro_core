@@ -75,6 +75,14 @@ static int invalid_creation()
 
 static int valid_creation()
 {
+  mc_result_ptr result;
+  char memory[2048];
+
+  mc_msg_cfg config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 37);
+  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  if ((MC_SUCCESS != result.error) || (NULL == result.data)) {
+    return MC_ERR_BAD_ALLOC;
+  }
   
   return MC_ERR_RUNTIME;
 }
