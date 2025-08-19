@@ -21,28 +21,28 @@ typedef enum __attribute__((packed))
 typedef struct
 {
   uint32_t value;
-  mc_error result;
+  mc_error error;
 }mc_result_u32;
 
-#define mc_result_u32(VALUE, ERROR)     (mc_result_u32){.value = (VALUE), .result = (ERROR)}
+#define mc_result_u32(VALUE, ERROR)     (mc_result_u32){.value = (VALUE), .error = (ERROR)}
 
 
 typedef struct
 {
   bool     value;
-  mc_error result;
+  mc_error error;
 }mc_result_bool;
 
-#define mc_result_bool(BOOL, ERROR)     (mc_result_bool){.value = (BOOL), .result = (ERROR)}
+#define mc_result_bool(BOOL, ERROR)     (mc_result_bool){.value = (BOOL), .error = (ERROR)}
 
 
 typedef struct
 {
   void*    data;// TODO(MN): Use uintptr_t and have only one mc_result struct?
-  mc_error result;// TODO(MN): Rename to error for all types
+  mc_error error;
 }mc_result_ptr;
 
-#define mc_result_ptr(DATA, ERROR)      (mc_result_ptr){.data = (DATA), .result = (ERROR)}
+#define mc_result_ptr(DATA, ERROR)      (mc_result_ptr){.data = (DATA), .error = (ERROR)}
 
 
 #endif /* MC_ERROR_H_ */
