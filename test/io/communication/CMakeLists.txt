@@ -1,9 +1,4 @@
 # Options
-option(BUILD_TEST_IO_MESSAGE "To compile tests" ON)
-if (NOT BUILD_TEST_IO_MESSAGE)
-  exit()
-endif()
-
 if (NOT UNIX)
   message(ERROR "Platform not supported. Only linux is suppported")
   exit()
@@ -12,11 +7,7 @@ endif()
 
 # Variables
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
-<<<<<<< HEAD
 set(TEST test_comm_udp)
-=======
-set(TEST test_udp_comm)
->>>>>>> a01d4ec ([ADD]: Test resources are added)
 
 
 # Subdirectory
@@ -36,5 +27,5 @@ target_include_directories(${TEST} PRIVATE ${INCLUDE_DIRS})
 
 
 # Linking
-target_link_libraries(${TEST} PRIVATE mcore_comm)
+target_link_libraries(${TEST} PRIVATE ${PROJECT_NAME}_comm)
 
