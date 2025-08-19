@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <pthread.h>
 #include "core/error.h"
 #include "core/version.h"
 #include "core/time.h"
@@ -94,7 +95,29 @@ static int authentication()
 
 static int singly_high_lossy()
 {
-  return MC_ERR_RUNTIME;
+  pthread_t task_snd;
+  pthread_t task_rcv;
+  uint32_t snd_error = MC_SUCCESS;
+  uint32_t rcv_error = MC_SUCCESS;
+
+  if (pthread_create(&task_snd, NULL, snd_start, &snd_error) || 
+      pthread_create(&task_rcv, NULL, rcv_start, &rcv_error)) {
+    MC_ERR_BAD_ALLOC;
+  }
+
+  if (pthread_join(task_snd, NULL) || 
+      pthread_join(task_rcv, NULL)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  if (snd_error) {
+    return snd_error;
+  }
+  if (rcv_error) {
+    return rcv_error;
+  }
+  
+  return MC_SUCCESS;
 }
 
 int main()
