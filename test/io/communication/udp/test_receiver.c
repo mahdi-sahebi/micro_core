@@ -90,16 +90,16 @@ static bool init(void* data)
   const uint32_t window_size = 37;
   const uint32_t window_capacity = 3;
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, window_capacity);
-  if (MC_SUCCESS != result_u32.result) {
-    *Result = result_u32.result;
+  if (MC_SUCCESS != result_u32.error) {
+    *Result = result_u32.error;
     return false;
   }
   const uint32_t alloc_size = result_u32.value;
   AllocBuffer = mc_span(malloc(alloc_size), alloc_size);// TODO(MN): Don't alloc dynamically
 
   const mc_result_ptr result = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(server_read, server_write));
-  if (MC_SUCCESS != result.result) {
-    *Result = result.result;
+  if (MC_SUCCESS != result.error) {
+    *Result = result.error;
     return false;
   }
 
@@ -140,7 +140,7 @@ static bool recv_data(void* data, uint32_t size)
 {
   const mc_result_u32 result = mc_comm_recv(message, data, size, TEST_TIMEOUT_US);
 
-  if((MC_SUCCESS != result.result) || (result.value != size)) {
+  if((MC_SUCCESS != result.error) || (result.value != size)) {
     *Result = MC_ERR_TIMEOUT;
     return false;
   }
@@ -242,7 +242,7 @@ void* rcv_start(void* data)
 
   if (MC_SUCCESS == *Result) {
     const mc_result_bool result = mc_comm_flush(message, TEST_TIMEOUT_US);
-    if ((MC_SUCCESS != result.result) || !result.value) {
+    if ((MC_SUCCESS != result.error) || !result.value) {
       printf("mc_comm_flush failed\n");
       *Result = MC_ERR_TIMEOUT;
     }

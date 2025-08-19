@@ -62,27 +62,27 @@ static int invalid_creation()
   mc_comm* message = NULL;
   
   result_ptr = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api));
-  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
+  if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
   result_ptr = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL));
-  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
+  if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
   result_ptr = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api));
-  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
+  if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
   result_ptr = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api));
-  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
+  if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
   result_ptr = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api));
-  if ((MC_SUCCESS == result_ptr.result) || (NULL != result_ptr.data)) {
+  if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
@@ -96,7 +96,7 @@ static int valid_creation()
   const uint32_t capcity = 3;
   
   const mc_result_ptr result = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api));
-  if ((MC_SUCCESS != result.result) || (NULL == result.data)) {
+  if ((MC_SUCCESS != result.error) || (NULL == result.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
