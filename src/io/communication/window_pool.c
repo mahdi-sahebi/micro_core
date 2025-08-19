@@ -72,7 +72,7 @@ static void remove_acked(wndpool_t* this)
   }
 }
 
-bool wndpool_update(wndpool_t* this, mc_span data, mc_pkt_id id)
+bool wndpool_update(wndpool_t* this, mc_buffer data, mc_pkt_id id)
 {
   if (!wndpool_contains(this, id)) {
     return false;
@@ -82,7 +82,7 @@ bool wndpool_update(wndpool_t* this, mc_span data, mc_pkt_id id)
   wnd_t* const window = get_window(this, index);
   wnd_write(window, data, id);
   window->packet.crc = 0x0000;
-  window->packet.crc = mc_alg_crc16_ccitt(mc_span(&window->packet, this->window_size)).value;
+  window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
   window->is_acked = true;
 
   return true;
@@ -127,7 +127,7 @@ uint8_t wndpool_get_capacity(const wndpool_t* this)
   return this->capacity;
 }
 
-bool wndpool_push(wndpool_t* this, mc_span data)
+bool wndpool_push(wndpool_t* this, mc_buffer data)
 {
   if (wndpool_get_count(this) == this->capacity) {
     return false; // TODO(MN): Error
@@ -136,7 +136,7 @@ bool wndpool_push(wndpool_t* this, mc_span data)
   wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
   wnd_write(window, data, this->end_id);
   window->packet.crc = 0x0000;
-  window->packet.crc = mc_alg_crc16_ccitt(mc_span(&window->packet, this->window_size)).value;
+  window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
   this->end_id++;
 
   return true;
