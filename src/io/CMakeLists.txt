@@ -1,32 +1,15 @@
 # Subdirectory
+add_subdirectory(communication)
 add_subdirectory(message)
 
+
 # Variables
-set(LIB mcore_io)
-set(PUBLIC_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
-set(PRIVATE_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/communication)
-set(HEADERS 
-    ${PUBLIC_INCLUDE_DIRS}/io/communication/window.h
-    ${PUBLIC_INCLUDE_DIRS}/io/communication/window_pool.h
-    ${PUBLIC_INCLUDE_DIRS}/io/communication/communication.h
-)
-set(SOURCES 
-    communication/window_pool.c
-    communication/communication.c
-)
 
 
 # Binray
-add_library(${LIB} STATIC ${SOURCES} ${HEADERS})
 
 
 # Include
-target_include_directories(${LIB} 
-    PUBLIC ${PUBLIC_INCLUDE_DIRS}
-)
 
 
 # Linking
-target_link_libraries(${LIB}
-    PRIVATE ${PROJECT_NAME}_time ${PROJECT_NAME}_alg
-)
