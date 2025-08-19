@@ -2,35 +2,84 @@
 #include "core/error.h"
 #include "core/version.h"
 #include "core/time.h"
+#include "alg/mc_buffer.h"
 #include "io/message/mc_message.h"
 
 
+static uint32_t io_recv(void* const data, uint32_t size)
+{
+  return 0;
+}
+
+static uint32_t io_send(const void* const data, uint32_t size)
+{
+  return 0;
+}
+
 static int invalid_creation()
 {
+  mc_result_ptr result;
+  char memory[100];
+  mc_msg_cfg config = {0};
+  
+  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  // TODO(MN): Must larger than window_size
+  config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 0);
+  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  config = mc_msg_cfg(mc_io(io_recv, io_send), 0, 37);
+  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  config = mc_msg_cfg(mc_io(NULL, io_send), 100, 37);
+  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  config = mc_msg_cfg(mc_io(io_recv, NULL), 100, 37);
+  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 37);
+  result = mc_msg_init(mc_buffer(memory, 0), config);
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 37);
+  result = mc_msg_init(mc_buffer(NULL, sizeof(memory)), config);
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  config = mc_msg_cfg(mc_io(io_recv, io_send), 2048, 37);
+  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  if (MC_ERR_BAD_ALLOC != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
   return MC_ERR_RUNTIME;
 }
 
 static int valid_creation()
 {
+  
   return MC_ERR_RUNTIME;
 }
 
 static int authentication()
-{
-  return MC_ERR_RUNTIME;
-}
-
-static int singly_direction()// TODO(MN): Signal, bool, string, variadic, larger than pool,
-{
-  return MC_ERR_RUNTIME;
-}
-
-static int singly_repetitive()
-{
-  return MC_ERR_RUNTIME;
-}
-
-static int singly_low_lossy()
 {
   return MC_ERR_RUNTIME;
 }
