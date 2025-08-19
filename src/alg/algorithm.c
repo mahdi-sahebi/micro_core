@@ -2,14 +2,14 @@
 #include "alg/algorithm.h"
 
 
-mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, mc_cmp_fn comparator)
+mc_result_ptr mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_cmp_fn comparator)
 {
   if ((NULL == data) || (NULL == comparator) || 
-      mc_span_is_null(buffer) || (0 == buffer.data_size)) {
+      mc_buffer_is_null(buffer) || (0 == buffer.data_size)) {
     return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
-  if (mc_span_is_empty(buffer)) {
+  if (mc_buffer_is_empty(buffer)) {
     return mc_result_ptr(NULL, MC_SUCCESS);
   }
 
@@ -31,9 +31,9 @@ mc_result_ptr mc_alg_lower_bound(mc_span buffer, const void* data, mc_cmp_fn com
   return mc_result_ptr(element, MC_SUCCESS);
 }
 
-mc_result_u32 mc_alg_crc16_ccitt(mc_span buffer)
+mc_result_u32 mc_alg_crc16_ccitt(mc_buffer buffer)
 {
-  if (mc_span_is_null(buffer)) {
+  if (mc_buffer_is_null(buffer)) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 

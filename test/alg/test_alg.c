@@ -17,7 +17,7 @@ static int8_t comparator(const void* data_1, const void* data_2)
 static int search_invalid_arguments()
 {
   int16_t key = 5;
-  const mc_span buffer = mc_span_raw(NULL, 0, sizeof(key));
+  const mc_buffer buffer = mc_buffer_raw(NULL, 0, sizeof(key));
   mc_result_ptr result = {0};
 
   result = mc_alg_lower_bound(buffer, &key, comparator);
@@ -38,7 +38,7 @@ static int search_invalid_arguments()
   }
 
 
-  result = mc_alg_lower_bound(mc_span_raw(NULL, 0, 0), &key, comparator);
+  result = mc_alg_lower_bound(mc_buffer_raw(NULL, 0, 0), &key, comparator);
   if (NULL != result.data) {
     return MC_ERR_RUNTIME;
   }
@@ -63,7 +63,7 @@ static int search_empty_buffer()
 {
   int16_t array[] = {};
   int16_t key = 5;
-  const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
+  const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
   if ((MC_SUCCESS != result.error) || (NULL != result.data)) {
@@ -76,7 +76,7 @@ static int search_present()
 {
   int16_t array[] = {1, 3, 5, 7, 9};
   int16_t key = 5;
-  const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
+  const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
   if ((MC_SUCCESS != result.error) || (result.data != &array[2])) {
@@ -89,7 +89,7 @@ static int search_not_present()
 {
   int16_t array[] = {1, 3, 5, 7, 9};
   int16_t key = 6;
-  const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
+  const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
   if ((MC_SUCCESS != result.error) || (result.data != &array[3])) {
@@ -102,7 +102,7 @@ static int search_greater_than_all()
 {
   int16_t array[] = {1, 3, 5, 7, 9};
   int16_t key = 10;
-  const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
+  const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
   if ((MC_SUCCESS != result.error) || (result.data != &array[5])) {
@@ -115,7 +115,7 @@ static int search_less_than_all()
 {
   int16_t array[] = {1, 3, 5, 7, 9};
   int16_t key = 0;
-  const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
+  const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
   if ((MC_SUCCESS != result.error) || (result.data != &array[0])) {
@@ -128,7 +128,7 @@ static int search_first_duplicate()
 {
   int16_t array[] = {1, 2, 2, 2, 3};
   int16_t key = 2;
-  mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
+  mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
   if ((MC_SUCCESS != result.error) || (result.data != &array[1])) {
@@ -141,7 +141,7 @@ static int search_element_end()
 {
   int16_t array[] = {1, 2, 2, 2, 3};
   int16_t key = 3;
-  mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
+  mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
   if ((MC_SUCCESS != result.error) || (result.data != &array[4])) {
@@ -154,7 +154,7 @@ static int search_not_prepresent_with_duplicate()
 {
   int16_t array[] = {2, 2, 2, 2, 2};
   int16_t key = 2;
-  mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
+  mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
   if ((MC_SUCCESS != result.error) || (result.data != &array[0])) {
@@ -170,7 +170,7 @@ static int search_large_array()
     array[index] = index;
   }
   int16_t key = 9999;
-  const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
+  const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
   if ((MC_SUCCESS != result.error) || (result.data != &array[9999])) {

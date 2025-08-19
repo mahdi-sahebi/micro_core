@@ -57,7 +57,7 @@ static uint32_t write_api(const void* const data, uint32_t size)
 static int invalid_creation()
 {
   char memory[1024];
-  mc_span alloc_buffer = mc_span(memory, sizeof(memory));
+  mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
   mc_result_ptr result_ptr = {0};
   mc_comm* message = NULL;
   
@@ -92,7 +92,7 @@ static int invalid_creation()
 static int valid_creation()
 {
   char memory[1024];
-  mc_span alloc_buffer = mc_span(memory, sizeof(memory));
+  mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
   const uint32_t capcity = 3;
   
   const mc_result_ptr result = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api));
