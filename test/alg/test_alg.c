@@ -24,7 +24,7 @@ static int search_invalid_arguments()
   if (NULL != result.data) {
     return MC_ERR_RUNTIME;
   }
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_RUNTIME;
   }
 
@@ -33,7 +33,7 @@ static int search_invalid_arguments()
   if (NULL != result.data) {
     return MC_ERR_RUNTIME;
   }
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_RUNTIME;
   }
 
@@ -42,7 +42,7 @@ static int search_invalid_arguments()
   if (NULL != result.data) {
     return MC_ERR_RUNTIME;
   }
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_RUNTIME;
   }
 
@@ -51,7 +51,7 @@ static int search_invalid_arguments()
   if (NULL != result.data) {
     return MC_ERR_RUNTIME;
   }
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_RUNTIME;
   }
 
@@ -66,8 +66,8 @@ static int search_empty_buffer()
   const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.result) || (NULL != result.data)) {
-    return result.result;
+  if ((MC_SUCCESS != result.error) || (NULL != result.data)) {
+    return result.error;
   }
   return MC_SUCCESS;
 }
@@ -79,8 +79,8 @@ static int search_present()
   const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.result) || (result.data != &array[2])) {
-    return result.result;
+  if ((MC_SUCCESS != result.error) || (result.data != &array[2])) {
+    return result.error;
   }
   return MC_SUCCESS;
 }
@@ -92,8 +92,8 @@ static int search_not_present()
   const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.result) || (result.data != &array[3])) {
-    return result.result;
+  if ((MC_SUCCESS != result.error) || (result.data != &array[3])) {
+    return result.error;
   }
   return MC_SUCCESS;
 }
@@ -105,8 +105,8 @@ static int search_greater_than_all()
   const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.result) || (result.data != &array[5])) {
-    return result.result;
+  if ((MC_SUCCESS != result.error) || (result.data != &array[5])) {
+    return result.error;
   }
   return MC_SUCCESS;
 }
@@ -118,8 +118,8 @@ static int search_less_than_all()
   const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
   
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.result) || (result.data != &array[0])) {
-    return result.result;
+  if ((MC_SUCCESS != result.error) || (result.data != &array[0])) {
+    return result.error;
   }
   return MC_SUCCESS;
 }
@@ -131,8 +131,8 @@ static int search_first_duplicate()
   mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
   
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.result) || (result.data != &array[1])) {
-    return result.result;
+  if ((MC_SUCCESS != result.error) || (result.data != &array[1])) {
+    return result.error;
   }
   return MC_SUCCESS;
 }
@@ -144,8 +144,8 @@ static int search_element_end()
   mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.result) || (result.data != &array[4])) {
-    return result.result;
+  if ((MC_SUCCESS != result.error) || (result.data != &array[4])) {
+    return result.error;
   }
   return MC_SUCCESS;
 }
@@ -157,8 +157,8 @@ static int search_not_prepresent_with_duplicate()
   mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.result) || (result.data != &array[0])) {
-    return result.result;
+  if ((MC_SUCCESS != result.error) || (result.data != &array[0])) {
+    return result.error;
   }
   return MC_SUCCESS;
 }
@@ -173,8 +173,8 @@ static int search_large_array()
   const mc_span buffer = mc_span_raw(array, sizeof(array), sizeof(key));
 
   const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.result) || (result.data != &array[9999])) {
-    return result.result;
+  if ((MC_SUCCESS != result.error) || (result.data != &array[9999])) {
+    return result.error;
   }
   return MC_SUCCESS;
 }

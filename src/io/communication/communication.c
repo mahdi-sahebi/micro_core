@@ -230,7 +230,7 @@ mc_result_ptr mc_comm_init(
   }
 
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, windows_capacity);
-  if ((MC_SUCCESS != result_u32.result) || (mc_span_get_size(alloc_buffer) < result_u32.value)) {
+  if ((MC_SUCCESS != result_u32.error) || (mc_span_get_size(alloc_buffer) < result_u32.value)) {
     return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
   

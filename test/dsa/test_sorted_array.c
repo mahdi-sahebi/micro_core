@@ -35,33 +35,33 @@ static int test_required_size()
   mc_result_u32 result = {0};
   
   result = mc_sarray_required_size(sizeof(char), 7);
-  if ((MC_SUCCESS != result.result) || 
+  if ((MC_SUCCESS != result.error) || 
       (result.value < (7 * sizeof(char))) ||
       (result.value > (7 * sizeof(char) + 30))) {
     return MC_ERR_RUNTIME;
   }
 
   result = mc_sarray_required_size(sizeof(int16_t), 10);
-  if ((MC_SUCCESS != result.result) || 
+  if ((MC_SUCCESS != result.error) || 
       (result.value < (10 * sizeof(int16_t))) ||
       (result.value > (10 * sizeof(int16_t) + 30))) {
     return MC_ERR_RUNTIME;
   }
   
   result = mc_sarray_required_size(sizeof(double), 500);
-  if ((MC_SUCCESS != result.result) || 
+  if ((MC_SUCCESS != result.error) || 
       (result.value < (500 * sizeof(double))) ||
       (result.value > (500 * sizeof(double) + 30))) {
     return MC_ERR_RUNTIME;
   }
   
   result = mc_sarray_required_size(sizeof(int16_t), 0);
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_INVALID_ARGUMENT;
   }
   
   result = mc_sarray_required_size(0, 5);
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_INVALID_ARGUMENT;
   }
   
@@ -75,33 +75,33 @@ static int test_invalid_creation()
   mc_result_ptr result = {0};
   
   result = mc_sarray_init(mc_span(NULL, 10), sizeof(int16_t), 5, comparator_i16);
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_RUNTIME;
   }
   
   result = mc_sarray_init(mc_span(memory, 0), sizeof(int16_t), 5, comparator_i16);
-  if (MC_ERR_BAD_ALLOC != result.result) {
-    return result.result;
+  if (MC_ERR_BAD_ALLOC != result.error) {
+    return result.error;
   }
   
   result = mc_sarray_init(buffer, 0, 5, comparator_i16);
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
-    return result.result;
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return result.error;
   }
   
   result = mc_sarray_init(buffer, sizeof(int16_t), 0, comparator_i16);
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
-    return result.result;
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return result.error;
   }
   
   result = mc_sarray_init(buffer, sizeof(int16_t), 5, NULL);
-  if (MC_ERR_INVALID_ARGUMENT != result.result) {
-    return result.result;
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return result.error;
   }
   
   result = mc_sarray_init(mc_span(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16);
-  if ((MC_ERR_BAD_ALLOC != result.result) || (NULL != result.data)) {
-    return result.result;
+  if ((MC_ERR_BAD_ALLOC != result.error) || (NULL != result.data)) {
+    return result.error;
   }
 
   return MC_SUCCESS;
@@ -117,22 +117,22 @@ static int test_correct_creation_i16()
     10, 
     comparator_i16);
   mc_sarray array = result_ptr.data;
-  if ((MC_SUCCESS != result_ptr.result) || (NULL == array)) {
+  if ((MC_SUCCESS != result_ptr.error) || (NULL == array)) {
     return MC_ERR_BAD_ALLOC;
   }
 
   mc_result_u32 result_u32 = mc_sarray_get_capacity(array);
-  if ((MC_SUCCESS != result_u32.result) || (10 != result_u32.value)) {
+  if ((MC_SUCCESS != result_u32.error) || (10 != result_u32.value)) {
     return MC_ERR_BAD_ALLOC;
   }
   
   result_u32 = mc_sarray_get_count(array);
-  if ((MC_SUCCESS != result_u32.result) || (0 != result_u32.value)) {
+  if ((MC_SUCCESS != result_u32.error) || (0 != result_u32.value)) {
     return MC_ERR_BAD_ALLOC;
   }
 
   result_u32 = mc_sarray_get_data_size(array);
-  if ((MC_SUCCESS != result_u32.result) || (sizeof(int16_t) != result_u32.value)) {
+  if ((MC_SUCCESS != result_u32.error) || (sizeof(int16_t) != result_u32.value)) {
     return MC_ERR_BAD_ALLOC;
   }
   
@@ -151,22 +151,22 @@ static int test_correct_creation_str()
     1, 
     comparator_str);
   mc_sarray array = result_ptr.data;
-  if ((MC_SUCCESS != result_ptr.result) || (NULL == array)) {
+  if ((MC_SUCCESS != result_ptr.error) || (NULL == array)) {
     return MC_ERR_BAD_ALLOC;
   }
 
   result_u32 = mc_sarray_get_capacity(array);
-  if ((MC_SUCCESS != result_u32.result) || (1 != result_u32.value)) {
+  if ((MC_SUCCESS != result_u32.error) || (1 != result_u32.value)) {
     return MC_ERR_BAD_ALLOC;
   }
   
   result_u32 = mc_sarray_get_count(array);
-  if ((MC_SUCCESS != result_u32.result) || (0 != result_u32.value)) {
+  if ((MC_SUCCESS != result_u32.error) || (0 != result_u32.value)) {
     return MC_ERR_BAD_ALLOC;
   }
 
   result_u32 = mc_sarray_get_data_size(array);
-  if ((MC_SUCCESS != result_u32.result) || (10 != result_u32.value)) {
+  if ((MC_SUCCESS != result_u32.error) || (10 != result_u32.value)) {
     return MC_ERR_BAD_ALLOC;
   }
   
@@ -186,12 +186,12 @@ static int test_empty()
     comparator_i16).data;
   
   result_bool = mc_sarray_is_empty(array);
-  if ((MC_SUCCESS != result_bool.result) || (false == result_bool.value)) {
+  if ((MC_SUCCESS != result_bool.error) || (false == result_bool.value)) {
     return MC_ERR_RUNTIME;
   }
   
   mc_result_u32 result_u32 = mc_sarray_get_count(array);
-  if ((MC_SUCCESS != result_u32.result) || (0 != result_u32.value)) {
+  if ((MC_SUCCESS != result_u32.error) || (0 != result_u32.value)) {
     return MC_ERR_RUNTIME;
   }
   
@@ -202,12 +202,12 @@ static int test_empty()
   }
   
   result_bool = mc_sarray_is_empty(array);
-  if ((MC_SUCCESS != result_bool.result) || (true == result_bool.value)) {
+  if ((MC_SUCCESS != result_bool.error) || (true == result_bool.value)) {
     return MC_ERR_RUNTIME;
   }
   
   result_u32 = mc_sarray_get_count(array);
-  if ((MC_SUCCESS != result_u32.result) || (1 != result_u32.value)) {
+  if ((MC_SUCCESS != result_u32.error) || (1 != result_u32.value)) {
     return MC_ERR_RUNTIME;
   }
   
@@ -234,7 +234,7 @@ static int test_insert_on_empty()
   }
     
   mc_result_ptr result_ptr = mc_sarray_get(array, 0);
-  if ((MC_SUCCESS != result_ptr.result) || (NULL == result_ptr.data)) {
+  if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
     return MC_ERR_OUT_OF_RANGE;
   }
   if (value != *(int16_t*)result_ptr.data) {
@@ -268,8 +268,8 @@ static int test_insert_ascending()
     }
 
     mc_result_ptr result_ptr = mc_sarray_find(array, &x);
-    if ((MC_SUCCESS != result_ptr.result) || (NULL == result_ptr.data)) {
-      return result_ptr.result;
+    if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
+      return result_ptr.error;
     }
     if (x != *(int16_t*)result_ptr.data) {
       return MC_ERR_OUT_OF_RANGE;
@@ -302,8 +302,8 @@ static int test_insert_descending()
     }
 
     mc_result_ptr result_ptr = mc_sarray_find(array, &x);
-    if ((MC_SUCCESS != result_ptr.result) || (NULL == result_ptr.data)) {
-      return result_ptr.result;
+    if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
+      return result_ptr.error;
     }
     if (x != *(int16_t*)result_ptr.data) {
       return MC_ERR_OUT_OF_RANGE;
@@ -336,8 +336,8 @@ static int test_insert_not_ordered()
     }
 
     mc_result_ptr result_ptr = mc_sarray_find(array, &nums[index]);
-    if ((MC_SUCCESS != result_ptr.result) || (NULL == result_ptr.data)) {
-      return result_ptr.result;
+    if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
+      return result_ptr.error;
     }
     if (nums[index] != *(int16_t*)result_ptr.data) {
       return MC_ERR_OUT_OF_RANGE;
@@ -384,8 +384,8 @@ static int test_get()
 
   for (uint8_t index = 0; index < capacity; index++) {
     const mc_result_ptr result = mc_sarray_get(array, index);
-    if ((MC_SUCCESS != result.result) || (NULL == result.data)){
-      return result.result;
+    if ((MC_SUCCESS != result.error) || (NULL == result.data)){
+      return result.error;
     }
     
     const int16_t x = (index * 100) + 600;
@@ -423,7 +423,7 @@ static int test_find()
     
     int16_t x = (index * 100) + 600;
     const mc_result_ptr result_ptr = mc_sarray_find(array, &x);
-    if ((MC_SUCCESS != result_ptr.result) || (NULL != result_ptr.data)) {
+    if ((MC_SUCCESS != result_ptr.error) || (NULL != result_ptr.data)) {
       return MC_ERR_OUT_OF_RANGE;
     }
   }
