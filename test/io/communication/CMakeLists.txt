@@ -12,7 +12,7 @@ endif()
 
 # Variables
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
-set(TEST test_message_udp)
+set(TEST test_comm_udp)
 
 
 # Subdirectory
@@ -32,5 +32,5 @@ target_include_directories(${TEST} PRIVATE ${INCLUDE_DIRS})
 
 
 # Linking
-target_link_libraries(${TEST} PRIVATE mcore_io)
+target_link_libraries(${TEST} PRIVATE mcore_comm)
 
