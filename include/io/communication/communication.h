@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "core/error.h"
-#include "alg/span.h"
+#include "alg/mc_buffer.h"
 #include "io/io.h"
 
 typedef struct _mc_comm_t mc_comm;

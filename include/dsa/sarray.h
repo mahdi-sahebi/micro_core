@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "core/error.h"
-#include "alg/span.h"
+#include "alg/mc_buffer.h"
 #include "alg/algorithm.h"
 
 

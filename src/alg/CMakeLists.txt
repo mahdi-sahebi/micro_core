@@ -4,7 +4,7 @@
 # Variables
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS 
-  ${INCLUDE_DIRS}/alg/span.h
+  ${INCLUDE_DIRS}/alg/mc_buffer.h
   ${INCLUDE_DIRS}/alg/algorithm.h
 )
 set(SOURCES 

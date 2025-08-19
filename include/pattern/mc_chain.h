@@ -2,7 +2,7 @@
 #define MC_PATTERN_CHAIN_H_
 
 #include <core/error.h>
-#include <alg/span.h>
+#include <alg/mc_buffer.h>
 
 
 typedef struct
