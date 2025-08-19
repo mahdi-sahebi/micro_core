@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "core/error.h"
-#include "alg/span.h"
+#include "alg/mc_buffer.h"
 
 
 typedef enum __attribute__((packed))

@@ -3,7 +3,7 @@
 #include <string.h>
 #include "core/error.h"
 #include "core/version.h"
-#include "alg/span.h"
+#include "alg/mc_buffer.h"
 
 
 static int span_create()

@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "alg/span.h"
+#include "alg/mc_buffer.h"
 #include "dsa/sarray.h"
 
 
