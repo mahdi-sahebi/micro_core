@@ -1,5 +1,5 @@
 # Subdirectory
-
+add_subdirectory(message)
 
 # Variables
 set(LIB mcore_io)
