@@ -3,12 +3,12 @@
 #include <string.h>
 #include "core/error.h"
 #include "core/version.h"
-#include "alg/span.h"
+#include "alg/mc_buffer.h"
 
 
 static int span_create()
 {
-    mc_span span = mc_span_null();
+    mc_buffer span = mc_buffer_null();
 
     if (&span == NULL) {
         return MC_ERR_BAD_ALLOC;
@@ -19,9 +19,9 @@ static int span_create()
 
 static int span_is_null()
 {
-    mc_span span = mc_span_null();
+    mc_buffer span = mc_buffer_null();
 
-    if (!mc_span_is_null(span)) {
+    if (!mc_buffer_is_null(span)) {
         return MC_ERR_BAD_ALLOC;
     }
 
@@ -30,9 +30,9 @@ static int span_is_null()
 
 static int span_is_empty()
 {
-    mc_span span = mc_span_null();
+    mc_buffer span = mc_buffer_null();
 
-    if (!mc_span_is_empty(span)) {
+    if (!mc_buffer_is_empty(span)) {
         return MC_ERR_BAD_ALLOC;
     }
 
@@ -48,13 +48,13 @@ static int span_fill_1()
     char buffer[SIZE];
     memset(buffer, CLEAR_MASK, sizeof(buffer));
 
-    mc_span span = mc_span(buffer + START_INDEX, 20);
+    mc_buffer span = mc_buffer(buffer + START_INDEX, 20);
 
-    if (mc_span_is_null(span)) {
+    if (mc_buffer_is_null(span)) {
         return MC_ERR_BAD_ALLOC;
     }
 
-    if (mc_span_is_empty(span)) {
+    if (mc_buffer_is_empty(span)) {
         return MC_ERR_BAD_ALLOC;
     }
 
@@ -95,13 +95,13 @@ static int span_fill_2()
     char buffer[SIZE];
     memset(buffer, CLEAR_MASK, sizeof(buffer));
 
-    mc_span span = mc_span(buffer + START_INDEX, 7);
+    mc_buffer span = mc_buffer(buffer + START_INDEX, 7);
 
-    if (mc_span_is_null(span)) {
+    if (mc_buffer_is_null(span)) {
         return MC_ERR_BAD_ALLOC;
     }
 
-    if (mc_span_is_empty(span)) {
+    if (mc_buffer_is_empty(span)) {
         return MC_ERR_BAD_ALLOC;
     }
 

@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#include "alg/span.h"
+#include "alg/mc_buffer.h"
 #include "core/time.h"
 
 

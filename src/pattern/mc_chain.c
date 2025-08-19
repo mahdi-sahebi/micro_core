@@ -12,9 +12,9 @@ mc_result_u32 mc_chain_get_alloc_size(uint8_t capacity)
   return mc_result_u32(size, MC_SUCCESS);
 }
 
-mc_result_ptr mc_chain_init(mc_span alloc_buffer, uint8_t capacity)
+mc_result_ptr mc_chain_init(mc_buffer alloc_buffer, uint8_t capacity)
 {
-  if (mc_span_is_null(alloc_buffer) || mc_span_is_empty(alloc_buffer) || (0 == capacity)) {
+  if (mc_buffer_is_null(alloc_buffer) || mc_buffer_is_empty(alloc_buffer) || (0 == capacity)) {
     return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
@@ -53,7 +53,7 @@ mc_error mc_chain_push(mc_chain* this, mc_chain_cb api, void* arg)
   return MC_SUCCESS;
 }
 
-mc_chain_data mc_chain_run(mc_chain* this, mc_span buffer)
+mc_chain_data mc_chain_run(mc_chain* this, mc_buffer buffer)
 {
   if (NULL == this) {
     return mc_chain_data_error(MC_ERR_INVALID_ARGUMENT);

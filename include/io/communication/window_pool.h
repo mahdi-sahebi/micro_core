@@ -23,7 +23,7 @@ typedef struct __attribute__((packed))
   mc_pkt     temp_window[0];
 }wndpool_t;
 
-typedef void (*wndpool_on_done_fn)(mc_span data, mc_pkt_id id);
+typedef void (*wndpool_on_done_fn)(mc_buffer data, mc_pkt_id id);
 
 
 // TODO(MN): init API
@@ -33,9 +33,9 @@ bool     wndpool_contains(wndpool_t* this, mc_pkt_id id);
 wnd_t*   wndpool_get(wndpool_t* this, mc_pkt_id id);
 uint8_t  wndpool_get_count(const wndpool_t* this);
 uint8_t  wndpool_get_capacity(const wndpool_t* this);
-bool     wndpool_push(wndpool_t* this, mc_span data);
+bool     wndpool_push(wndpool_t* this, mc_buffer data);
 uint32_t wndpool_pop(wndpool_t* this, void* data, uint32_t size);
-bool     wndpool_update(wndpool_t* this, mc_span data, mc_pkt_id id);
+bool     wndpool_update(wndpool_t* this, mc_buffer data, mc_pkt_id id);
 bool     wndpool_ack(wndpool_t* this, mc_pkt_id id);
 
 
