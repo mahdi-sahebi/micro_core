@@ -111,15 +111,13 @@ static void on_string_received(mc_msg_id id, mc_buffer buffer)
 
 static void on_large_received(mc_msg_id id, mc_buffer buffer)
 {
-  if ((101 != id) || mc_buffer_is_null(buffer) || (30 * sizeof(uint32_t) != mc_buffer_get_size(buffer))) {
+  if ((101 != id) || mc_buffer_is_null(buffer) || (147 * sizeof(uint32_t) != mc_buffer_get_size(buffer))) {
     Error = MC_ERR_RUNTIME;
     return;
   }
 
   const uint32_t* const data = (const uint32_t* const)buffer.data;
-  const uint32_t random_count = (TestCounter * 1664525) + 1013904223;
-  const uint32_t count = (random_count % 28) + 2;
-  const uint32_t size = count * sizeof(*data);
+  const uint32_t count = mc_buffer_get_size(buffer) / sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
     const uint32_t expected = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (TestCounter + 1) + index;
