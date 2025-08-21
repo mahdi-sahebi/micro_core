@@ -412,7 +412,7 @@ static int test_find()
 
   uint8_t index = capacity;
   while (index--) {
-    const mc_error result = mc_sarray_remove(array, index);
+    const mc_error result = mc_sarray_remove_at(array, index);
     if (MC_SUCCESS != result){
       return result;
     }
@@ -510,17 +510,17 @@ static int test_remove_when_empty()
     10, 
     comparator_i16).data;
   
-  mc_error result = mc_sarray_remove(array, 0);
+  mc_error result = mc_sarray_remove_at(array, 0);
   if (MC_ERR_OUT_OF_RANGE != result) {
     return result;
   }
 
-  result = mc_sarray_remove(array, 17);
+  result = mc_sarray_remove_at(array, 17);
   if (MC_ERR_OUT_OF_RANGE != result) {
     return result;
   }
 
-  result = mc_sarray_remove(array, -1);
+  result = mc_sarray_remove_at(array, -1);
   if (MC_ERR_OUT_OF_RANGE != result) {
     return result;
   }
@@ -545,7 +545,7 @@ static int test_remove_descending()
 
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
-    mc_error result = mc_sarray_remove(array, index);
+    mc_error result = mc_sarray_remove_at(array, index);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;
     }
@@ -567,7 +567,7 @@ static int test_remove_ascending()
 
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
-    mc_error result = mc_sarray_remove(array, 0);
+    mc_error result = mc_sarray_remove_at(array, 0);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;
     }
@@ -590,7 +590,7 @@ static int test_remove_middle()
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
     const uint32_t mid = (mc_sarray_get_count(array).value - 1) / 2;
-    mc_error result = mc_sarray_remove(array, mid);
+    mc_error result = mc_sarray_remove_at(array, mid);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;
     }
