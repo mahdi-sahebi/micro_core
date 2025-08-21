@@ -112,31 +112,54 @@ mc_error mc_msg_update(mc_msg* this)
     }
     this->recv_pool_stored += result.value; 
   }
+  // TODO(MN): Stay here if at least on pkt_hdr is received or 1 byte. 
   
+  mc_error error = MC_SUCCESS;
+
   if (this->recv_pool_stored >= sizeof(pkt_hdr)) {
+    // TODO(MN): Stay here to receive all message
     const pkt_hdr* pkt = (pkt_hdr*)this->recv_pool.data;
-    size = pkt->size - (this->recv_pool_stored - sizeof(pkt_hdr));
 
-    mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
-    if (!mc_result_is_ok(result) && (MC_ERR_TIMEOUT != result.error)) {
-      return MC_SUCCESS;
-    }
-    this->recv_pool_stored += result.value; 
+    while (this->recv_pool_stored != (pkt->size + sizeof(pkt_hdr))) { 
 
-    if (this->recv_pool_stored == (pkt->size + sizeof(pkt_hdr))) {
-      this->recv_pool_stored = 0;
-      // Find the id and it's callback
 
-      id_node temp_node = {.id = pkt->msg_id};
-      const mc_result_ptr itr = mc_sarray_find(this->ids, &temp_node);
-      if (mc_result_is_ok(itr)) {
-        const id_node* const node = itr.data;
-        node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+      if (mc_buffer_get_size(this->recv_pool) < (pkt->size + sizeof(pkt_hdr))) {
+        #define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y))
+        const uint32_t seg_size = MIN(mc_buffer_get_size(this->recv_pool), pkt->size + sizeof(pkt_hdr));
+        this->recv_pool_stored += mc_comm_recv(this->comm, this->recv_pool.data, seg_size, 1000000).value;
+        error = MC_ERR_OUT_OF_RANGE; // TODO(MN): Not enough memory
+        continue;
+        #undef MIN
       }
+
+
+      size = pkt->size - (this->recv_pool_stored - sizeof(pkt_hdr));
+  // TODO(MN): store the pkt_hdr on a temp object and not on the recv_pool. retrn the not_enough_memory error
+      mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
+      if (!mc_result_is_ok(result) && (MC_ERR_TIMEOUT != result.error)) {
+        return MC_SUCCESS;
+      }
+      this->recv_pool_stored += result.value; 
+
+      if (this->recv_pool_stored == (pkt->size + sizeof(pkt_hdr))) {
+        this->recv_pool_stored = 0;// TODO(MN): Move before break
+        // Find the id and it's callback
+
+        id_node temp_node = {.id = pkt->msg_id};
+        const mc_result_ptr itr = mc_sarray_find(this->ids, &temp_node);
+        if (mc_result_is_ok(itr)) {
+          const id_node* const node = itr.data;
+          node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+        }
+        
+        break;
+      }
+
     }
+
   }
 
-  return MC_SUCCESS;
+  return error;
 }
 
 mc_error mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_receive_cb on_receive)
