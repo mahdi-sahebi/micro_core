@@ -5,6 +5,8 @@
 #include "core/time.h"
 #include "alg/mc_buffer.h"
 #include "io/message/mc_message.h"
+#include "test_sender.h"
+#include "test_receiver.h"
 
 
 static uint32_t io_recv(void* const data, uint32_t size)
@@ -88,10 +90,10 @@ static int valid_creation()
   return MC_ERR_RUNTIME;
 }
 
-static int authentication()
-{
-  return MC_ERR_RUNTIME;
-}
+// static int authentication()
+// {
+//   return MC_ERR_RUNTIME;
+// }
 
 static int singly_high_lossy()
 {
@@ -147,10 +149,10 @@ int main()
     }
   }
 
-  printf("[invalid_creation]\n");
+  printf("[singly_high_lossy]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    result = invalid_creation();
+    result = singly_high_lossy();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {

@@ -9,9 +9,9 @@ endif()
 set(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(TEST test_message_udp)
 set(HEADERS 
-  test_common.h
-  test_receiver.h
-  test_sender.h
+  udp/test_common.h
+  udp/test_receiver.h
+  udp/test_sender.h
 )
 set(SOURCES
   udp/test_common.c 
