@@ -86,7 +86,7 @@ mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
   this->ids = NULL;
   if (0 != config.ids_capacity) {
     const mc_buffer ids_buffer = mc_buffer(
-      mc_buffer_end(comm_buffer), mc_sarray_required_size(sizeof(id_node), config.ids_capacity).value);
+      mc_buffer_end(this->recv_pool), mc_sarray_required_size(sizeof(id_node), config.ids_capacity).value);
     this->ids = mc_sarray_init(ids_buffer, sizeof(id_node), config.ids_capacity, id_compare).data;
   }
 
