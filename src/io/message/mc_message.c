@@ -95,7 +95,7 @@ mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 
 mc_error mc_msg_update(mc_msg* this)
 {
-  return MC_SUCCESS;
+  return mc_comm_update(this->comm);
 }
 
 mc_error mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_receive_cb on_receive)
