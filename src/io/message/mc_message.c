@@ -10,11 +10,11 @@
  
 typedef struct __attribute__((packed))
 {
-  uint32_t  rest_size;
+  // uint32_t  rest_size;
   uint16_t  size;
   mc_msg_id msg_id;
   char      data[0];
-}msg_pkt;
+}pkt_hdr;
 
 typedef struct __attribute__((packed))
 {
@@ -123,12 +123,38 @@ mc_error mc_msg_unsubscribe(mc_msg* this, mc_msg_id id)
   }
 
   id_node node = {.id = id};
-  return mc_sarray_remove(this->ids, &node);// TODO(MN): Remove by data, not index
+  return mc_sarray_remove(this->ids, &node);
 }
 
 mc_result_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeout_us)
-{
-  return mc_result_u32(0, MC_SUCCESS);
+{// TODO(MN): Handle total timeout_us
+  if ((NULL == this) || (mc_buffer_is_null(buffer))) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+
+  const uint32_t size = mc_buffer_get_size(buffer);
+
+  pkt_hdr pkt = {
+    .size = size,
+    .msg_id = id
+  };
+  
+  mc_result_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
+  if (!mc_result_is_ok(result)) {
+    return result;
+  }
+
+  result = mc_comm_send(this->comm, buffer.data, size, timeout_us);
+  if (!mc_result_is_ok(result)) {
+    return result;
+  }
+
+  const mc_result_bool result_bool = mc_comm_flush(this->comm, timeout_us);
+  if (!mc_result_is_ok(result_bool)) {
+    return mc_result_u32(0, result.error);
+  }
+
+  return mc_result_u32(size, MC_SUCCESS);
 }
 
 mc_result_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us)
