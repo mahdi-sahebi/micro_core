@@ -95,7 +95,48 @@ mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 
 mc_error mc_msg_update(mc_msg* this)
 {
-  return mc_comm_update(this->comm);
+  if (NULL == this) {
+    return MC_ERR_INVALID_ARGUMENT;
+  }
+
+  mc_comm_update(this->comm);
+// handle if pkt->size or even pkt_hdr are larger than recv_pool_size
+  // Receive packet header.
+  uint32_t size = 0;
+  if (this->recv_pool_stored < sizeof(pkt_hdr)) {
+    size = sizeof(pkt_hdr) - this->recv_pool_stored;
+
+    mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
+    if (!mc_result_is_ok(result)) {
+      return MC_SUCCESS;
+    }
+    this->recv_pool_stored += result.value; 
+  }
+  
+  if (this->recv_pool_stored >= sizeof(pkt_hdr)) {
+    const pkt_hdr* pkt = (pkt_hdr*)this->recv_pool.data;
+    size = pkt->size - (this->recv_pool_stored - sizeof(pkt_hdr));
+
+    mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
+    if (!mc_result_is_ok(result) && (MC_ERR_TIMEOUT != result.error)) {
+      return MC_SUCCESS;
+    }
+    this->recv_pool_stored += result.value; 
+
+    if (this->recv_pool_stored == (pkt->size + sizeof(pkt_hdr))) {
+      this->recv_pool_stored = 0;
+      // Find the id and it's callback
+
+      id_node temp_node = {.id = pkt->msg_id};
+      const mc_result_ptr itr = mc_sarray_find(this->ids, &temp_node);
+      if (mc_result_is_ok(itr)) {
+        const id_node* const node = itr.data;
+        node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+      }
+    }
+  }
+
+  return MC_SUCCESS;
 }
 
 mc_error mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_receive_cb on_receive)
