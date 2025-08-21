@@ -8,8 +8,8 @@
 typedef struct
 {
   char*    data;
-  uint32_t capacity;
-  uint32_t data_size;
+  uint32_t capacity;// TODO(MN): rename to size
+  uint32_t data_size;// TODO(MN): Remove or extend to array
 }mc_buffer;
 
 
