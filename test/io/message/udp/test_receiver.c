@@ -82,70 +82,6 @@ static void print_progress(float progress)
   fflush(stdout);
 }
 
-static bool init(void* data)
-{
-  /* TODO(MN): invalid header, incomplete packet, miss packet pointer, use zero copy
-   */
-  Result = (uint32_t*)data;
-  *Result = MC_SUCCESS;
-
-  server_create();
-  flush_receive_buffer();
-
-
-  mc_msg_cfg config =
-  {
-    .io = mc_io(server_read, server_write),
-    .window_size = 37,
-    .recv_pool_size = 120
-  };
-  const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
-  if (MC_SUCCESS != result_u32.error) {
-    *Result = result_u32.error;
-    return false;
-  }
-  const uint32_t alloc_size = result_u32.value;
-  AllocBuffer = mc_buffer(malloc(alloc_size), alloc_size);// TODO(MN): Don't alloc dynamically
-
-  const mc_result_ptr result = mc_msg_init(AllocBuffer, config);
-  if (MC_SUCCESS != result.error) {
-    *Result = result.error;
-    return false;
-  }
-
-  message = result.data;
-  return true;
-}
-
-static void print_log()
-{
-  const uint32_t recv_cnt = cfg_get_recv_counter();
-  const uint32_t send_cnt = cfg_get_send_counter();
-  const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
-  const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
-  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
-      recv_cnt, send_cnt, 
-      recv_failed_cnt, 100 * (recv_failed_cnt / (float)recv_cnt),
-      send_failed_cnt, 100 * (send_failed_cnt / (float)send_cnt)
-    );
-}
-
-static void deinit()
-{
-  server_close();
-  print_log();
-  free(AllocBuffer.data);
-}
-
-static void wait_for_sender()
-{
-  const mc_time_t end_time = mc_now_u() + 500000 * ((cfg_get_loss_rate() / 10) + 1);
-
-  while (mc_now_u() < end_time) {
-    mc_msg_update(message);
-  }
-}
-
 static void on_string_received(mc_msg_id, mc_buffer)
 {
   char data[9] = {0};
@@ -199,6 +135,87 @@ static void on_tiny_received(mc_msg_id, mc_buffer)
   }
 
   IsTinyReceived = true;
+}
+
+static bool init(void* data)
+{
+  /* TODO(MN): invalid header, incomplete packet, miss packet pointer, use zero copy
+   */
+  Result = (uint32_t*)data;
+  *Result = MC_SUCCESS;
+
+  server_create();
+  flush_receive_buffer();
+
+
+  mc_msg_cfg config =
+  {
+    .io = mc_io(server_read, server_write),
+    .window_size = 37,
+    .recv_pool_size = 120,
+    .ids_capacity = 10
+  };
+  const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
+  if (MC_SUCCESS != result_u32.error) {
+    *Result = result_u32.error;
+    return false;
+  }
+  const uint32_t alloc_size = result_u32.value;
+  AllocBuffer = mc_buffer(malloc(alloc_size), alloc_size);// TODO(MN): Don't alloc dynamically
+
+  const mc_result_ptr result = mc_msg_init(AllocBuffer, config);
+  if (MC_SUCCESS != result.error) {
+    *Result = result.error;
+    return false;
+  }
+  message = result.data;
+
+  mc_error error = mc_msg_subscribe(message, 77, on_string_received);
+  if (MC_SUCCESS != error) {
+    *Result = error;
+    return false;
+  }
+  error = mc_msg_subscribe(message, 101, on_large_received);
+  if (MC_SUCCESS != error) {
+    *Result = error;
+    return false;
+  }
+  error = mc_msg_subscribe(message, 19, on_tiny_received);
+  if (MC_SUCCESS != error) {
+    *Result = error;
+    return false;
+  }// TODO(MN): Send a message id withouth subscribe
+
+  return true;
+}
+
+static void print_log()
+{
+  const uint32_t recv_cnt = cfg_get_recv_counter();
+  const uint32_t send_cnt = cfg_get_send_counter();
+  const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
+  const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
+  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
+      recv_cnt, send_cnt, 
+      recv_failed_cnt, 100 * (recv_failed_cnt / (float)recv_cnt),
+      send_failed_cnt, 100 * (send_failed_cnt / (float)send_cnt)
+    );
+}
+
+static void deinit()
+{
+  server_close();
+  print_log();
+  free(AllocBuffer.data);
+}
+
+static void wait_for_sender()
+{
+  const mc_time_t end_time = mc_now_u() + 500000 * ((cfg_get_loss_rate() / 10) + 1);
+
+  while (mc_now_u() < end_time) {
+    mc_msg_update(message);
+  }
 }
 
 static bool all_messages_received()
