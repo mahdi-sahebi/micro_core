@@ -12,7 +12,7 @@ add_subdirectory(dsa)
 add_subdirectory(io)
 
 
-# Binray
+# Binary
 add_executable(test_dsa_span test_dsa_span.c) # TODO(MN): Make each test in it's dir
 add_executable(test_dsa_memlin test_dsa_memlin.c)
 

@@ -280,16 +280,16 @@ mc_result_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_
   const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
 
   while (size) {
+    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
+      error = MC_ERR_TIMEOUT;
+      break;
+    }
+
     mc_comm_update(this);
     const uint32_t seg_size = wndpool_pop(this->rcv, (char*)dst_data + read_size, size);
 
     size -= seg_size;
     read_size += seg_size;
-
-    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
-      error = MC_ERR_TIMEOUT;
-      break;
-    }
   }
 
   return mc_result_u32(read_size, error);
