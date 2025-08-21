@@ -111,16 +111,14 @@ static bool send_string(uint32_t seed)
 
 static bool send_variadic_size(uint32_t seed)
 {
-  uint32_t data[30] = {0};
-  const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint32_t count = (random_count % 28) + 2;
-  const uint32_t size = count * sizeof(*data);
+  uint32_t data[147] = {0};
+  const uint32_t count = sizeof(data) / sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
     data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
   }
 
-  return send_data(mc_buffer(data, size), 101);
+  return send_data(mc_buffer(data, sizeof(data)), 101);
 }
 
 static bool send_tiny_size(uint32_t seed)
