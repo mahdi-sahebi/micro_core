@@ -14,7 +14,7 @@ set(SOURCES
 )
 
 
-# Binray
+# Binary
 add_library(${LIB} STATIC ${SOURCES} ${HEADERS})
 
 

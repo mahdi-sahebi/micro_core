@@ -105,7 +105,7 @@ static int valid_creation()
 
 static int singly_direction()
 {
-  cfg_set_repetitive_send(false);
+  cfg_set_repetitive_send(false);// TODO(MN): Set out of this function
 
   pthread_t task_snd;
   pthread_t task_rcv;
