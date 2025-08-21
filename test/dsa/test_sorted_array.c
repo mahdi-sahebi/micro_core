@@ -397,6 +397,43 @@ static int test_get()
   return MC_SUCCESS;
 }
 
+static int test_remove()
+{
+  mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
+  uint16_t memory[25];
+
+  mc_sarray array = mc_sarray_init(
+    mc_buffer(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
+  fill_i16(array); 
+  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+
+  uint8_t index = capacity;
+  while (index--) {
+    mc_result_ptr result = mc_sarray_get(array, index);
+    if ((MC_SUCCESS != result.error) || (NULL == result.data)){
+      return result.error;
+    }
+
+    const mc_error error = mc_sarray_remove(array, result.data);
+    if (MC_SUCCESS != error) {
+      return error;
+    }
+
+    if (index != mc_sarray_get_count(array).value) {
+      return MC_ERR_BAD_ALLOC;
+    }
+    result = mc_sarray_find(array, result.data);
+    if ((MC_SUCCESS != result.error) || (NULL != result.data)) {
+      return MC_ERR_OUT_OF_RANGE;
+    }
+  }
+    
+  return MC_SUCCESS;
+}
+
 static int test_find()
 {
   mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
@@ -742,6 +779,19 @@ int main()
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_error result = test_get();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_remove]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_error result = test_remove();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
