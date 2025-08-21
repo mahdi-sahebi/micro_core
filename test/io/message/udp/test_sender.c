@@ -1,0 +1,165 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "core/error.h"
+#include "core/time.h"
+#include "io/message/mc_message.h"
+#include "test_common.h"
+#include "test_sender.h"
+
+
+static int ClientSocket = -1;
+static mc_msg* message = NULL;
+static uint32_t* Result = NULL;
+static mc_buffer AllocBuffer = {0};
+
+
+static void client_create()
+{
+  ClientSocket = socket(AF_INET, SOCK_DGRAM, 0);
+  
+  struct sockaddr_in addr_in;
+  memset(&addr_in, 0, sizeof(addr_in));
+  addr_in.sin_family = AF_INET;
+  addr_in.sin_port = htons(CLIENT_PORT);
+  inet_aton("127.0.0.1", &addr_in.sin_addr);
+  bind(ClientSocket, (struct sockaddr*)&addr_in, sizeof(addr_in));
+
+  struct timeval timeout = {0, 10000};
+  setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+}
+
+static uint32_t client_write(const void* const data, uint32_t size)
+{
+    return socket_write(ClientSocket, data, size, "127.0.0.1", SERVER_PORT);
+}
+
+static uint32_t client_read(void* data, uint32_t size)
+{
+    return socket_read(ClientSocket, data, size);
+}
+
+static void client_close()
+{
+  close(ClientSocket);
+}
+
+static void let_server_start()
+{
+  /* Let receiver not to miss any packet */
+  usleep(200000);
+}
+
+static bool init(void* data)
+{
+  Result = (uint32_t*)data;
+  *Result = MC_SUCCESS;
+  
+  client_create();
+  let_server_start();
+
+  mc_msg_cfg config =
+  {
+    .io = mc_io(client_read, client_write),
+    .window_size = 37,
+    .recv_pool_size = 120
+  };
+  const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
+  if (MC_SUCCESS != result_u32.error) {
+    *Result = result_u32.error;
+    return false;
+  }
+  const uint32_t alloc_size = result_u32.value;
+  AllocBuffer = mc_buffer(malloc(alloc_size), alloc_size);
+
+  const mc_result_ptr result = mc_msg_init(AllocBuffer, config);
+  if (MC_SUCCESS != result.error) {
+    *Result = result.error;
+    return false;
+  }
+
+  message = result.data;;
+  return true;
+}
+
+static void deinit()
+{
+  client_close();
+  free(AllocBuffer.data);
+}
+
+static bool send_data(mc_buffer buffer, mc_msg_id id)
+{
+  const mc_result_u32 result = mc_msg_send(message, buffer, id, TEST_TIMEOUT_US);
+  if ((MC_SUCCESS != result.error) || (result.value != mc_buffer_get_size(buffer))) {
+    *Result = MC_ERR_TIMEOUT;
+    return false;
+  }
+  return true;
+}
+
+static bool send_string(uint32_t seed)
+{
+  char data[9] = {0};
+  const uint32_t size = sizeof(data);
+  sprintf(data, "!p%03u.?I", seed % 1000);
+
+  return send_data(mc_buffer(data, size), 77);
+}
+
+static bool send_variadic_size(uint32_t seed)
+{
+  uint32_t data[30] = {0};
+  const uint32_t random_count = (seed * 1664525) + 1013904223;
+  const uint32_t count = (random_count % 28) + 2;
+  const uint32_t size = count * sizeof(*data);
+
+  for (uint32_t index = 0; index < count; index++) {
+    data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
+  }
+
+  return send_data(mc_buffer(data, size), 101);
+}
+
+static bool send_tiny_size(uint32_t seed)
+{
+  bool data = (seed & 1);
+  const uint32_t size = sizeof(data);
+
+  return send_data(mc_buffer(&data, size), 19);
+}
+
+void* snd_start(void* data)
+{
+  if (!init(data)) {
+    return NULL;
+  }
+  
+  for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
+    if (MC_SUCCESS != mc_msg_update(message)) {
+      *Result = MC_ERR_TIMEOUT;
+      break;
+    }
+
+    if (!send_string(counter)        ||
+        !send_variadic_size(counter) ||  /* Smaller and larger than window size */
+        !send_tiny_size(counter)){
+      *Result = MC_ERR_TIMEOUT;
+      break;
+    }
+  }
+  
+  if (MC_SUCCESS == *Result) {
+    const mc_result_bool result = mc_msg_flush(message, TEST_TIMEOUT_US);
+    if ((MC_SUCCESS != result.error) || !result.value) {
+      printf("mc_comm_flush failed\n");
+      *Result = MC_ERR_TIMEOUT;
+    }
+  }
+
+  deinit();
+  return NULL;
+}
+
