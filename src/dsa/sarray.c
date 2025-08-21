@@ -129,7 +129,7 @@ mc_result_ptr result = mc_alg_lower_bound(mc_buffer_raw(this->data, this->data_s
     } else {
       bgn = mid + 1;
     }
-  }  
+  }
 
   void* found_data = NULL;
   if (!this->comparator(data, GET_DATA(this, bgn)) && !this->comparator(GET_DATA(this, bgn), data)) {

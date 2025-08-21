@@ -33,8 +33,8 @@ struct _mc_msg
 
 static mc_cmp id_compare(const void* a, const void* b)
 {
-  const mc_msg_id id_1 = *(mc_msg_id*)a;
-  const mc_msg_id id_2 = *(mc_msg_id*)b;
+  const mc_msg_id id_1 = ((id_node*)a)->id;
+  const mc_msg_id id_2 = ((id_node*)b)->id;
   return (id_1 < id_2) ? MC_ALG_LT : ((id_1 > id_2) ? MC_ALG_GT : MC_ALG_EQ);
 }
 
@@ -100,12 +100,30 @@ mc_error mc_msg_update(mc_msg* this)
 
 mc_error mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_receive_cb on_receive)
 {
-  return MC_SUCCESS;
+  if ((NULL == this) || (NULL == on_receive)) {
+    return MC_ERR_INVALID_ARGUMENT;
+  }
+
+  if (NULL == this->ids) {
+    return MC_ERR_OUT_OF_RANGE;
+  }
+
+  id_node node = {.id = id, .on_receive = on_receive};
+  return mc_sarray_insert(this->ids, &node);
 }
 
 mc_error mc_msg_unsubscribe(mc_msg* this, mc_msg_id id)
 {
-  return MC_SUCCESS;
+  if (NULL == this) {
+    return MC_ERR_INVALID_ARGUMENT;
+  }
+
+  if (NULL == this->ids) {
+    return MC_ERR_OUT_OF_RANGE;
+  }
+
+  id_node node = {.id = id};
+  return mc_sarray_remove(this->ids, &node);// TODO(MN): Remove by data, not index
 }
 
 mc_result_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeout_us)
@@ -115,5 +133,5 @@ mc_result_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t
 
 mc_result_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us)
 {
-  return mc_result_bool(false, MC_SUCCESS);
+  return mc_comm_flush(this->comm, timeout_us);
 }
