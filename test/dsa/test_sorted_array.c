@@ -12,7 +12,13 @@ static mc_cmp comparator_i16(const void* data_1, const void* data_2)
 {
   const int16_t a = *(int16_t*)data_1;
   const int16_t b = *(int16_t*)data_2;
-  return (a > b) - (a < b);
+  
+  if (a < b) {
+    return MC_ALG_LT;
+  } else if (a > b) {
+    return MC_ALG_GT;
+  }
+  return MC_ALG_EQ;
 }
 
 static mc_cmp comparator_str(const void* a, const void* b) 
@@ -397,6 +403,43 @@ static int test_get()
   return MC_SUCCESS;
 }
 
+static int test_remove()
+{
+  mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
+  uint16_t memory[25];
+
+  mc_sarray array = mc_sarray_init(
+    mc_buffer(memory, sizeof(memory)), 
+    sizeof(int16_t), 
+    10, 
+    comparator_i16).data;
+  fill_i16(array); 
+  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+
+  uint8_t index = capacity;
+  while (index--) {
+    mc_result_ptr result = mc_sarray_get(array, index);
+    if ((MC_SUCCESS != result.error) || (NULL == result.data)){
+      return result.error;
+    }
+
+    const mc_error error = mc_sarray_remove(array, result.data);
+    if (MC_SUCCESS != error) {
+      return error;
+    }
+
+    if (index != mc_sarray_get_count(array).value) {
+      return MC_ERR_BAD_ALLOC;
+    }
+    result = mc_sarray_find(array, result.data);
+    if ((MC_SUCCESS != result.error) || (NULL != result.data)) {
+      return MC_ERR_OUT_OF_RANGE;
+    }
+  }
+    
+  return MC_SUCCESS;
+}
+
 static int test_find()
 {
   mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
@@ -412,7 +455,14 @@ static int test_find()
 
   uint8_t index = capacity;
   while (index--) {
-    const mc_error result = mc_sarray_remove(array, index);
+    int16_t x = (index * 100) + 600;
+    mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data) || 
+        (x != *((int16_t*)result_ptr.data))) {
+      return MC_ERR_OUT_OF_RANGE;
+    }
+    
+    const mc_error result = mc_sarray_remove_at(array, index);
     if (MC_SUCCESS != result){
       return result;
     }
@@ -421,8 +471,7 @@ static int test_find()
       return MC_ERR_BAD_ALLOC;
     }
     
-    int16_t x = (index * 100) + 600;
-    const mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    result_ptr = mc_sarray_find(array, &x);
     if ((MC_SUCCESS != result_ptr.error) || (NULL != result_ptr.data)) {
       return MC_ERR_OUT_OF_RANGE;
     }
@@ -510,17 +559,17 @@ static int test_remove_when_empty()
     10, 
     comparator_i16).data;
   
-  mc_error result = mc_sarray_remove(array, 0);
+  mc_error result = mc_sarray_remove_at(array, 0);
   if (MC_ERR_OUT_OF_RANGE != result) {
     return result;
   }
 
-  result = mc_sarray_remove(array, 17);
+  result = mc_sarray_remove_at(array, 17);
   if (MC_ERR_OUT_OF_RANGE != result) {
     return result;
   }
 
-  result = mc_sarray_remove(array, -1);
+  result = mc_sarray_remove_at(array, -1);
   if (MC_ERR_OUT_OF_RANGE != result) {
     return result;
   }
@@ -545,7 +594,7 @@ static int test_remove_descending()
 
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
-    mc_error result = mc_sarray_remove(array, index);
+    mc_error result = mc_sarray_remove_at(array, index);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;
     }
@@ -567,7 +616,7 @@ static int test_remove_ascending()
 
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
-    mc_error result = mc_sarray_remove(array, 0);
+    mc_error result = mc_sarray_remove_at(array, 0);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;
     }
@@ -590,7 +639,7 @@ static int test_remove_middle()
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
     const uint32_t mid = (mc_sarray_get_count(array).value - 1) / 2;
-    mc_error result = mc_sarray_remove(array, mid);
+    mc_error result = mc_sarray_remove_at(array, mid);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;
     }
@@ -742,6 +791,19 @@ int main()
     test_count++;
     const mc_time_t bgn_time_us = mc_now_u();
     const mc_error result = test_get();
+    test_failed_count += (MC_SUCCESS != result);
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
+  printf("[test_remove]\n");
+  {
+    test_count++;
+    const mc_time_t bgn_time_us = mc_now_u();
+    const mc_error result = test_remove();
     test_failed_count += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
