@@ -12,7 +12,13 @@ static mc_cmp comparator_i16(const void* data_1, const void* data_2)
 {
   const int16_t a = *(int16_t*)data_1;
   const int16_t b = *(int16_t*)data_2;
-  return (a > b) - (a < b);
+  
+  if (a < b) {
+    return MC_ALG_LT;
+  } else if (a > b) {
+    return MC_ALG_GT;
+  }
+  return MC_ALG_EQ;
 }
 
 static mc_cmp comparator_str(const void* a, const void* b) 
