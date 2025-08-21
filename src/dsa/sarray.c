@@ -195,6 +195,29 @@ mc_error mc_sarray_remove_at(mc_sarray this, uint32_t index)
   return MC_SUCCESS;
 }
 
+mc_error mc_sarray_remove(mc_sarray this, const void* data)
+{
+  if (NULL == this) {
+    return MC_ERR_INVALID_ARGUMENT;
+  }
+  if (0 == this->count) {
+    return MC_ERR_OUT_OF_RANGE;
+  }
+
+  const mc_result_ptr result = mc_sarray_find(this, data);
+  if ((MC_SUCCESS != result.error) || (NULL == result.data)) { 
+    return result.error;
+  }
+
+  const uint32_t data_index = ((char*)result.data - this->data) / this->data_size;
+  memmove(this->data + (data_index * this->data_size),
+          this->data + (data_index + 1) * this->data_size,
+          (this->count - (data_index + 1)) * this->data_size);
+
+  this->count--;
+  return MC_SUCCESS;
+}
+
 mc_result_bool mc_sarray_is_empty(const mc_sarray this)
 {
   if (NULL == this) {
