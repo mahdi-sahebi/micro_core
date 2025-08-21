@@ -82,24 +82,26 @@ static void print_progress(float progress)
   fflush(stdout);
 }
 
-static void on_string_received(mc_msg_id, mc_buffer)
+static void on_string_received(mc_msg_id id, mc_buffer buffer)
 {
-  char data[9] = {0};
-  const uint32_t size = sizeof(data);
+  if ((77 != id) || mc_buffer_is_null(buffer) || (9 != mc_buffer_get_size(buffer))) {
+    Error = MC_ERR_RUNTIME;
+    return;
+  }
   
-  if (0 != memcmp(&data[0], "!p", 2)) {
+  if (0 != memcmp(&buffer.data[0], "!p", 2)) {
     printf("[ERR Data 1] wrong data received\n");
     Error = MC_ERR_RUNTIME;
   }
 
-  if (0 != memcmp(&data[5], ".?I", 3)) {
+  if (0 != memcmp(&buffer.data[5], ".?I", 3)) {
     printf("[ERR Data 1] wrong data received\n");
     Error = MC_ERR_RUNTIME;
   }
 
   char num_text[4] = {0};
   sprintf(num_text, "%03u", TestCounter % 1000);
-  if (0 != memcmp(num_text, &data[2], 3)) {
+  if (0 != memcmp(num_text, &buffer.data[2], 3)) {
     printf("[ERR Data 1] wrong data received\n");
     Error = MC_ERR_RUNTIME;
   }
@@ -107,9 +109,14 @@ static void on_string_received(mc_msg_id, mc_buffer)
   IsStringReceived = true;
 }
 
-static void on_large_received(mc_msg_id, mc_buffer)
+static void on_large_received(mc_msg_id id, mc_buffer buffer)
 {
-  uint32_t data[30] = {0};
+  if ((101 != id) || mc_buffer_is_null(buffer) || (30 * sizeof(uint32_t) != mc_buffer_get_size(buffer))) {
+    Error = MC_ERR_RUNTIME;
+    return;
+  }
+
+  const uint32_t* const data = (const uint32_t* const)buffer.data;
   const uint32_t random_count = (TestCounter * 1664525) + 1013904223;
   const uint32_t count = (random_count % 28) + 2;
   const uint32_t size = count * sizeof(*data);
@@ -125,11 +132,16 @@ static void on_large_received(mc_msg_id, mc_buffer)
   IsLargeReceived = true;
 }
 
-static void on_tiny_received(mc_msg_id, mc_buffer)
+static void on_tiny_received(mc_msg_id id, mc_buffer buffer)
 {
-  bool data = false;
+  if ((19 != id) || mc_buffer_is_null(buffer) || (sizeof(bool) != mc_buffer_get_size(buffer))) {
+    Error = MC_ERR_RUNTIME;
+    return;
+  }
 
-  if ((TestCounter & 1) != data) {
+  const bool* const data = (const bool* const)buffer.data;
+
+  if ((TestCounter & 1) != *data) {
     printf("[ERR Data 1] wrong data received\n");
     Error = MC_ERR_RUNTIME;
   }
