@@ -449,6 +449,13 @@ static int test_find()
 
   uint8_t index = capacity;
   while (index--) {
+    int16_t x = (index * 100) + 600;
+    mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data) || 
+        (x != *((int16_t*)result_ptr.data))) {
+      return MC_ERR_OUT_OF_RANGE;
+    }
+    
     const mc_error result = mc_sarray_remove_at(array, index);
     if (MC_SUCCESS != result){
       return result;
@@ -458,8 +465,7 @@ static int test_find()
       return MC_ERR_BAD_ALLOC;
     }
     
-    int16_t x = (index * 100) + 600;
-    const mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    result_ptr = mc_sarray_find(array, &x);
     if ((MC_SUCCESS != result_ptr.error) || (NULL != result_ptr.data)) {
       return MC_ERR_OUT_OF_RANGE;
     }
