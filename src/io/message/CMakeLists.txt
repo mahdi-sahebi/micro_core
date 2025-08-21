@@ -25,5 +25,5 @@ target_include_directories(${LIB}
 
 # Linking
 target_link_libraries(${LIB}
-    PRIVATE ${PROJECT_NAME}_comm
+  PRIVATE ${PROJECT_NAME}_dsa ${PROJECT_NAME}_comm
 )
