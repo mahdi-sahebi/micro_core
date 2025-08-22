@@ -7,7 +7,8 @@
 #include "dsa/sarray.h"
 #include "io/communication/communication.h"
 #include "io/message/mc_message.h"
- 
+
+
 typedef struct __attribute__((packed))
 {
   // uint32_t  rest_size;
@@ -30,6 +31,8 @@ struct _mc_msg
   uint32_t  recv_pool_stored;
 };
 
+
+#define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y))
 
 static mc_cmp id_compare(const void* a, const void* b)
 {
@@ -105,12 +108,11 @@ mc_error mc_msg_update(mc_msg* this)
   uint32_t size = 0;
   if (this->recv_pool_stored < sizeof(pkt_hdr)) {
     size = sizeof(pkt_hdr) - this->recv_pool_stored;
-
-    mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
+    const mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
     if (!mc_result_is_ok(result)) {
       return MC_SUCCESS;
     }
-    this->recv_pool_stored += result.value; 
+    this->recv_pool_stored += result.value;
   }
   // TODO(MN): Stay here if at least on pkt_hdr is received or 1 byte. 
   
@@ -120,6 +122,7 @@ mc_error mc_msg_update(mc_msg* this)
     // TODO(MN): Stay here to receive all message
     const pkt_hdr* pkt = (pkt_hdr*)this->recv_pool.data;
     const uint32_t data_size = pkt->size;
+    const uint32_t expected_size = data_size + sizeof(pkt_hdr);
 
     if (0 == pkt->size) {
       this->recv_pool_stored = 0;// TODO(MN): Move before break
@@ -135,21 +138,19 @@ mc_error mc_msg_update(mc_msg* this)
       return MC_SUCCESS;
     }
 
-    while (this->recv_pool_stored != (data_size + sizeof(pkt_hdr))) { 
+    while (this->recv_pool_stored != expected_size) { 
 
 
-      if (mc_buffer_get_size(this->recv_pool) < (data_size + sizeof(pkt_hdr))) {
-        #define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y))
+      if (mc_buffer_get_size(this->recv_pool) < expected_size) {
         const uint32_t seg_size = MIN(mc_buffer_get_size(this->recv_pool), data_size + sizeof(pkt_hdr) - this->recv_pool_stored);
         mc_result_u32 res = mc_comm_recv(this->comm, this->recv_pool.data, seg_size, 1000000);
         this->recv_pool_stored += res.value;
-        // error = MC_ERR_OUT_OF_RANGE; // TODO(MN): Not enough memory
-        if (this->recv_pool_stored == (data_size + sizeof(pkt_hdr))) {
+        error = MC_ERR_NO_SPACE;
+        if (this->recv_pool_stored == expected_size) {
           this->recv_pool_stored = 0;
           break;
         }
         continue;
-        #undef MIN
       }
 
 
@@ -161,7 +162,7 @@ mc_error mc_msg_update(mc_msg* this)
       }
       this->recv_pool_stored += result.value; 
 
-      if (this->recv_pool_stored == (data_size + sizeof(pkt_hdr))) {
+      if (this->recv_pool_stored == expected_size) {
         this->recv_pool_stored = 0;// TODO(MN): Move before break
         // Find the id and it's callback
 
@@ -251,7 +252,7 @@ mc_result_u32 mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
   if (!mc_result_is_ok(result)) {
     return result;
   }
-  
+
   return mc_result_u32(0, MC_SUCCESS);
 }
 
@@ -259,3 +260,6 @@ mc_result_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us)
 {
   return mc_comm_flush(this->comm, timeout_us);
 }
+
+
+#undef MIN

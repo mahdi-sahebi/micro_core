@@ -268,7 +268,8 @@ void* rcv_start(void* data)
         break;
       }
 
-      if (MC_SUCCESS != mc_msg_update(message)) {
+      const mc_error error = mc_msg_update(message);
+      if ((MC_SUCCESS != error) && (MC_ERR_NO_SPACE != error)) {
         *Result = MC_ERR_TIMEOUT;
         break;
       }
