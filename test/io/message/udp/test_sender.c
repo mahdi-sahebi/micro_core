@@ -149,9 +149,9 @@ void* snd_start(void* data)
       break;
     }
 
-    if (!send_string(counter)       ||
-        !send_large_1(counter) ||  /* Smaller and larger than window size */
-        !send_large_2(counter) ||  /* Smaller and larger than window size */
+    if (!send_string(counter)  ||
+        !send_large_1(counter) ||
+        !send_large_2(counter) ||
         !send_tiny(counter)    ||
         !send_signal()){
       *Result = MC_ERR_TIMEOUT;

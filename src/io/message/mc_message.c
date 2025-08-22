@@ -233,11 +233,6 @@ mc_result_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t
     return result;
   }
 
-  const mc_result_bool result_bool = mc_comm_flush(this->comm, timeout_us);
-  if (!mc_result_is_ok(result_bool)) {
-    return mc_result_u32(0, result.error);
-  }
-
   return mc_result_u32(size, MC_SUCCESS);
 }
 
@@ -256,12 +251,7 @@ mc_result_u32 mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
   if (!mc_result_is_ok(result)) {
     return result;
   }
-// TODO(MN): Don't flush at the end of sends
-  const mc_result_bool result_bool = mc_comm_flush(this->comm, timeout_us);
-  if (!mc_result_is_ok(result_bool)) {
-    return mc_result_u32(0, result.error);
-  }
-
+  
   return mc_result_u32(0, MC_SUCCESS);
 }
 
