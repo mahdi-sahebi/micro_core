@@ -14,6 +14,7 @@ typedef enum __attribute__((packed))
   MC_ERR_OUT_OF_RANGE,
   MC_ERR_TIMEOUT,
   MC_ERR_INCOMPLETE,// TODO(MN): Remove
+  MC_ERR_NO_SPACE,
   MC_ERR_RUNTIME
 }mc_error;
 
