@@ -21,6 +21,7 @@ static mc_error Error = MC_SUCCESS;
 static bool IsStringReceived = false;
 static bool IsLargeReceived  = false;
 static bool IsTinyReceived   = false;
+static bool IsSignalReceived = false;
 
 
 static void server_create()
@@ -147,6 +148,16 @@ static void on_tiny_received(mc_msg_id id, mc_buffer buffer)
   IsTinyReceived = true;
 }
 
+static void on_signal_received(mc_msg_id id, mc_buffer buffer)
+{
+  if ((9910 != id) || !mc_buffer_is_empty(buffer)) {
+    Error = MC_ERR_RUNTIME;
+    return;
+  }
+
+  IsSignalReceived = true;
+}
+
 static bool init(void* data)
 {
   /* TODO(MN): invalid header, incomplete packet, miss packet pointer, use zero copy
@@ -194,6 +205,12 @@ static bool init(void* data)
     return false;
   }// TODO(MN): Send a message id withouth subscribe
 
+  error = mc_msg_subscribe(message, 9910, on_signal_received);
+  if (MC_SUCCESS != error) {
+    *Result = error;
+    return false;
+  }
+
   return true;
 }
 
@@ -227,7 +244,7 @@ static void wait_for_sender()
 
 static bool all_messages_received()
 {
-  return (IsStringReceived && IsLargeReceived && IsTinyReceived);
+  return (IsStringReceived && IsLargeReceived && IsTinyReceived && IsSignalReceived);
 }
 
 static void reset_flags()
@@ -235,6 +252,7 @@ static void reset_flags()
   IsStringReceived = false;
   IsLargeReceived  = false;
   IsTinyReceived   = false;
+  IsSignalReceived = false;
 }
 
 void* rcv_start(void* data)
