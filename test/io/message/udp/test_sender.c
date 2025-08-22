@@ -49,7 +49,7 @@ static void client_close()
 static void let_server_start()
 {
   /* Let receiver not to miss any packet */
-  usleep(200000);
+  usleep(1000000);// TODO(MN): 200ms?
 }
 
 static bool init(void* data)
@@ -109,7 +109,7 @@ static bool send_string(uint32_t seed)
   return send_data(mc_buffer(data, size), 77);
 }
 
-static bool send_variadic_size(uint32_t seed)
+static bool send_large_data_1(uint32_t seed)
 {
   uint32_t data[147] = {0};
   const uint32_t count = sizeof(data) / sizeof(*data);
@@ -119,6 +119,13 @@ static bool send_variadic_size(uint32_t seed)
   }
 
   return send_data(mc_buffer(data, sizeof(data)), 101);
+}
+
+
+static bool send_large_data_2(uint32_t seed)
+{
+  double data[600] = {0};
+  return send_data(mc_buffer(data, sizeof(data)), 436);
 }
 
 static bool send_tiny_size(uint32_t seed)
@@ -141,8 +148,9 @@ void* snd_start(void* data)
       break;
     }
 
-    if (!send_string(counter)        ||
-        !send_variadic_size(counter) ||  /* Smaller and larger than window size */
+    if (!send_string(counter)       ||
+        !send_large_data_1(counter) ||  /* Smaller and larger than window size */
+        !send_large_data_2(counter) ||  /* Smaller and larger than window size */
         !send_tiny_size(counter)){
       *Result = MC_ERR_TIMEOUT;
       break;
