@@ -13,7 +13,7 @@
 static int ClientSocket = -1;
 static mc_msg* message = NULL;
 static uint32_t* Result = NULL;
-static mc_buffer AllocBuffer = {0};
+static char AllocBuffer[1 * 1024];
 
 
 static void client_create()
@@ -72,9 +72,7 @@ static bool init(void* data)
     return false;
   }
   const uint32_t alloc_size = result_u32.value;
-  AllocBuffer = mc_buffer(malloc(alloc_size), alloc_size);
-
-  const mc_result_ptr result = mc_msg_init(AllocBuffer, config);
+  const mc_result_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
     *Result = result.error;
     return false;
@@ -87,7 +85,6 @@ static bool init(void* data)
 static void deinit()
 {
   client_close();
-  free(AllocBuffer.data);
 }
 
 static bool send_data(mc_buffer buffer, mc_msg_id id)
