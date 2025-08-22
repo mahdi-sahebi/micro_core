@@ -27,6 +27,7 @@ mc_error       mc_msg_update(mc_msg* this);// TODO(MN): receive
 mc_error       mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_receive_cb on_receive);
 mc_error       mc_msg_unsubscribe(mc_msg* this, mc_msg_id id);
 mc_result_u32  mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeout_us);
+mc_result_u32  mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us);
 mc_result_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us);
 
 
