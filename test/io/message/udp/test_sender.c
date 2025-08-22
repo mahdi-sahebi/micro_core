@@ -106,7 +106,7 @@ static bool send_string(uint32_t seed)
   return send_data(mc_buffer(data, size), 77);
 }
 
-static bool send_large_data_1(uint32_t seed)
+static bool send_large_1(uint32_t seed)
 {
   uint32_t data[32] = {0};
   const uint32_t count = sizeof(data) / sizeof(*data);
@@ -118,19 +118,23 @@ static bool send_large_data_1(uint32_t seed)
   return send_data(mc_buffer(data, sizeof(data)), 101);
 }
 
-
-static bool send_large_data_2(uint32_t seed)
+static bool send_large_2(uint32_t seed)
 {
   char data[189] = {0};
   return send_data(mc_buffer(data, sizeof(data)), 436);
 }
 
-static bool send_tiny_size(uint32_t seed)
+static bool send_tiny(uint32_t seed)
 {
   bool data = (seed & 1);
   const uint32_t size = sizeof(data);
 
   return send_data(mc_buffer(&data, size), 19);
+}
+
+static bool send_signal()
+{
+  return (MC_SUCCESS == mc_msg_signal(message, 9910, TEST_TIMEOUT_US).error);
 }
 
 void* snd_start(void* data)
@@ -146,9 +150,10 @@ void* snd_start(void* data)
     }
 
     if (!send_string(counter)       ||
-        !send_large_data_1(counter) ||  /* Smaller and larger than window size */
-        !send_large_data_2(counter) ||  /* Smaller and larger than window size */
-        !send_tiny_size(counter)){
+        !send_large_1(counter) ||  /* Smaller and larger than window size */
+        !send_large_2(counter) ||  /* Smaller and larger than window size */
+        !send_tiny(counter)    ||
+        !send_signal()){
       *Result = MC_ERR_TIMEOUT;
       break;
     }
