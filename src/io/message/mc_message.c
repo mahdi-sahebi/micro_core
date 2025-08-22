@@ -119,21 +119,26 @@ mc_error mc_msg_update(mc_msg* this)
   if (this->recv_pool_stored >= sizeof(pkt_hdr)) {
     // TODO(MN): Stay here to receive all message
     const pkt_hdr* pkt = (pkt_hdr*)this->recv_pool.data;
+    const uint32_t data_size = pkt->size;
+    while (this->recv_pool_stored != (data_size + sizeof(pkt_hdr))) { 
 
-    while (this->recv_pool_stored != (pkt->size + sizeof(pkt_hdr))) { 
 
-
-      if (mc_buffer_get_size(this->recv_pool) < (pkt->size + sizeof(pkt_hdr))) {
+      if (mc_buffer_get_size(this->recv_pool) < (data_size + sizeof(pkt_hdr))) {
         #define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y))
-        const uint32_t seg_size = MIN(mc_buffer_get_size(this->recv_pool), pkt->size + sizeof(pkt_hdr));
-        this->recv_pool_stored += mc_comm_recv(this->comm, this->recv_pool.data, seg_size, 1000000).value;
-        error = MC_ERR_OUT_OF_RANGE; // TODO(MN): Not enough memory
+        const uint32_t seg_size = MIN(mc_buffer_get_size(this->recv_pool), data_size + sizeof(pkt_hdr) - this->recv_pool_stored);
+        mc_result_u32 res = mc_comm_recv(this->comm, this->recv_pool.data, seg_size, 1000000);
+        this->recv_pool_stored += res.value;
+        // error = MC_ERR_OUT_OF_RANGE; // TODO(MN): Not enough memory
+        if (this->recv_pool_stored == (data_size + sizeof(pkt_hdr))) {
+          this->recv_pool_stored = 0;
+          break;
+        }
         continue;
         #undef MIN
       }
 
 
-      size = pkt->size - (this->recv_pool_stored - sizeof(pkt_hdr));
+      size = data_size - (this->recv_pool_stored - sizeof(pkt_hdr));
   // TODO(MN): store the pkt_hdr on a temp object and not on the recv_pool. retrn the not_enough_memory error
       mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
       if (!mc_result_is_ok(result) && (MC_ERR_TIMEOUT != result.error)) {
@@ -141,7 +146,7 @@ mc_error mc_msg_update(mc_msg* this)
       }
       this->recv_pool_stored += result.value; 
 
-      if (this->recv_pool_stored == (pkt->size + sizeof(pkt_hdr))) {
+      if (this->recv_pool_stored == (data_size + sizeof(pkt_hdr))) {
         this->recv_pool_stored = 0;// TODO(MN): Move before break
         // Find the id and it's callback
 
@@ -149,7 +154,7 @@ mc_error mc_msg_update(mc_msg* this)
         const mc_result_ptr itr = mc_sarray_find(this->ids, &temp_node);
         if (mc_result_is_ok(itr)) {
           const id_node* const node = itr.data;
-          node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+          node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), data_size));
         }
         
         break;
