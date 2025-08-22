@@ -162,7 +162,7 @@ static bool init(void* data)
   {
     .io = mc_io(server_read, server_write),
     .window_size = 37,
-    .recv_pool_size = 120,
+    .recv_pool_size = 1024,
     .ids_capacity = 10
   };
   const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
