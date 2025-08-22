@@ -120,6 +120,21 @@ mc_error mc_msg_update(mc_msg* this)
     // TODO(MN): Stay here to receive all message
     const pkt_hdr* pkt = (pkt_hdr*)this->recv_pool.data;
     const uint32_t data_size = pkt->size;
+
+    if (0 == pkt->size) {
+      this->recv_pool_stored = 0;// TODO(MN): Move before break
+      // Find the id and it's callback
+
+      id_node temp_node = {.id = pkt->msg_id};
+      const mc_result_ptr itr = mc_sarray_find(this->ids, &temp_node);
+      if (mc_result_is_ok(itr) && (NULL != itr.data)) {
+        const id_node* const node = itr.data;
+        node->on_receive(node->id, mc_buffer(NULL, 0));
+      }
+
+      return MC_SUCCESS;
+    }
+
     while (this->recv_pool_stored != (data_size + sizeof(pkt_hdr))) { 
 
 
@@ -224,6 +239,30 @@ mc_result_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t
   }
 
   return mc_result_u32(size, MC_SUCCESS);
+}
+
+mc_result_u32 mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
+{// TODO(MN): Handle total timeout_us
+  if (NULL == this) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+
+  pkt_hdr pkt = {
+    .size = 0,
+    .msg_id = id
+  };
+  
+  mc_result_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
+  if (!mc_result_is_ok(result)) {
+    return result;
+  }
+// TODO(MN): Don't flush at the end of sends
+  const mc_result_bool result_bool = mc_comm_flush(this->comm, timeout_us);
+  if (!mc_result_is_ok(result_bool)) {
+    return mc_result_u32(0, result.error);
+  }
+
+  return mc_result_u32(0, MC_SUCCESS);
 }
 
 mc_result_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us)
