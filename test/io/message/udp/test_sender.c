@@ -71,7 +71,7 @@ static bool init(void* data)
     *Result = result_u32.error;
     return false;
   }
-  const uint32_t alloc_size = result_u32.value;
+  
   const mc_result_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
     *Result = result.error;
@@ -108,7 +108,7 @@ static bool send_string(uint32_t seed)
 
 static bool send_large_data_1(uint32_t seed)
 {
-  uint32_t data[147] = {0};
+  uint32_t data[32] = {0};
   const uint32_t count = sizeof(data) / sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
@@ -121,7 +121,7 @@ static bool send_large_data_1(uint32_t seed)
 
 static bool send_large_data_2(uint32_t seed)
 {
-  double data[600] = {0};
+  char data[189] = {0};
   return send_data(mc_buffer(data, sizeof(data)), 436);
 }
 

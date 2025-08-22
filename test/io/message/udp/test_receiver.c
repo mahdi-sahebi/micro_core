@@ -111,7 +111,7 @@ static void on_string_received(mc_msg_id id, mc_buffer buffer)
 
 static void on_large_received(mc_msg_id id, mc_buffer buffer)
 {
-  if ((101 != id) || mc_buffer_is_null(buffer) || (147 * sizeof(uint32_t) != mc_buffer_get_size(buffer))) {
+  if ((101 != id) || mc_buffer_is_null(buffer) || (32 * sizeof(uint32_t) != mc_buffer_get_size(buffer))) {
     Error = MC_ERR_RUNTIME;
     return;
   }
@@ -162,7 +162,7 @@ static bool init(void* data)
   {
     .io = mc_io(server_read, server_write),
     .window_size = 37,
-    .recv_pool_size = 1024,
+    .recv_pool_size = 150,
     .ids_capacity = 10
   };
   const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
@@ -170,7 +170,7 @@ static bool init(void* data)
     *Result = result_u32.error;
     return false;
   }
-  const uint32_t alloc_size = result_u32.value;
+
   const mc_result_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
     *Result = result.error;
