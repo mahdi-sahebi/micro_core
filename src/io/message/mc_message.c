@@ -152,7 +152,7 @@ mc_error mc_msg_update(mc_msg* this)
 
         id_node temp_node = {.id = pkt->msg_id};
         const mc_result_ptr itr = mc_sarray_find(this->ids, &temp_node);
-        if (mc_result_is_ok(itr)) {
+        if (mc_result_is_ok(itr) && (NULL != itr.data)) {
           const id_node* const node = itr.data;
           node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), data_size));
         }
