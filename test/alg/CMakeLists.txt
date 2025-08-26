@@ -8,7 +8,7 @@ set(HEADERS
 set(SOURCES 
   test_alg.c
 )
-set(TEST ${PROJECT_NAME}_test_alg)
+set(TEST test_alg)
 
 
 # Subdirectory
