@@ -41,6 +41,11 @@ static mc_cmp id_compare(const void* a, const void* b)
   return (id_1 < id_2) ? MC_ALG_LT : ((id_1 > id_2) ? MC_ALG_GT : MC_ALG_EQ);
 }
 
+static bool is_header_received(const mc_msg* this)
+{
+  return (this->recv_pool_stored >= sizeof(pkt_hdr));
+}
+
 mc_result_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
 {
   if ((NULL == config.io.recv) || (NULL == config.io.send) ||
@@ -106,7 +111,7 @@ mc_error mc_msg_update(mc_msg* this)
 // handle if pkt->size or even pkt_hdr are larger than recv_pool_size
   // Receive packet header.
   uint32_t size = 0;
-  if (this->recv_pool_stored < sizeof(pkt_hdr)) {
+  if (!is_header_received(this)) {
     size = sizeof(pkt_hdr) - this->recv_pool_stored;
     const mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
     if (!mc_result_is_ok(result)) {
@@ -118,7 +123,7 @@ mc_error mc_msg_update(mc_msg* this)
   
   mc_error error = MC_SUCCESS;
 
-  if (this->recv_pool_stored >= sizeof(pkt_hdr)) {
+  if (is_header_received(this)) {
     // TODO(MN): Stay here to receive all message
     const pkt_hdr* pkt = (pkt_hdr*)this->recv_pool.data;
     const uint32_t data_size = pkt->size;
