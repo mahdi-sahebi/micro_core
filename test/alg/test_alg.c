@@ -19,10 +19,10 @@ static int search_invalid_arguments()
 {
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(NULL, 0, sizeof(key));
-  mc_result_ptr result = {0};
+  mc_result_u32 result = {0};
 
   result = mc_alg_lower_bound(buffer, &key, comparator);
-  if (NULL != result.data) {
+  if (buffer.capacity != result.value) {
     return MC_ERR_RUNTIME;
   }
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
@@ -31,7 +31,7 @@ static int search_invalid_arguments()
 
 
   result = mc_alg_lower_bound(buffer, &key, NULL);
-  if (NULL != result.data) {
+  if (buffer.capacity != result.value) {
     return MC_ERR_RUNTIME;
   }
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
@@ -40,7 +40,7 @@ static int search_invalid_arguments()
 
 
   result = mc_alg_lower_bound(mc_buffer_raw(NULL, 0, 0), &key, comparator);
-  if (NULL != result.data) {
+  if (buffer.capacity != result.value) {
     return MC_ERR_RUNTIME;
   }
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
@@ -49,7 +49,7 @@ static int search_invalid_arguments()
 
 
   result = mc_alg_lower_bound(buffer, NULL, comparator);
-  if (NULL != result.data) {
+  if (buffer.capacity != result.value) {
     return MC_ERR_RUNTIME;
   }
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
@@ -66,8 +66,8 @@ static int search_empty_buffer()
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (NULL != result.data)) {
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  if ((MC_SUCCESS != result.error) || (buffer.capacity != result.value)) {
     return result.error;
   }
   return MC_SUCCESS;
@@ -79,8 +79,8 @@ static int search_present()
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (result.data != &array[2])) {
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  if ((MC_SUCCESS != result.error) || (2 != result.value)) {
     return result.error;
   }
   return MC_SUCCESS;
@@ -92,8 +92,8 @@ static int search_not_present()
   int16_t key = 6;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (result.data != &array[3])) {
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  if ((MC_SUCCESS != result.error) || (3 != result.value)) {
     return result.error;
   }
   return MC_SUCCESS;
@@ -105,8 +105,8 @@ static int search_greater_than_all()
   int16_t key = 10;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (result.data != &array[5])) {
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  if ((MC_SUCCESS != result.error) || (5 != result.value)) {
     return result.error;
   }
   return MC_SUCCESS;
@@ -118,8 +118,8 @@ static int search_less_than_all()
   int16_t key = 0;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
-  const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (result.data != &array[0])) {
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
   return MC_SUCCESS;
@@ -131,8 +131,8 @@ static int search_first_duplicate()
   int16_t key = 2;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
-  const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (result.data != &array[1])) {
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  if ((MC_SUCCESS != result.error) || (1 != result.value)) {
     return result.error;
   }
   return MC_SUCCESS;
@@ -144,8 +144,8 @@ static int search_element_end()
   int16_t key = 3;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (result.data != &array[4])) {
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  if ((MC_SUCCESS != result.error) || (4 != result.value)) {
     return result.error;
   }
   return MC_SUCCESS;
@@ -157,8 +157,8 @@ static int search_not_prepresent_with_duplicate()
   int16_t key = 2;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (result.data != &array[0])) {
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
   return MC_SUCCESS;
@@ -173,8 +173,8 @@ static int search_large_array()
   int16_t key = 9999;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_ptr result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (result.data != &array[9999])) {
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  if ((MC_SUCCESS != result.error) || (9999 != result.value)) {
     return result.error;
   }
   return MC_SUCCESS;
