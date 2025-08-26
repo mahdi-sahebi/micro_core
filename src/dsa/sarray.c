@@ -137,6 +137,7 @@ mc_error mc_sarray_insert(mc_sarray this, const void* data)
     while (bgn < end) {
       const uint32_t mid = (bgn + end) >> 1;
       const mc_cmp cmp = this->comparator(data, GET_DATA(this, mid));// TODO(MN): Use lower_bound
+      
       if        (MC_ALG_EQ == cmp) {
         bgn = mid;
         break;
