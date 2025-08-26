@@ -21,16 +21,26 @@ mc_result_ptr mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_cmp_fn c
     const void* mid_element = (const char*)buffer.data + (mid * buffer.data_size);
     const mc_cmp cmp = comparator(data, mid_element);
 
-    if (MC_ALG_GT == cmp) {
+    if        (MC_ALG_GT == cmp) {
+      if (buffer.capacity == mid) {
+        bgn = mid;
+        break;
+      }
+      
       bgn = mid + 1;
     } else if (MC_ALG_LT == cmp) {
+      if (0 == mid) {
+        break;
+      }
+
       end = mid - 1;
     } else {
-      return mc_result_ptr(mid_element, MC_SUCCESS);
+      bgn = mid;
+      break;
     }
   }
 
-  return mc_result_ptr(NULL, MC_SUCCESS);
+  return mc_result_ptr((const char*)buffer.data + (bgn * buffer.data_size), MC_SUCCESS);
 }
 
 mc_result_u32 mc_alg_crc16_ccitt(mc_buffer buffer)

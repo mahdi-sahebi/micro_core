@@ -7,11 +7,12 @@
 #include "alg/algorithm.h"
 
 
-static int8_t comparator(const void* data_1, const void* data_2) 
+static mc_cmp comparator(const void* data_1, const void* data_2) 
 {
   const int16_t a = *(const int16_t*)data_1;
   const int16_t b = *(const int16_t*)data_2;
-  return (a > b) - (a < b);
+
+  return (a > b) ? MC_ALG_GT : ((a < b) ? MC_ALG_LT : MC_ALG_EQ);
 }
 
 static int search_invalid_arguments()
