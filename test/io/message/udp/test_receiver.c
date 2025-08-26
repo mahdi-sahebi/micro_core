@@ -13,11 +13,10 @@
 
 
 static int ServerSocket = -1;
-static uint32_t* Result = NULL;
+static mc_error* Error = NULL;
 static mc_msg* message = NULL;
 static char AllocBuffer[2 * 1024];
 static uint32_t TestCounter = 0;
-static mc_error Error = MC_SUCCESS;
 static bool IsStringReceived = false;
 static bool IsLargeReceived  = false;
 static bool IsTinyReceived   = false;
@@ -49,6 +48,7 @@ static uint32_t server_read(void* const data, uint32_t size)
 {
   return socket_read(ServerSocket, data, size);
 }
+
 static void server_close()
 {
   close(ServerSocket);
@@ -87,25 +87,25 @@ static void print_progress(float progress)
 static void on_string_received(mc_msg_id id, mc_buffer buffer)
 {
   if ((77 != id) || mc_buffer_is_null(buffer) || (9 != mc_buffer_get_size(buffer))) {
-    Error = MC_ERR_RUNTIME;
+    *Error = MC_ERR_RUNTIME;
     return;
   }
   
   if (0 != memcmp(&buffer.data[0], "!p", 2)) {
     printf("[ERR Data 1] wrong data received\n");
-    Error = MC_ERR_RUNTIME;
+    *Error = MC_ERR_RUNTIME;
   }
 
   if (0 != memcmp(&buffer.data[5], ".?I", 3)) {
     printf("[ERR Data 1] wrong data received\n");
-    Error = MC_ERR_RUNTIME;
+    *Error = MC_ERR_RUNTIME;
   }
 
   char num_text[4] = {0};
   sprintf(num_text, "%03u", TestCounter % 1000);
   if (0 != memcmp(num_text, &buffer.data[2], 3)) {
     printf("[ERR Data 1] wrong data received\n");
-    Error = MC_ERR_RUNTIME;
+    *Error = MC_ERR_RUNTIME;
   }
 
   IsStringReceived = true;
@@ -114,7 +114,7 @@ static void on_string_received(mc_msg_id id, mc_buffer buffer)
 static void on_large_received(mc_msg_id id, mc_buffer buffer)
 {
   if ((101 != id) || mc_buffer_is_null(buffer) || (32 * sizeof(uint32_t) != mc_buffer_get_size(buffer))) {
-    Error = MC_ERR_RUNTIME;
+    *Error = MC_ERR_RUNTIME;
     return;
   }
 
@@ -125,7 +125,7 @@ static void on_large_received(mc_msg_id id, mc_buffer buffer)
     const uint32_t expected = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (TestCounter + 1) + index;
     if (data[index] != expected) {
       printf("[ERR Data 2] Received: %u, Expected: %u\n", data[index], expected);
-      Error = MC_ERR_RUNTIME;
+      *Error = MC_ERR_RUNTIME;
     }
   }
 
@@ -135,7 +135,7 @@ static void on_large_received(mc_msg_id id, mc_buffer buffer)
 static void on_tiny_received(mc_msg_id id, mc_buffer buffer)
 {
   if ((19 != id) || mc_buffer_is_null(buffer) || (sizeof(bool) != mc_buffer_get_size(buffer))) {
-    Error = MC_ERR_RUNTIME;
+    *Error = MC_ERR_RUNTIME;
     return;
   }
 
@@ -143,7 +143,7 @@ static void on_tiny_received(mc_msg_id id, mc_buffer buffer)
 
   if ((TestCounter & 1) != *data) {
     printf("[ERR Data 1] wrong data received\n");
-    Error = MC_ERR_RUNTIME;
+    *Error = MC_ERR_RUNTIME;
   }
 
   IsTinyReceived = true;
@@ -152,7 +152,7 @@ static void on_tiny_received(mc_msg_id id, mc_buffer buffer)
 static void on_signal_received(mc_msg_id id, mc_buffer buffer)
 {
   if ((9910 != id) || !mc_buffer_is_empty(buffer)) {
-    Error = MC_ERR_RUNTIME;
+    *Error = MC_ERR_RUNTIME;
     return;
   }
 
@@ -163,14 +163,13 @@ static bool init(void* data)
 {
   /* TODO(MN): invalid header, incomplete packet, miss packet pointer, use zero copy
    */
-  Result = (uint32_t*)data;
-  *Result = MC_SUCCESS;
+  Error = (mc_error*)data;
+  *Error = MC_SUCCESS;
 
   server_create();
   flush_receive_buffer();
 
-
-  mc_msg_cfg config =
+  const mc_msg_cfg config =
   {
     .io = mc_io(server_read, server_write),
     .window_size = 37,
@@ -179,36 +178,37 @@ static bool init(void* data)
   };
   const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
-    *Result = result_u32.error;
+    *Error = result_u32.error;
     return false;
   }
 
   const mc_result_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
-    *Result = result.error;
+    *Error = result.error;
     return false;
   }
   message = result.data;
 
-  mc_error error = mc_msg_subscribe(message, 77, on_string_received);
+  mc_error error = MC_SUCCESS;
+  error = mc_msg_subscribe(message, 77, on_string_received);
   if (MC_SUCCESS != error) {
-    *Result = error;
+    *Error = error;
     return false;
   }
   error = mc_msg_subscribe(message, 101, on_large_received);
   if (MC_SUCCESS != error) {
-    *Result = error;
+    *Error = error;
     return false;
   }
   error = mc_msg_subscribe(message, 19, on_tiny_received);
   if (MC_SUCCESS != error) {
-    *Result = error;
+    *Error = error;
     return false;
-  }// TODO(MN): Send a message id withouth subscribe
+  }
 
   error = mc_msg_subscribe(message, 9910, on_signal_received);
   if (MC_SUCCESS != error) {
-    *Result = error;
+    *Error = error;
     return false;
   }
 
@@ -262,6 +262,19 @@ static void reset_flags()
   IsSignalReceived = false;
 }
 
+static bool recv_messages()
+{
+  do {
+    const mc_error error = mc_msg_update(message);
+    if ((MC_SUCCESS != error) && (MC_ERR_NO_SPACE != error)) {
+      *Error = MC_ERR_TIMEOUT;
+      break;
+    }
+  } while (!all_messages_received() && (MC_SUCCESS == *Error));
+
+  return (MC_SUCCESS == *Error);
+}
+
 void* rcv_start(void* data)
 {
   if (!init(data)) {
@@ -269,28 +282,19 @@ void* rcv_start(void* data)
   }
 
   for (TestCounter = 0; TestCounter <= cfg_get_iterations(); TestCounter++) {
-    while (!all_messages_received()) {
-      if (MC_SUCCESS != Error) {
-        *Result = Error;
-        break;
-      }
-
-      const mc_error error = mc_msg_update(message);
-      if ((MC_SUCCESS != error) && (MC_ERR_NO_SPACE != error)) {
-        *Result = MC_ERR_TIMEOUT;
-        break;
-      }
+    if (!recv_messages()) {
+      break;
     }
     
     reset_flags();
     print_progress(TestCounter / (float)cfg_get_iterations());
   }
 
-  if (MC_SUCCESS == *Result) {
+  if (MC_SUCCESS == *Error) {
     const mc_result_bool result = mc_msg_flush(message, TEST_TIMEOUT_US);
     if ((MC_SUCCESS != result.error) || !result.value) {
       printf("mc_comm_flush failed\n");
-      *Result = MC_ERR_TIMEOUT;
+      *Error = MC_ERR_TIMEOUT;
     }
   }
 

@@ -12,7 +12,7 @@
 
 static int ClientSocket = -1;
 static mc_msg* message = NULL;
-static uint32_t* Result = NULL;
+static mc_error* Error = NULL;
 static char AllocBuffer[1 * 1024];
 
 
@@ -54,13 +54,13 @@ static void let_server_start()
 
 static bool init(void* data)
 {
-  Result = (uint32_t*)data;
-  *Result = MC_SUCCESS;
+  Error = (mc_error*)data;
+  *Error = MC_SUCCESS;
   
   client_create();
   let_server_start();
 
-  mc_msg_cfg config =
+  const mc_msg_cfg config =
   {
     .io = mc_io(client_read, client_write),
     .window_size = 37,
@@ -68,13 +68,13 @@ static bool init(void* data)
   };
   const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
-    *Result = result_u32.error;
+    *Error = result_u32.error;
     return false;
   }
   
   const mc_result_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
-    *Result = result.error;
+    *Error = result.error;
     return false;
   }
 
@@ -91,7 +91,7 @@ static bool send_data(mc_buffer buffer, mc_msg_id id)
 {
   const mc_result_u32 result = mc_msg_send(message, buffer, id, TEST_TIMEOUT_US);
   if ((MC_SUCCESS != result.error) || (result.value != mc_buffer_get_size(buffer))) {
-    *Result = MC_ERR_TIMEOUT;
+    *Error = MC_ERR_TIMEOUT;
     return false;
   }
   return true;
@@ -137,6 +137,19 @@ static bool send_signal()
   return (MC_SUCCESS == mc_msg_signal(message, 9910, TEST_TIMEOUT_US).error);
 }
 
+static bool send_messages(uint32_t seed)
+{
+  if (MC_SUCCESS != mc_msg_update(message)) {
+    return false;
+  }
+
+  return (send_string(seed)  &&
+          send_large_1(seed) &&
+          send_large_2(seed) &&
+          send_tiny(seed)    &&
+          send_signal());
+}
+
 void* snd_start(void* data)
 {
   if (!init(data)) {
@@ -144,26 +157,17 @@ void* snd_start(void* data)
   }
   
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
-    if (MC_SUCCESS != mc_msg_update(message)) {
-      *Result = MC_ERR_TIMEOUT;
-      break;
-    }
-
-    if (!send_string(counter)  ||
-        !send_large_1(counter) ||
-        !send_large_2(counter) ||
-        !send_tiny(counter)    ||
-        !send_signal()){
-      *Result = MC_ERR_TIMEOUT;
+    if (!send_messages(counter)) {
+      *Error = MC_ERR_TIMEOUT;
       break;
     }
   }
   
-  if (MC_SUCCESS == *Result) {
+  if (MC_SUCCESS == *Error) {
     const mc_result_bool result = mc_msg_flush(message, TEST_TIMEOUT_US);
     if ((MC_SUCCESS != result.error) || !result.value) {
       printf("mc_comm_flush failed\n");
-      *Result = MC_ERR_TIMEOUT;
+      *Error = MC_ERR_TIMEOUT;
     }
   }
 
