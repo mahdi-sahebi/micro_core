@@ -21,7 +21,7 @@ typedef enum __attribute__((packed))
 
 typedef struct
 {
-  uint32_t value;
+  uint32_t value;// TODO(MN): Rename to have unique name for all result types
   mc_error error;
 }mc_result_u32;
 

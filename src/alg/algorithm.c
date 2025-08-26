@@ -2,15 +2,15 @@
 #include "alg/algorithm.h"
 
 
-mc_result_ptr mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_cmp_fn comparator)
+mc_result_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_cmp_fn comparator)
 {
   if ((NULL == data) || (NULL == comparator) || 
       mc_buffer_is_null(buffer) || (0 == buffer.data_size)) {
-    return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
+    return mc_result_u32(buffer.capacity, MC_ERR_INVALID_ARGUMENT);
   }
 
   if (mc_buffer_is_empty(buffer)) {
-    return mc_result_ptr(NULL, MC_SUCCESS);
+    return mc_result_u32(buffer.capacity, MC_SUCCESS);
   }
 
   uint32_t bgn = 0;
@@ -18,8 +18,7 @@ mc_result_ptr mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_cmp_fn c
 
   while (bgn <= end) {
     const uint32_t mid = (bgn + end) >> 1;
-    const void* mid_element = (const char*)buffer.data + (mid * buffer.data_size);
-    const mc_cmp cmp = comparator(data, mid_element);
+    const mc_cmp cmp = comparator(data, (char*)buffer.data + (mid * buffer.data_size));
 
     if        (MC_ALG_GT == cmp) {
       if (buffer.capacity == mid) {
@@ -40,7 +39,7 @@ mc_result_ptr mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_cmp_fn c
     }
   }
 
-  return mc_result_ptr((const char*)buffer.data + (bgn * buffer.data_size), MC_SUCCESS);
+  return mc_result_u32(bgn, MC_SUCCESS);
 }
 
 mc_result_u32 mc_alg_crc16_ccitt(mc_buffer buffer)
