@@ -23,7 +23,7 @@ static bool simulate_loss()
 
 static uint32_t base_socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {
-  usleep(171);
+  usleep(17);
 
   struct sockaddr_in addr_in = {
     .sin_family      = AF_INET,
@@ -42,7 +42,7 @@ static uint32_t base_socket_write(int socket_fd, const void* data, uint32_t size
 
 static uint32_t base_socket_read(int socket_fd, void* data, uint32_t size, char src_ip[INET_ADDRSTRLEN], uint16_t* src_port)
 {
-  usleep(159);
+  usleep(19);
   
   struct sockaddr_in addr_in = {0};
   socklen_t addr_len = sizeof(addr_in);
