@@ -31,7 +31,6 @@ static int invalid_creation()
     return MC_ERR_BAD_ALLOC;
   }
 
-  // TODO(MN): Must larger than window_size
   config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 0);
   result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
@@ -90,11 +89,6 @@ static int valid_creation()
   
   return MC_ERR_RUNTIME;
 }
-
-// static int authentication()
-// {
-//   return MC_ERR_RUNTIME;
-// }
 
 static int singly_direction()
 {

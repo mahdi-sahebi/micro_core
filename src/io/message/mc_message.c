@@ -47,7 +47,7 @@ static bool is_header_received(const mc_msg* this)
 }
 
 mc_result_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
-{
+{ 
   if ((NULL == config.io.recv) || (NULL == config.io.send) ||
     (0 == config.recv_pool_size) || (0 == config.window_size)) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
