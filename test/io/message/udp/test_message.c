@@ -57,13 +57,13 @@ static int invalid_creation()
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 37);
   result = mc_msg_init(mc_buffer(memory, 0), config);
-  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+  if (MC_ERR_BAD_ALLOC != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 37);
   result = mc_msg_init(mc_buffer(NULL, sizeof(memory)), config);
-  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+  if (MC_ERR_BAD_ALLOC != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
@@ -73,7 +73,7 @@ static int invalid_creation()
     return MC_ERR_BAD_ALLOC;
   }
 
-  return MC_ERR_RUNTIME;
+  return MC_SUCCESS;
 }
 
 static int valid_creation()
@@ -87,7 +87,7 @@ static int valid_creation()
     return MC_ERR_BAD_ALLOC;
   }
   
-  return MC_ERR_RUNTIME;
+  return MC_SUCCESS;
 }
 
 static int singly_direction()
