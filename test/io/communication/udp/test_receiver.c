@@ -16,6 +16,7 @@ static int ServerSocket = -1;
 static uint32_t* Result = NULL;
 static mc_comm* message = NULL;
 static mc_buffer AllocBuffer = {0};
+static mc_time_t BeginTime = 0;
 
 
 static void server_create()
@@ -104,19 +105,25 @@ static bool init(void* data)
   }
 
   message = result.data;
+  BeginTime = mc_now();
   return true;
 }
 
 static void print_log()
 {
+  const mc_time_t duration_s = (mc_now() - BeginTime) / 1000000000;
+  const uint32_t size_k_byte_ps = (9 + 120 + 1) * cfg_get_iterations() / 1024;
+  const float throughput = size_k_byte_ps / (float)duration_s;
+
   const uint32_t recv_cnt = cfg_get_recv_counter();
   const uint32_t send_cnt = cfg_get_send_counter();
   const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
   const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
-  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)}\n",
+  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)} - Throughput: %.1f KBps\n",
       recv_cnt, send_cnt, 
       recv_failed_cnt, 100 * (recv_failed_cnt / (float)recv_cnt),
-      send_failed_cnt, 100 * (send_failed_cnt / (float)send_cnt)
+      send_failed_cnt, 100 * (send_failed_cnt / (float)send_cnt),
+      throughput
     );
 }
 
