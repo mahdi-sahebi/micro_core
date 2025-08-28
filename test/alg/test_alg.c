@@ -15,7 +15,7 @@ static mc_cmp comparator(const void* data_1, const void* data_2)
   return (a > b) ? MC_ALG_GT : ((a < b) ? MC_ALG_LT : MC_ALG_EQ);
 }
 
-static int search_invalid_arguments()
+static int lower_bound_invalid_arguments()
 {
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(NULL, 0, sizeof(key));
@@ -60,7 +60,7 @@ static int search_invalid_arguments()
   return MC_SUCCESS;
 }
 
-static int search_empty_buffer()
+static int lower_bound_empty_buffer()
 {
   int16_t array[] = {};
   int16_t key = 5;
@@ -73,7 +73,7 @@ static int search_empty_buffer()
   return MC_SUCCESS;
 }
 
-static int search_present()
+static int lower_bound_present()
 {
   int16_t array[] = {1, 3, 5, 7, 9};
   int16_t key = 5;
@@ -86,7 +86,7 @@ static int search_present()
   return MC_SUCCESS;
 }
 
-static int search_not_present()
+static int lower_bound_not_present()
 {
   int16_t array[] = {1, 3, 5, 7, 9};
   int16_t key = 6;
@@ -99,7 +99,7 @@ static int search_not_present()
   return MC_SUCCESS;
 }
 
-static int search_greater_than_all()
+static int lower_bound_greater_than_all()
 {
   int16_t array[] = {1, 3, 5, 7, 9};
   int16_t key = 10;
@@ -112,7 +112,7 @@ static int search_greater_than_all()
   return MC_SUCCESS;
 }
 
-static int search_less_than_all()
+static int lower_bound_less_than_all()
 {
   int16_t array[] = {1, 3, 5, 7, 9};
   int16_t key = 0;
@@ -125,7 +125,7 @@ static int search_less_than_all()
   return MC_SUCCESS;
 }
 
-static int search_first_duplicate()
+static int lower_bound_first_duplicate()
 {
   int16_t array[] = {1, 2, 2, 2, 3};
   int16_t key = 2;
@@ -138,7 +138,7 @@ static int search_first_duplicate()
   return MC_SUCCESS;
 }
 
-static int search_element_end()
+static int lower_bound_last_element()
 {
   int16_t array[] = {1, 2, 2, 2, 3};
   int16_t key = 3;
@@ -151,7 +151,7 @@ static int search_element_end()
   return MC_SUCCESS;
 }
 
-static int search_not_prepresent_with_duplicate()
+static int lower_bound_prepresent_with_duplicate()
 {
   int16_t array[] = {2, 2, 2, 2, 2};
   int16_t key = 2;
@@ -164,7 +164,7 @@ static int search_not_prepresent_with_duplicate()
   return MC_SUCCESS;
 }
 
-static int search_large_array()
+static int lower_bound_large_array()
 {
   int16_t array[10000] = {0};
   for (uint32_t index = 0; index < 10000; index++) {
@@ -185,10 +185,10 @@ int main()
   printf("[MICRO CORE - ALG - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
   uint32_t total_failed = 0;
 
-  printf("[search_invalid_arguments]\n");
+  printf("[lower_bound_invalid_arguments]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_invalid_arguments();
+    const mc_error result = lower_bound_invalid_arguments();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -197,10 +197,10 @@ int main()
     }
   }
 
-  printf("[search_empty_buffer]\n");
+  printf("[lower_bound_empty_buffer]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_empty_buffer();
+    const mc_error result = lower_bound_empty_buffer();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -209,10 +209,10 @@ int main()
     }
   }
 
-  printf("[search_present]\n");
+  printf("[lower_bound_present]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_present();
+    const mc_error result = lower_bound_present();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -221,10 +221,10 @@ int main()
     }
   }
 
-  printf("[search_not_present]\n");
+  printf("[lower_bound_not_present]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_not_present();
+    const mc_error result = lower_bound_not_present();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -233,10 +233,10 @@ int main()
     }
   }
 
-  printf("[search_greater_than_all]\n");
+  printf("[lower_bound_greater_than_all]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_greater_than_all();
+    const mc_error result = lower_bound_greater_than_all();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -245,10 +245,10 @@ int main()
     }
   }
 
-  printf("[search_less_than_all]\n");
+  printf("[lower_bound_less_than_all]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_less_than_all();
+    const mc_error result = lower_bound_less_than_all();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -257,10 +257,10 @@ int main()
     }
   }
 
-  printf("[search_first_duplicate]\n");
+  printf("[lower_bound_first_duplicate]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_first_duplicate();
+    const mc_error result = lower_bound_first_duplicate();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -269,10 +269,10 @@ int main()
     }
   }
 
-  printf("[search_element_end]\n");
+  printf("[lower_bound_last_element]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_element_end();
+    const mc_error result = lower_bound_last_element();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -281,10 +281,10 @@ int main()
     }
   }
 
-  printf("[search_not_prepresent_with_duplicate]\n");
+  printf("[lower_bound_prepresent_with_duplicate]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_not_prepresent_with_duplicate();
+    const mc_error result = lower_bound_prepresent_with_duplicate();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -293,10 +293,10 @@ int main()
     }
   }
 
-  printf("[search_large_array]\n");
+  printf("[lower_bound_large_array]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = search_large_array();
+    const mc_error result = lower_bound_large_array();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
