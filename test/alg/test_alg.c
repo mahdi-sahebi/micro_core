@@ -7,12 +7,12 @@
 #include "alg/algorithm.h"
 
 
-static mc_cmp comparator(const void* data_1, const void* data_2) 
+static float distance_i16(const void* data_1, const void* data_2) 
 {
   const int16_t a = *(const int16_t*)data_1;
   const int16_t b = *(const int16_t*)data_2;
 
-  return (a > b) ? MC_ALG_GT : ((a < b) ? MC_ALG_LT : MC_ALG_EQ);
+  return a - b;
 }
 
 static int lower_bound_invalid_arguments()
@@ -21,7 +21,7 @@ static int lower_bound_invalid_arguments()
   const mc_buffer buffer = mc_buffer_raw(NULL, 0, sizeof(key));
   mc_result_u32 result = {0};
 
-  result = mc_alg_lower_bound(buffer, &key, comparator);
+  result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if (buffer.capacity != result.value) {
     return MC_ERR_RUNTIME;
   }
@@ -37,7 +37,7 @@ static int lower_bound_invalid_arguments()
     return MC_ERR_RUNTIME;
   }
 
-  result = mc_alg_lower_bound(mc_buffer_raw(NULL, 0, 0), &key, comparator);
+  result = mc_alg_lower_bound(mc_buffer_raw(NULL, 0, 0), &key, distance_i16);
   if (buffer.capacity != result.value) {
     return MC_ERR_RUNTIME;
   }
@@ -45,7 +45,7 @@ static int lower_bound_invalid_arguments()
     return MC_ERR_RUNTIME;
   }
 
-  result = mc_alg_lower_bound(buffer, NULL, comparator);
+  result = mc_alg_lower_bound(buffer, NULL, distance_i16);
   if (buffer.capacity != result.value) {
     return MC_ERR_RUNTIME;
   }
@@ -62,7 +62,7 @@ static int lower_bound_empty_buffer()
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (buffer.capacity != result.value)) {
     return result.error;
   }
@@ -75,7 +75,7 @@ static int lower_bound_present()
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (2 != result.value)) {
     return result.error;
   }
@@ -88,7 +88,7 @@ static int lower_bound_not_present()
   int16_t key = 6;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (3 != result.value)) {
     return result.error;
   }
@@ -101,7 +101,7 @@ static int lower_bound_greater_than_all()
   int16_t key = 10;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (5 != result.value)) {
     return result.error;
   }
@@ -114,7 +114,7 @@ static int lower_bound_less_than_all()
   int16_t key = 0;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
@@ -127,7 +127,7 @@ static int lower_bound_first_duplicate()
   int16_t key = 2;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (1 != result.value)) {
     return result.error;
   }
@@ -140,7 +140,7 @@ static int lower_bound_last_element()
   int16_t key = 3;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (4 != result.value)) {
     return result.error;
   }
@@ -153,7 +153,7 @@ static int lower_bound_prepresent_with_duplicate()
   int16_t key = 2;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
@@ -173,7 +173,7 @@ static int lower_bound_large_array()
     int16_t key = index;
     const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-    const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+    const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
     if ((MC_SUCCESS != result.error) || (index != result.value)) {
       return result.error;
     }

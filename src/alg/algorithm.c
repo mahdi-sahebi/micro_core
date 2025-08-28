@@ -2,9 +2,9 @@
 #include "alg/algorithm.h"
 
 
-mc_result_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_cmp_fn comparator)
+mc_result_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_distance_fn distance_fn)
 {
-  if ((NULL == data) || (NULL == comparator) || 
+  if ((NULL == data) || (NULL == distance_fn) || 
       mc_buffer_is_null(buffer) || (0 == buffer.data_size)) {
     return mc_result_u32(buffer.capacity, MC_ERR_INVALID_ARGUMENT);
   }
@@ -18,16 +18,16 @@ mc_result_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_cmp_fn c
 
   while (bgn <= end) {
     const uint32_t mid = (bgn + end) >> 1;
-    const mc_cmp cmp = comparator(data, (char*)buffer.data + (mid * buffer.data_size));
+    const float distance = distance_fn(data, (char*)buffer.data + (mid * buffer.data_size));
 
-    if        (MC_ALG_GT == cmp) {
+    if        (distance > 0.0F) {
       if (buffer.capacity == mid) {
         bgn = mid;
         break;
       }
       
       bgn = mid + 1;
-    } else if (MC_ALG_LT == cmp) {
+    } else if (distance < 0.0F) {
       if (0 == mid) {
         break;
       }
