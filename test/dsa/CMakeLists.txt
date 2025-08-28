@@ -8,7 +8,7 @@ set(HEADERS
 set(SOURCES 
   test_sorted_array.c
 )
-set(TEST ${PROJECT_NAME}_test_dsa)
+set(TEST test_dsa)
 
 
 # Subdirectory
