@@ -29,7 +29,6 @@ static int lower_bound_invalid_arguments()
     return MC_ERR_RUNTIME;
   }
 
-
   result = mc_alg_lower_bound(buffer, &key, NULL);
   if (buffer.capacity != result.value) {
     return MC_ERR_RUNTIME;
@@ -37,7 +36,6 @@ static int lower_bound_invalid_arguments()
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_RUNTIME;
   }
-
 
   result = mc_alg_lower_bound(mc_buffer_raw(NULL, 0, 0), &key, comparator);
   if (buffer.capacity != result.value) {
@@ -47,7 +45,6 @@ static int lower_bound_invalid_arguments()
     return MC_ERR_RUNTIME;
   }
 
-
   result = mc_alg_lower_bound(buffer, NULL, comparator);
   if (buffer.capacity != result.value) {
     return MC_ERR_RUNTIME;
@@ -56,7 +53,6 @@ static int lower_bound_invalid_arguments()
     return MC_ERR_RUNTIME;
   }
 
-  
   return MC_SUCCESS;
 }
 
@@ -167,16 +163,22 @@ static int lower_bound_prepresent_with_duplicate()
 static int lower_bound_large_array()
 {
   int16_t array[10000] = {0};
-  for (uint32_t index = 0; index < 10000; index++) {
+  const uint32_t count = sizeof(array) / sizeof(*array);
+
+  for (uint32_t index = 0; index < count; index++) {
     array[index] = index;
   }
-  int16_t key = 9999;
-  const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
-  if ((MC_SUCCESS != result.error) || (9999 != result.value)) {
-    return result.error;
+  for (uint32_t index = 0; index < count; index++) {
+    int16_t key = index;
+    const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
+
+    const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, comparator);
+    if ((MC_SUCCESS != result.error) || (index != result.value)) {
+      return result.error;
+    }
   }
+
   return MC_SUCCESS;
 }
 
