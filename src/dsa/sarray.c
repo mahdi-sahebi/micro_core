@@ -12,7 +12,7 @@
 
 struct _mc_sarray
 {
-  mc_cmp_fn comparator;
+  mc_distance_fn distance;
   uint32_t  capacity;
   uint32_t  count;
   uint16_t  data_size;
@@ -32,9 +32,9 @@ mc_result_u32 mc_sarray_required_size(uint32_t data_size, uint32_t capacity)// T
   return mc_result_u32(sizeof(struct _mc_sarray) + (capacity * data_size), MC_SUCCESS);
 }
 
-mc_result_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_cmp_fn comparator)
+mc_result_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_distance_fn distance)
 {
-  if (mc_buffer_is_null(buffer) || (0 == capacity) || (0 == data_size) || (NULL == comparator)) {
+  if (mc_buffer_is_null(buffer) || (0 == capacity) || (0 == data_size) || (NULL == distance)) {
     return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
@@ -44,7 +44,7 @@ mc_result_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capa
   }
 
   mc_sarray this   = (mc_sarray)buffer.data;
-  this->comparator = comparator;
+  this->distance = distance;
   this->capacity   = capacity;
   this->count      = 0;
   this->data_size  = data_size;
@@ -115,7 +115,7 @@ mc_result_ptr mc_sarray_find(const mc_sarray this, const void* const data)
   const mc_result_u32 result = mc_alg_lower_bound(
     mc_buffer_raw(this->data, this->data_size * this->count, this->data_size), 
     data, 
-    this->comparator);
+    this->distance);
   
   void* itr = (result.value == this->count) ? NULL :
     this->data + (result.value * this->data_size);
@@ -139,12 +139,12 @@ mc_error mc_sarray_insert(mc_sarray this, const void* data)
 
     while (bgn < end) {
       const uint32_t mid = (bgn + end) >> 1;
-      const mc_cmp cmp = this->comparator(data, GET_DATA(this, mid));// TODO(MN): Use lower_bound
+      const float distance = this->distance(data, GET_DATA(this, mid));// TODO(MN): Use lower_bound
 
-      if        (MC_ALG_EQ == cmp) {
+      if        (0.5F == distance) {
         bgn = mid;
         break;
-      } else if (MC_ALG_LT == cmp) {
+      } else if (distance < 0.0F) {
         end = mid;
       } else {
         bgn = mid + 1;
