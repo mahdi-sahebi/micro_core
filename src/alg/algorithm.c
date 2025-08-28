@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include "alg/algorithm.h"
 
 
@@ -40,6 +41,30 @@ mc_result_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_distance
   }
 
   return mc_result_u32(bgn, MC_SUCCESS);
+}
+
+mc_result_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_distance_fn distance_fn)
+{
+  mc_result_u32 result = mc_alg_lower_bound(buffer, data, distance_fn);
+  if (!mc_result_is_ok(result)) {
+    return result;
+  }
+
+  if (result.value == 0) {
+    return result;
+  }
+
+  if (result.value == buffer.capacity) {
+    return mc_result_u32(buffer.capacity - 1, MC_SUCCESS);
+  }
+
+  const float distance_cur = distance_fn(data, (char*)buffer.data + ((result.value - 0) * buffer.data_size));
+  const float distance_prv = distance_fn(data, (char*)buffer.data + ((result.value - 1) * buffer.data_size));
+  if (fabsf(distance_prv) < fabsf(distance_cur)) {
+    return mc_result_u32(result.value - 1, MC_SUCCESS);
+  }
+
+  return mc_result_u32(result.value, MC_SUCCESS);
 }
 
 mc_result_u32 mc_alg_crc16_ccitt(mc_buffer buffer)
