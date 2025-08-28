@@ -34,11 +34,11 @@ struct _mc_msg
 
 #define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y))
 
-static mc_cmp id_compare(const void* a, const void* b)
+static float id_compare(const void* a, const void* b)
 {
   const mc_msg_id id_1 = ((id_node*)a)->id;
   const mc_msg_id id_2 = ((id_node*)b)->id;
-  return (id_1 < id_2) ? MC_ALG_LT : ((id_1 > id_2) ? MC_ALG_GT : MC_ALG_EQ);
+  return id_1 - id_2;
 }
 
 static bool is_header_received(const mc_msg* this)
