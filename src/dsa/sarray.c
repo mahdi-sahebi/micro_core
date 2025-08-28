@@ -112,11 +112,14 @@ mc_result_ptr mc_sarray_find(const mc_sarray this, const void* const data)
     return mc_result_ptr(NULL, MC_SUCCESS);
   }
   
-  const mc_result_ptr result = mc_alg_lower_bound(
+  const mc_result_u32 result = mc_alg_lower_bound(
     mc_buffer_raw(this->data, this->data_size * this->count, this->data_size), 
     data, 
     this->comparator);
-  return mc_result_ptr(result.data, MC_SUCCESS);
+  
+  void* itr = (result.value == this->count) ? NULL :
+    this->data + (result.value * this->data_size);
+  return mc_result_ptr(itr, MC_SUCCESS);
 }
 
 mc_error mc_sarray_insert(mc_sarray this, const void* data)
@@ -137,7 +140,7 @@ mc_error mc_sarray_insert(mc_sarray this, const void* data)
     while (bgn < end) {
       const uint32_t mid = (bgn + end) >> 1;
       const mc_cmp cmp = this->comparator(data, GET_DATA(this, mid));// TODO(MN): Use lower_bound
-      
+
       if        (MC_ALG_EQ == cmp) {
         bgn = mid;
         break;
