@@ -13,10 +13,10 @@
 struct _mc_sarray
 {
   mc_distance_fn distance;
-  uint32_t  capacity;
-  uint32_t  count;
-  uint16_t  data_size;
-  char      data[0];
+  uint32_t       capacity;
+  uint32_t       count;
+  uint16_t       data_size;
+  char           data[0];
 };
 
 #define GET_DATA(ARRAY, INDEX)   ((ARRAY)->data + ((ARRAY)->data_size * (INDEX)))// TODO(MN): Opt
@@ -43,11 +43,11 @@ mc_result_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capa
     return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
 
-  mc_sarray this   = (mc_sarray)buffer.data;
-  this->distance = distance;
-  this->capacity   = capacity;
-  this->count      = 0;
-  this->data_size  = data_size;
+  mc_sarray this  = (mc_sarray)buffer.data;
+  this->distance  = distance;
+  this->capacity  = capacity;
+  this->count     = 0;
+  this->data_size = data_size;
 
   return mc_result_ptr(this, MC_SUCCESS);
 }
@@ -131,33 +131,12 @@ mc_error mc_sarray_insert(mc_sarray this, const void* data)
     return MC_ERR_OUT_OF_RANGE;
   }
 
-  if (0 == this->count) {
-    memcpy(GET_DATA(this, 0), data, this->data_size);
-  } else {
-    uint32_t bgn = 0;
-    uint32_t end = this->count;
-
-    while (bgn < end) {
-      const uint32_t mid = (bgn + end) >> 1;
-      const float distance = this->distance(data, GET_DATA(this, mid));// TODO(MN): Use lower_bound
-
-      if        (0.5F == distance) {
-        bgn = mid;
-        break;
-      } else if (distance < 0.0F) {
-        end = mid;
-      } else {
-        bgn = mid + 1;
-      }
-    }
-
-    /* Shift one element to right */
-    if (bgn < this->count) {
-      memmove(GET_DATA(this, bgn + 1), GET_DATA(this, bgn), this->data_size * (this->count - bgn));
-    }
-
-    memcpy(GET_DATA(this, bgn), data, this->data_size);
+  const uint32_t index = mc_alg_lower_bound(mc_buffer_raw(this->data, this->data_size * this->count, this->data_size), data, this->distance).value;
+  if (index < this->count) {
+    memmove(GET_DATA(this, index + 1), GET_DATA(this, index), this->data_size * (this->count - index));
   }
+
+  memcpy(GET_DATA(this, index), data, this->data_size);
 
   this->count++;
   return MC_SUCCESS;
@@ -172,7 +151,6 @@ mc_error mc_sarray_remove_at(mc_sarray this, uint32_t index)
     return MC_ERR_OUT_OF_RANGE;
   }
 
-  /* Shift one element to left */
   memmove(GET_DATA(this, index), GET_DATA(this, index + 1), this->data_size * (this->count - index));
 
   this->count--;
