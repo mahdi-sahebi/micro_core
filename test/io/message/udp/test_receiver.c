@@ -13,6 +13,8 @@
 
 
 static int ServerSocket = -1;
+static char ClientIP[INET_ADDRSTRLEN];
+static uint16_t ClientPort = 0;
 static mc_error* Error = NULL;
 static mc_msg* message = NULL;
 static char AllocBuffer[2 * 1024];
@@ -41,12 +43,16 @@ static void server_create()
 
 static uint32_t server_write(const void* const data, uint32_t size)
 {
-  return socket_write(ServerSocket, data, size, "127.0.0.1", CLIENT_PORT);
+  return socket_write(ServerSocket, data, size, ClientIP, ClientPort);
 }
 
 static uint32_t server_read(void* const data, uint32_t size)
 {
-  return socket_read(ServerSocket, data, size);
+  const uint32_t read_size = socket_read(ServerSocket, data, size, ClientIP, &ClientPort);
+  if (strcmp(ClientIP, "127.0.0.1") || (0 == ClientPort)) {
+    return 0;
+  }
+  return read_size;
 }
 
 static void server_close()

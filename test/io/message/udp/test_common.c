@@ -95,7 +95,7 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
   return sent_size;
 }
 
-uint32_t socket_read(int socket_fd, void* data, uint32_t size)
+uint32_t socket_read(int socket_fd, void* data, uint32_t size, char src_ip[INET_ADDRSTRLEN], uint16_t* src_port)
 {
   RecvCounter++;
   static bool bit_corruption = false;
@@ -111,7 +111,7 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size)
     }
   }
   
-  uint32_t read_size = base_socket_read(socket_fd, data, size, NULL, NULL);
+  const uint32_t read_size = base_socket_read(socket_fd, data, size, src_ip, src_port);
 
   if (0 != read_size) {
     if (packetDrop && bit_corruption) {

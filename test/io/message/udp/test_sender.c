@@ -20,25 +20,26 @@ static void client_create()
 {
   ClientSocket = socket(AF_INET, SOCK_DGRAM, 0);
   
-  struct sockaddr_in addr_in;
-  memset(&addr_in, 0, sizeof(addr_in));
-  addr_in.sin_family = AF_INET;
-  addr_in.sin_port = htons(CLIENT_PORT);
-  inet_aton("127.0.0.1", &addr_in.sin_addr);
-  bind(ClientSocket, (struct sockaddr*)&addr_in, sizeof(addr_in));
-
   struct timeval timeout = {0, 10000};
   setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 }
 
 static uint32_t client_write(const void* const data, uint32_t size)
 {
-    return socket_write(ClientSocket, data, size, "127.0.0.1", SERVER_PORT);
+  return socket_write(ClientSocket, data, size, "127.0.0.1", SERVER_PORT);
 }
 
 static uint32_t client_read(void* data, uint32_t size)
 {
-    return socket_read(ClientSocket, data, size);
+  char src_ip[INET_ADDRSTRLEN] = {0};
+  uint16_t src_port = 0;
+  const uint32_t read_size = socket_read(ClientSocket, data, size, src_ip, &src_port);
+
+  if ((SERVER_PORT != src_port) || (0 != strcmp(src_ip, "127.0.0.1"))) {
+    return 0;
+  }
+
+  return read_size;
 }
 
 static void client_close()
