@@ -41,10 +41,10 @@
 
 struct _mc_comm_t
 { 
-  mc_io      io;
-  uint32_t   send_delay_us;// TODO(MN): Use u16 with 100X us resolution
   wndpool_t* rcv;// TODO(MN): Use array to reduce one pointer size
   wndpool_t* snd;
+  mc_io      io;
+  uint32_t   send_delay_us;// TODO(MN): Use u16 with 100X us resolution
 };
 
 
@@ -244,12 +244,12 @@ mc_result_ptr mc_comm_init(
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
   this->rcv->window_size = window_size;
   this->rcv->capacity    = windows_capacity;
-  this->rcv->windows     = (wnd_t*)((char*)this->rcv->temp_window + window_size);
+  this->rcv->windows     = (wnd_t*)((char*)(this->rcv->temp_window) + window_size);
 
-  this->snd              = (wndpool_t*)(char*)(this->rcv->windows) + windows_size;
+  this->snd              = (wndpool_t*)((char*)(this->rcv->windows) + windows_size);
   this->snd->window_size = window_size;
   this->snd->capacity    = windows_capacity;
-  this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
+  this->snd->windows     = (wnd_t*)((char*)(this->snd->temp_window) + window_size);
 
   wndpool_clear(this->rcv);
   wndpool_clear(this->snd);
