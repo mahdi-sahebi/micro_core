@@ -13,6 +13,8 @@
 
 
 static int ServerSocket = -1;
+static char ClientIP[INET_ADDRSTRLEN];
+static uint16_t ClientPort = 0;
 static mc_error* Error = NULL;
 static mc_msg* message = NULL;
 static char AllocBuffer[2 * 1024];
@@ -28,6 +30,10 @@ static void server_create()
 {
   ServerSocket = socket(AF_INET, SOCK_DGRAM, 0);
   
+  int opt = 1;
+  setsockopt(ServerSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+  setsockopt(ServerSocket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+
   struct sockaddr_in addr_in;
   memset(&addr_in, 0, sizeof(addr_in));
   addr_in.sin_family = AF_INET;
@@ -41,12 +47,16 @@ static void server_create()
 
 static uint32_t server_write(const void* const data, uint32_t size)
 {
-  return socket_write(ServerSocket, data, size, "127.0.0.1", CLIENT_PORT);
+  return socket_write(ServerSocket, data, size, ClientIP, ClientPort);
 }
 
 static uint32_t server_read(void* const data, uint32_t size)
 {
-  return socket_read(ServerSocket, data, size);
+  const uint32_t read_size = socket_read(ServerSocket, data, size, ClientIP, &ClientPort);
+  if (strcmp(ClientIP, "127.0.0.1") || (0 == ClientPort)) {
+    return 0;
+  }
+  return read_size;
 }
 
 static void server_close()
@@ -226,7 +236,7 @@ static void print_log()
   const uint32_t send_cnt = cfg_get_send_counter();
   const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
   const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
-  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)} - Throughput: %.1f KBps\n",
+  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.2f%%), Send: %u(%.2f%%)} - Throughput: %.2f KBps\n",
       recv_cnt, send_cnt, 
       recv_failed_cnt, 100 * (recv_failed_cnt / (float)recv_cnt),
       send_failed_cnt, 100 * (send_failed_cnt / (float)send_cnt),

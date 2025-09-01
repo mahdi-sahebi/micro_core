@@ -34,16 +34,95 @@ struct _mc_msg
 
 #define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y))
 
-static mc_cmp id_compare(const void* a, const void* b)
+static float id_compare(const void* a, const void* b)
 {
   const mc_msg_id id_1 = ((id_node*)a)->id;
   const mc_msg_id id_2 = ((id_node*)b)->id;
-  return (id_1 < id_2) ? MC_ALG_LT : ((id_1 > id_2) ? MC_ALG_GT : MC_ALG_EQ);
+  return id_1 - id_2;
 }
 
 static bool is_header_received(const mc_msg* this)
 {
   return (this->recv_pool_stored >= sizeof(pkt_hdr));
+}
+
+static uint32_t remaining_message_size(const mc_msg* const this, const pkt_hdr* const pkt)
+{
+  return (pkt->size - (this->recv_pool_stored - sizeof(pkt_hdr)));
+}
+
+static uint32_t remaining_header_size(const mc_msg* const this)
+{
+  return (sizeof(pkt_hdr) - this->recv_pool_stored);
+}
+
+static mc_error drop_message(mc_msg* const this)
+{
+  const pkt_hdr* const pkt = (pkt_hdr*)this->recv_pool.data;
+  const uint32_t expected_size = pkt->size + sizeof(pkt_hdr);
+
+  if (mc_buffer_get_size(this->recv_pool) < expected_size) {// Droping message until the end because receive pool is smaller than message size
+    const uint32_t seg_size = MIN(mc_buffer_get_size(this->recv_pool) - sizeof(pkt_hdr), expected_size - this->recv_pool_stored);// TODO(MN): Check minimum of sizeof(pkt_hdr)
+    mc_result_u32 res = mc_comm_recv(this->comm, this->recv_pool.data + sizeof(pkt_hdr), seg_size, 1000000);
+    this->recv_pool_stored += res.value;
+    if (this->recv_pool_stored == expected_size) {
+      this->recv_pool_stored = 0;
+    }
+
+    return MC_ERR_NO_SPACE;
+  }
+
+  return MC_SUCCESS;
+}
+
+static bool is_message_stored(mc_msg* const this)
+{
+  const pkt_hdr* const pkt = (pkt_hdr*)this->recv_pool.data;
+  const uint32_t expected_size = pkt->size + sizeof(pkt_hdr);
+
+  if (this->recv_pool_stored != expected_size) {
+    const uint32_t size = remaining_message_size(this, pkt);
+
+    mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
+    if (!mc_result_is_ok(result) && (MC_ERR_TIMEOUT != result.error)) {
+      return false;
+    }
+    this->recv_pool_stored += result.value; 
+  }
+
+  if (this->recv_pool_stored == expected_size) {
+    this->recv_pool_stored = 0;// TODO(MN): Move before break
+    return true;
+  }
+
+  return false;
+}
+
+static bool read_message_header(mc_msg* this)
+{
+  const uint32_t size = remaining_header_size(this);
+  const mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
+  
+  if (!mc_result_is_ok(result)) {
+    return false;
+  }
+
+if (this->recv_pool.capacity == 120)
+  printf("f\n");
+  
+  this->recv_pool_stored += result.value;
+  return true;
+}
+
+static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
+{
+  id_node temp_node = {.id = pkt->msg_id};
+  const mc_result_ptr result = mc_sarray_find(this->ids, &temp_node);
+  
+  if (mc_result_is_ok(result) && (NULL != result.data)) {
+    const id_node* const node = result.data;
+    node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+  }
 }
 
 mc_result_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
@@ -74,6 +153,7 @@ mc_result_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
 
 mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 {
+  // handle if pkt->size or even pkt_hdr are larger than recv_pool_size
   const mc_result_u32 result = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result.error) {
     return mc_result_ptr(NULL, result.error);
@@ -108,84 +188,27 @@ mc_error mc_msg_update(mc_msg* this)
   }
 
   mc_comm_update(this->comm);
-// handle if pkt->size or even pkt_hdr are larger than recv_pool_size
-  // Receive packet header.
+
   uint32_t size = 0;
+  if (!is_header_received(this) && !read_message_header(this)) {
+    return MC_SUCCESS;
+  }
+
   if (!is_header_received(this)) {
-    size = sizeof(pkt_hdr) - this->recv_pool_stored;
-    const mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
-    if (!mc_result_is_ok(result)) {
-      return MC_SUCCESS;
-    }
-    this->recv_pool_stored += result.value;
+    return MC_SUCCESS;
   }
-  // TODO(MN): Stay here if at least on pkt_hdr is received or 1 byte. 
-  
+
   mc_error error = MC_SUCCESS;
-
-  if (is_header_received(this)) {
-    // TODO(MN): Stay here to receive all message
-    const pkt_hdr* pkt = (pkt_hdr*)this->recv_pool.data;
-    const uint32_t data_size = pkt->size;
-    const uint32_t expected_size = data_size + sizeof(pkt_hdr);
-
-    if (0 == pkt->size) {
-      this->recv_pool_stored = 0;// TODO(MN): Move before break
-      // Find the id and it's callback
-
-      id_node temp_node = {.id = pkt->msg_id};
-      const mc_result_ptr itr = mc_sarray_find(this->ids, &temp_node);
-      if (mc_result_is_ok(itr) && (NULL != itr.data)) {
-        const id_node* const node = itr.data;
-        node->on_receive(node->id, mc_buffer(NULL, 0));
-      }
-
-      return MC_SUCCESS;
-    }
-
-    while (this->recv_pool_stored != expected_size) { 
-
-
-      if (mc_buffer_get_size(this->recv_pool) < expected_size) {
-        const uint32_t seg_size = MIN(mc_buffer_get_size(this->recv_pool), data_size + sizeof(pkt_hdr) - this->recv_pool_stored);
-        mc_result_u32 res = mc_comm_recv(this->comm, this->recv_pool.data, seg_size, 1000000);
-        this->recv_pool_stored += res.value;
-        error = MC_ERR_NO_SPACE;
-        if (this->recv_pool_stored == expected_size) {
-          this->recv_pool_stored = 0;
-          break;
-        }
-        continue;
-      }
-
-
-      size = data_size - (this->recv_pool_stored - sizeof(pkt_hdr));
-  // TODO(MN): store the pkt_hdr on a temp object and not on the recv_pool. retrn the not_enough_memory error
-      mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
-      if (!mc_result_is_ok(result) && (MC_ERR_TIMEOUT != result.error)) {
-        return MC_SUCCESS;
-      }
-      this->recv_pool_stored += result.value; 
-
-      if (this->recv_pool_stored == expected_size) {
-        this->recv_pool_stored = 0;// TODO(MN): Move before break
-        // Find the id and it's callback
-
-        id_node temp_node = {.id = pkt->msg_id};
-        const mc_result_ptr itr = mc_sarray_find(this->ids, &temp_node);
-        if (mc_result_is_ok(itr) && (NULL != itr.data)) {
-          const id_node* const node = itr.data;
-          node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), data_size));
-        }
-        
-        break;
-      }
-
-    }
-
+  if (error = drop_message(this)) {
+    return error;
   }
 
-  return error;
+  if (is_message_stored(this)) {
+    const pkt_hdr* const pkt = (pkt_hdr*)this->recv_pool.data;
+    on_receive(this, pkt);
+  }
+
+  return MC_SUCCESS;
 }
 
 mc_error mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_receive_cb on_receive)
