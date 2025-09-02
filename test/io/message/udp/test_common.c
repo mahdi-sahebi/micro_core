@@ -14,6 +14,7 @@ static uint32_t RecvCounter = 0;
 static uint32_t SendCounter = 0;
 static uint32_t RecvFailedCounter = 0;
 static uint32_t SendFailedCounter = 0;
+static bool BitCorruption = false;
 
 
 static bool simulate_loss() 
@@ -97,25 +98,20 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
 
 uint32_t socket_read(int socket_fd, void* data, uint32_t size, char src_ip[INET_ADDRSTRLEN], uint16_t* src_port)
 {
-  RecvCounter++;
-  static bool bit_corruption = false;
-  bool packetDrop = false;
-
-  if (simulate_loss()) {
-    packetDrop = true;
-    bit_corruption = !bit_corruption;
-    RecvFailedCounter++;
-    
-    if (!bit_corruption) {
-      return 0;
-    }
-  }
+  uint32_t read_size = base_socket_read(socket_fd, data, size, src_ip, src_port);
   
-  const uint32_t read_size = base_socket_read(socket_fd, data, size, src_ip, src_port);
-
-  if (0 != read_size) {
-    if (packetDrop && bit_corruption) {
-      ((uint8_t*)data)[29] ^= 1;
+  if (read_size) {
+    RecvCounter++;
+  
+    if (simulate_loss()) {
+      BitCorruption = !BitCorruption;
+      RecvFailedCounter++;
+      
+      if (!BitCorruption) {
+        read_size = 0;
+      } else {
+        ((uint8_t*)data)[read_size / 2] ^= 1;// TODO(MN): Sometimes CRC16 doesn't detect
+      }
     }
   }
   
