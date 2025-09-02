@@ -30,6 +30,10 @@ static void server_create()
 {
   ServerSocket = socket(AF_INET, SOCK_DGRAM, 0);
   
+  int opt = 1;
+  setsockopt(ServerSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+  setsockopt(ServerSocket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+
   struct sockaddr_in addr_in;
   memset(&addr_in, 0, sizeof(addr_in));
   addr_in.sin_family = AF_INET;
@@ -232,7 +236,7 @@ static void print_log()
   const uint32_t send_cnt = cfg_get_send_counter();
   const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
   const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
-  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)} - Throughput: %.1f KBps\n",
+  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.2f%%), Send: %u(%.2f%%)} - Throughput: %.2f KBps\n",
       recv_cnt, send_cnt, 
       recv_failed_cnt, 100 * (recv_failed_cnt / (float)recv_cnt),
       send_failed_cnt, 100 * (send_failed_cnt / (float)send_cnt),
