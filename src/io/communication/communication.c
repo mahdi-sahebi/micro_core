@@ -287,11 +287,15 @@ mc_result_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_
       break;
     }
 
-    mc_comm_update(this);
     const uint32_t seg_size = wndpool_pop(this->rcv, (char*)dst_data + read_size, size);
 
-    size -= seg_size;
-    read_size += seg_size;
+    if (seg_size) {
+      size -= seg_size;
+      read_size += seg_size;
+    } else {
+      mc_comm_update(this);
+      usleep(MIN_SEND_TIME_US);
+    }
   }
 
   return mc_result_u32(read_size, error);
@@ -310,14 +314,13 @@ mc_result_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, u
   while (size) {
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(mc_pkt));
     mc_buffer buffer = mc_buffer((char*)src_data + sent_size, seg_size);
-
-    mc_comm_update(this);
     buffer = pipeline_send(this, buffer);
     
-    if ((NULL != buffer.data)) {// && (0 != buffer.capacity)){
+    if ((NULL != buffer.data)) {
       size -= seg_size;
       sent_size += seg_size;
     } else {
+      mc_comm_update(this);
       usleep(MIN_SEND_TIME_US);
     }
     
@@ -344,6 +347,8 @@ mc_result_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
     if (mc_now_u() > end_time_us) {
       return mc_result_bool(false, MC_ERR_TIMEOUT);
     }
+
+    usleep(MIN_SEND_TIME_US);
   }
   
   return mc_result_bool(true, MC_SUCCESS);

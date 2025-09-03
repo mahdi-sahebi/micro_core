@@ -194,7 +194,7 @@ static bool recv_variadic_size(uint32_t seed)
 {
   uint32_t data[1024] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint32_t count = (random_count % 28) + 2;
+  const uint32_t count = (random_count % 997) + 27;
   const uint32_t size = count * sizeof(*data);
 
   if (!recv_data(data, size)) {
