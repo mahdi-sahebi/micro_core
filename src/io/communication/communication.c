@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 #include "core/error.h"
 #include "core/time.h"
 #include "io/communication/window.h"
@@ -51,11 +52,13 @@ struct _mc_comm_t
 
 static bool send_buffer(mc_comm* this, const void* buffer, uint32_t size)
 {
-  uint8_t index = 5;
+  uint8_t index = 3;
   while (index--) {
     if (size == this->io.send(buffer, size)) {
       return true;
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
+
+    usleep(100);
   }
   
   return false;
@@ -93,9 +96,8 @@ static mc_buffer protocol_recv(mc_comm* this, mc_buffer buffer)
       return mc_buffer(NULL, 0);
     }
     // TODO(MN): Not per ack
-    const mc_time_t sent_time_us = wndpool_get(this->snd, pkt->id)->sent_time_us;
-    const uint64_t elapsed_time = mc_now_u() - sent_time_us;
-    this->send_delay_us = elapsed_time * 0.8;
+    const uint64_t elapsed_time = mc_now_u() - wndpool_get(this->snd, pkt->id)->sent_time_us;
+    this->send_delay_us = MIN(MAX(elapsed_time * 0.8, MIN_SEND_TIME_US), MAX_SEND_TIME_US);
     wndpool_ack(this->snd, pkt->id);
     return mc_buffer(NULL, 0);// done
   }
@@ -145,7 +147,7 @@ static mc_buffer frame_recv(mc_comm* this, mc_buffer buffer)
 
 static mc_buffer io_send(mc_comm* this, mc_buffer buffer)
 {
-  const uint32_t sent_size = this->io.send(buffer.data, buffer.capacity);
+  const uint32_t sent_size = send_buffer(this, buffer.data, buffer.capacity) ? buffer.capacity : 0;
   return mc_buffer(buffer.data, sent_size);
 }
 
@@ -198,7 +200,7 @@ static void send_unacked(mc_comm* const this)
     }
 
     if (send_buffer(this, &window->packet, this->snd->window_size)) {
-      // window->sent_time_us = now;
+      // window->sent_time_us = mc_now_u();
     }
   }
 }
@@ -312,9 +314,11 @@ mc_result_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, u
     mc_comm_update(this);
     buffer = pipeline_send(this, buffer);
     
-    if (NULL != buffer.data){
+    if ((NULL != buffer.data)) {// && (0 != buffer.capacity)){
       size -= seg_size;
       sent_size += seg_size;
+    } else {
+      usleep(MIN_SEND_TIME_US);
     }
     
     if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
