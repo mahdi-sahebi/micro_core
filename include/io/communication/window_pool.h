@@ -14,10 +14,10 @@ typedef uint8_t mc_wnd_idx;
 typedef struct __attribute__((packed))
 {
   wnd_t*     windows;
-  mc_pkt_id  bgn_id;
+  mc_pkt_id  bgn_id;// TODO(MN): Handle overflow
   mc_pkt_id  end_id;// TODO(MN): Remove
   uint16_t   window_size;
-  uint16_t   last_read_size;
+  uint16_t   last_read_size;// last read/write
   mc_wnd_idx bgn_index;
   mc_wnd_idx capacity;
   mc_pkt     temp_window[0];
