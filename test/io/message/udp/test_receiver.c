@@ -229,13 +229,13 @@ static bool init(void* data)
 
 static void print_log()
 {
-  const mc_time_t duration_s = (EndTime - BeginTime) / 1000000000;
+  const float duration_s = (EndTime - BeginTime) / 1000000000.0F;
   const uint32_t size_1 = 9 * sizeof(char);
   const uint32_t size_2 = 32 * sizeof(uint32_t);
   const uint32_t size_3 = 1 * sizeof(bool);
   const uint32_t size_4 = 0;
   const uint32_t size_k_byte_ps = (size_1 + size_2 + size_3 + size_4) * cfg_get_iterations() / 1024;
-  const float throughput = size_k_byte_ps / (float)duration_s;
+  const float throughput = size_k_byte_ps / duration_s;
 
   const uint32_t recv_cnt = cfg_get_recv_counter();
   const uint32_t send_cnt = cfg_get_send_counter();
