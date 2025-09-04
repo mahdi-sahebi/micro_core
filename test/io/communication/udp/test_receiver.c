@@ -17,6 +17,7 @@ static uint32_t* Result = NULL;
 static mc_comm* message = NULL;
 static mc_buffer AllocBuffer = {0};
 static mc_time_t BeginTime = 0;
+static mc_time_t EndTime = 0;
 
 
 static void server_create()
@@ -88,8 +89,8 @@ static bool init(void* data)
   server_create();
   flush_receive_buffer();
 
-  const uint32_t window_size = 37;
-  const uint32_t window_capacity = 3;
+  const uint32_t window_size = 4 * 1024;
+  const uint32_t window_capacity = 5;
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, window_capacity);
   if (MC_SUCCESS != result_u32.error) {
     *Result = result_u32.error;
@@ -111,15 +112,18 @@ static bool init(void* data)
 
 static void print_log()
 {
-  const mc_time_t duration_s = (mc_now() - BeginTime) / 1000000000;
-  const uint32_t size_k_byte_ps = (9 + 120 + 1) * cfg_get_iterations() / 1024;
-  const float throughput = size_k_byte_ps / (float)duration_s;
+  const float duration_s = (EndTime - BeginTime) / 1000000000.0F;
+  const uint32_t size_1 = 9 * sizeof(char);
+  const uint32_t size_2 = 1024 * sizeof(uint32_t);
+  const uint32_t size_3 = 1 * sizeof(bool);
+  const uint32_t size_k_byte_ps = (size_1 + size_2 + size_3) * cfg_get_iterations() / 1024;
+  const float throughput = size_k_byte_ps / duration_s;
 
   const uint32_t recv_cnt = cfg_get_recv_counter();
   const uint32_t send_cnt = cfg_get_send_counter();
   const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
   const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
-  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.1f%%), Send: %u(%.1f%%)} - Throughput: %.1f KBps\n",
+  printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.2f%%), Send: %u(%.2f%%)} - Throughput: %.2f KBps\n",
       recv_cnt, send_cnt, 
       recv_failed_cnt, 100 * (recv_failed_cnt / (float)recv_cnt),
       send_failed_cnt, 100 * (send_failed_cnt / (float)send_cnt),
@@ -136,6 +140,7 @@ static void deinit()
 
 static void wait_for_sender()
 {
+  EndTime = mc_now();
   const mc_time_t end_time = mc_now_u() + 500000 * ((cfg_get_loss_rate() / 10) + 1);
 
   while (mc_now_u() < end_time) {
@@ -187,9 +192,9 @@ static bool recv_string(uint32_t seed)
 
 static bool recv_variadic_size(uint32_t seed)
 {
-  uint32_t data[30] = {0};
+  uint32_t data[1024] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint32_t count = (random_count % 28) + 2;
+  const uint32_t count = (random_count % 997) + 27;
   const uint32_t size = count * sizeof(*data);
 
   if (!recv_data(data, size)) {

@@ -11,7 +11,6 @@
 
 typedef struct __attribute__((packed))
 {
-  // uint32_t  rest_size;
   uint16_t  size;
   mc_msg_id msg_id;
   char      data[0];
