@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 #include "core/error.h"
 #include "core/time.h"
 #include "io/communication/window.h"
@@ -41,21 +42,23 @@
 
 struct _mc_comm_t
 { 
-  mc_io      io;
-  uint32_t   send_delay_us;// TODO(MN): Use u16 with 100X us resolution
   wndpool_t* rcv;// TODO(MN): Use array to reduce one pointer size
   wndpool_t* snd;
+  mc_io      io;
+  uint32_t   send_delay_us;// TODO(MN): Use u16 with 100X us resolution
 };
 
 
 
 static bool send_buffer(mc_comm* this, const void* buffer, uint32_t size)
 {
-  uint8_t index = 5;
+  uint8_t index = 3;
   while (index--) {
     if (size == this->io.send(buffer, size)) {
       return true;
     }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
+
+    usleep(100);
   }
   
   return false;
@@ -93,9 +96,8 @@ static mc_buffer protocol_recv(mc_comm* this, mc_buffer buffer)
       return mc_buffer(NULL, 0);
     }
     // TODO(MN): Not per ack
-    const mc_time_t sent_time_us = wndpool_get(this->snd, pkt->id)->sent_time_us;
-    const uint64_t elapsed_time = mc_now_u() - sent_time_us;
-    this->send_delay_us = elapsed_time * 0.8;
+    const uint64_t elapsed_time = mc_now_u() - wndpool_get(this->snd, pkt->id)->sent_time_us;
+    this->send_delay_us = MIN(MAX(elapsed_time * 0.8, MIN_SEND_TIME_US), MAX_SEND_TIME_US);
     wndpool_ack(this->snd, pkt->id);
     return mc_buffer(NULL, 0);// done
   }
@@ -145,7 +147,7 @@ static mc_buffer frame_recv(mc_comm* this, mc_buffer buffer)
 
 static mc_buffer io_send(mc_comm* this, mc_buffer buffer)
 {
-  const uint32_t sent_size = this->io.send(buffer.data, buffer.capacity);
+  const uint32_t sent_size = send_buffer(this, buffer.data, buffer.capacity) ? buffer.capacity : 0;
   return mc_buffer(buffer.data, sent_size);
 }
 
@@ -198,7 +200,7 @@ static void send_unacked(mc_comm* const this)
     }
 
     if (send_buffer(this, &window->packet, this->snd->window_size)) {
-      // window->sent_time_us = now;
+      // window->sent_time_us = mc_now_u();
     }
   }
 }
@@ -244,12 +246,12 @@ mc_result_ptr mc_comm_init(
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
   this->rcv->window_size = window_size;
   this->rcv->capacity    = windows_capacity;
-  this->rcv->windows     = (wnd_t*)((char*)this->rcv->temp_window + window_size);
+  this->rcv->windows     = (wnd_t*)((char*)(this->rcv->temp_window) + window_size);
 
-  this->snd              = (wndpool_t*)(char*)(this->rcv->windows) + windows_size;
+  this->snd              = (wndpool_t*)((char*)(this->rcv->windows) + windows_size);
   this->snd->window_size = window_size;
   this->snd->capacity    = windows_capacity;
-  this->snd->windows     = (wnd_t*)((char*)this->snd->temp_window + window_size);
+  this->snd->windows     = (wnd_t*)((char*)(this->snd->temp_window) + window_size);
 
   wndpool_clear(this->rcv);
   wndpool_clear(this->snd);
@@ -285,11 +287,15 @@ mc_result_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_
       break;
     }
 
-    mc_comm_update(this);
     const uint32_t seg_size = wndpool_pop(this->rcv, (char*)dst_data + read_size, size);
 
-    size -= seg_size;
-    read_size += seg_size;
+    if (seg_size) {
+      size -= seg_size;
+      read_size += seg_size;
+    } else {
+      mc_comm_update(this);
+      usleep(MIN_SEND_TIME_US);
+    }
   }
 
   return mc_result_u32(read_size, error);
@@ -308,13 +314,14 @@ mc_result_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, u
   while (size) {
     const uint32_t seg_size = MIN(size, this->snd->window_size - sizeof(mc_pkt));
     mc_buffer buffer = mc_buffer((char*)src_data + sent_size, seg_size);
-
-    mc_comm_update(this);
     buffer = pipeline_send(this, buffer);
     
-    if (NULL != buffer.data){
+    if ((NULL != buffer.data)) {
       size -= seg_size;
       sent_size += seg_size;
+    } else {
+      mc_comm_update(this);
+      usleep(MIN_SEND_TIME_US);
     }
     
     if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
@@ -340,6 +347,8 @@ mc_result_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
     if (mc_now_u() > end_time_us) {
       return mc_result_bool(false, MC_ERR_TIMEOUT);
     }
+
+    usleep(MIN_SEND_TIME_US);
   }
   
   return mc_result_bool(true, MC_SUCCESS);

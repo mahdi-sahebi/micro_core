@@ -7,7 +7,7 @@
 
 
 static uint32_t TestIterations = COMPLETE_COUNT;
-static char SendBuffer[1 * 1024];
+static char SendBuffer[8 * 1024];
 static bool RepetitiveSendEnable = false;
 static uint8_t LossRate = 0;
 static uint32_t RecvCounter = 0;

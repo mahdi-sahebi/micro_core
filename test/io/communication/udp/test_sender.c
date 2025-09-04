@@ -60,8 +60,8 @@ static bool init(void* data)
   client_create();
   let_server_start();
 
-  const uint32_t window_size = 37;
-  const uint32_t window_capacity = 3;// TODO(MN): Calculate accoridng the buffer size / window size
+  const uint32_t window_size = 4 * 1024;
+  const uint32_t window_capacity = 5;// TODO(MN): Calculate accoridng the buffer size / window size
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, window_capacity);
   if (MC_SUCCESS != result_u32.error) {
     *Result = result_u32.error;
@@ -107,9 +107,9 @@ static bool send_string(uint32_t seed)
 
 static bool send_variadic_size(uint32_t seed)
 {
-  uint32_t data[30] = {0};
+  uint32_t data[1024] = {0};
   const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint32_t count = (random_count % 28) + 2;
+  const uint32_t count = (random_count % 997) + 27;
   const uint32_t size = count * sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
