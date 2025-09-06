@@ -21,6 +21,8 @@
  * Get comm interface.
  * Test of incomplete send/recv, packet unlock/lock
  * Use one temp window for send/recv
+ * 
+ * Doc: Concat the data like TCP.
  */
 
 #include <stdlib.h>
@@ -114,14 +116,22 @@ static mc_buffer protocol_recv(mc_comm* this, mc_buffer buffer)
   return buffer;
 }
 
+static void on_send_window_ready(mc_buffer buffer, void* arg)
+{
+  mc_comm* this = arg;
+  send_buffer(this, buffer.data, buffer.capacity);
+}
+
 static mc_buffer frame_send(mc_comm* this, mc_buffer buffer)
 {
-  const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
-  if (wndpool_push(this->snd, buffer)) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
-    return mc_buffer(&window->packet, this->snd->window_size);
-  }
+  const uint32_t size = wndpool_write(this->snd, buffer, on_send_window_ready, this);
+  return mc_buffer(buffer.data, size);
+  // const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
+  // if (wndpool_push(this->snd, buffer)) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
+  //   return mc_buffer(&window->packet, this->snd->window_size);
+  // }
 
-  return mc_buffer(NULL, 0);
+  // return mc_buffer(NULL, 0);
 }
 
 static mc_buffer frame_recv(mc_comm* this, mc_buffer buffer)
@@ -165,11 +175,11 @@ static mc_buffer pipeline_send(mc_comm* this, mc_buffer buffer)
   }
 
   buffer = frame_send(this, buffer);
-  if (NULL == buffer.data) {
-    return buffer;
-  }
+  // if (NULL == buffer.data) {
+  //   return buffer;
+  // }
 
-  buffer = io_send(this, buffer);
+  // buffer = io_send(this, buffer);
   return buffer;
 }
 
@@ -287,7 +297,7 @@ mc_result_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_
       break;
     }
 
-    const uint32_t seg_size = wndpool_pop(this->rcv, (char*)dst_data + read_size, size);
+    const uint32_t seg_size = wndpool_read(this->rcv, mc_buffer((char*)dst_data + read_size, size));
 
     if (seg_size) {
       size -= seg_size;
@@ -316,7 +326,8 @@ mc_result_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, u
     mc_buffer buffer = mc_buffer((char*)src_data + sent_size, seg_size);
     buffer = pipeline_send(this, buffer);
     
-    if ((NULL != buffer.data)) {
+    // if ((NULL != buffer.data)) {
+    if (0 != buffer.capacity) {
       size -= seg_size;
       sent_size += seg_size;
     } else {
