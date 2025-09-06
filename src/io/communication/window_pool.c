@@ -72,7 +72,7 @@ static void remove_acked(wndpool_t* this)
   }
 }
 
-bool wndpool_update(wndpool_t* this, mc_buffer data, mc_pkt_id id)
+bool wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
 {
   if (!wndpool_contains(this, id)) {
     return false;
@@ -80,15 +80,17 @@ bool wndpool_update(wndpool_t* this, mc_buffer data, mc_pkt_id id)
   
   const mc_wnd_idx index = get_index(this, id);
   wnd_t* const window = get_window(this, index);
-  wnd_write(window, data, id);
-  window->packet.crc = 0x0000;
+  wnd_write(window, buffer, id);
+  window->packet.size = mc_buffer_get_size(buffer);
+  memcpy(window->packet.data, buffer.data, mc_buffer_get_size(buffer));
+  window->packet.crc = 0x0000;// TODO(MN): Not necessary here
   window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
   window->is_acked = true;
 
   return true;
 }
 
-uint32_t wndpool_pop(wndpool_t* this, void* data, uint32_t size)
+uint32_t wndpool_pop(wndpool_t* this, void* buffer, uint32_t size)
 {
   if (!is_first_acked(this)) {
     return 0;
@@ -98,12 +100,12 @@ uint32_t wndpool_pop(wndpool_t* this, void* data, uint32_t size)
   // Store the last read bytes. requires the continuous data pools
   // Separate the wnd(s) meta data and data buffers
   wnd_t* const window = wndpool_get(this, this->bgn_id);
-  const uint32_t read_size = MIN(wnd_get_data_size(window) - this->last_read_size, size);
-  memcpy(data, wnd_get_data(window) + this->last_read_size, read_size);
+  const uint32_t read_size = MIN(wnd_get_data_size(window) - this->itr_index, size);
+  memcpy(buffer, wnd_get_data(window) + this->itr_index, read_size);
 
-  this->last_read_size += read_size;
-  if (this->last_read_size >= wnd_get_data_size(window)) {
-    this->last_read_size = 0;
+  this->itr_index += read_size;
+  if (this->itr_index >= wnd_get_data_size(window)) {
+    this->itr_index = 0;
     remove_first(this);
   }
   
@@ -112,13 +114,6 @@ uint32_t wndpool_pop(wndpool_t* this, void* data, uint32_t size)
 
 uint8_t wndpool_get_count(const wndpool_t* this)
 {
-  // uint8_t count = 0;
-
-  // for (mc_wnd_idx index = 0; index < this->capacity; index++) {
-  //   count += wnd_is_valid(get_window(this, index));
-  // }
-
-  // return count;
   return (this->end_id - this->bgn_id);
 }
 
@@ -127,17 +122,20 @@ uint8_t wndpool_get_capacity(const wndpool_t* this)
   return this->capacity;
 }
 
-bool wndpool_push(wndpool_t* this, mc_buffer data)
+bool wndpool_push(wndpool_t* this, mc_buffer buffer)
 {
   if (wndpool_get_count(this) == this->capacity) {
     return false; // TODO(MN): Error
   }
 
   wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
-  wnd_write(window, data, this->end_id);
+  wnd_write(window, buffer, this->end_id);
   window->packet.crc = 0x0000;
   window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
   this->end_id++;
+
+  // TODO(MN): Optimize it.
+  wnd_clear(wndpool_get(this, this->end_id));
 
   return true;
 }
@@ -157,6 +155,49 @@ bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
   
   return true;
 }
+
+uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
+{
+  return wndpool_pop(this, buffer.data, mc_buffer_get_size(buffer));
+}
+
+uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_done, void* arg)
+{
+  if (wndpool_get_count(this) == this->capacity) {
+    return 0;
+  }
+
+  uint32_t data_size = mc_buffer_get_size(buffer);
+  uint32_t sent_size = 0;
+
+  while (data_size) {
+    wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
+    const uint32_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
+    const uint32_t seg_size = MIN(data_size, available_size);
+    memcpy(window->packet.data + window->packet.size, buffer.data + sent_size, seg_size);
+    
+    window->packet.size += seg_size;
+    data_size -= seg_size;
+    sent_size += seg_size;
+
+    if (window->packet.size == wnd_get_payload_size(this->window_size)) {
+      const mc_buffer window_buffer = mc_buffer(&window->packet, this->window_size);
+      const bool pushed = wndpool_push(this, window_buffer);
+
+      if (NULL != on_done) {
+        on_done(window_buffer, arg);
+      }
+
+      if (!pushed) {
+        printf("sss\n");
+        break;
+      }
+    }
+  }
+
+  return sent_size;
+}
+
 
 
 #undef MIN
