@@ -213,6 +213,17 @@ static void send_unacked(mc_comm* const this)
       // window->sent_time_us = mc_now_u();
     }
   }
+
+
+  if (!wndpool_is_empty(this->snd)) {
+    if (mc_now_m() > (this->snd->update_time + 1000)) {
+      wndpool_update_header(this->snd);
+
+      wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Use index
+      mc_buffer last_buffer = mc_buffer(&window->packet, this->snd->window_size);
+      on_send_window_ready(last_buffer, this);
+    }
+  }
 }
 
 mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t windows_capacity)
