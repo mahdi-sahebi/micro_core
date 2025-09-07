@@ -117,6 +117,16 @@ uint8_t wndpool_get_count(const wndpool_t* this)
   return (this->end_id - this->bgn_id);
 }
 
+bool wndpool_is_empty(const wndpool_t* this)
+{
+  if (this->end_id == this->bgn_id) {
+    wnd_t* window = wndpool_get(this, this->end_id);
+    return (0 == window->packet.size);
+  }
+
+  return false;
+}
+
 uint8_t wndpool_get_capacity(const wndpool_t* this)
 {
   return this->capacity;
