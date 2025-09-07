@@ -5,6 +5,7 @@
 #ifndef MC_MESSAGE_WINDOW_POOL_H_
 #define MC_MESSAGE_WINDOW_POOL_H_
 
+#include "core/time.h"
 #include "alg/algorithm.h"
 #include "window.h"
 
@@ -14,6 +15,7 @@ typedef uint8_t mc_wnd_idx;
 typedef struct __attribute__((packed))
 {
   wnd_t*     windows;
+  mc_time_t  update_time;
   mc_pkt_id  bgn_id;// TODO(MN): Handle overflow
   mc_pkt_id  end_id;// TODO(MN): Remove
   uint16_t   window_size;

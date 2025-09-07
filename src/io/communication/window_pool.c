@@ -146,10 +146,6 @@ bool wndpool_push(wndpool_t* this, mc_buffer buffer)
     return false; // TODO(MN): Error
   }
 
-  // wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
-  // wnd_write(window, buffer, this->end_id);
-  // window->packet.crc = 0x0000;
-  // window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
   wndpool_update_header(this);
   this->end_id++;
 
@@ -196,6 +192,7 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_
     memcpy(window->packet.data + window->packet.size, buffer.data + sent_size, seg_size);
     
     window->packet.size += seg_size;
+    this->update_time = mc_now_m();
     data_size -= seg_size;
     sent_size += seg_size;
 
