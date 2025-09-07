@@ -132,16 +132,25 @@ uint8_t wndpool_get_capacity(const wndpool_t* this)
   return this->capacity;
 }
 
+void wndpool_update_header(wndpool_t* this)
+{
+  wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
+  wnd_write(window, buffer, this->end_id);
+  window->packet.crc = 0x0000;
+  window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
+}
+
 bool wndpool_push(wndpool_t* this, mc_buffer buffer)
 {
   if (wndpool_get_count(this) == this->capacity) {
     return false; // TODO(MN): Error
   }
 
-  wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
-  wnd_write(window, buffer, this->end_id);
-  window->packet.crc = 0x0000;
-  window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
+  // wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
+  // wnd_write(window, buffer, this->end_id);
+  // window->packet.crc = 0x0000;
+  // window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
+  wndpool_update_header(this);
   this->end_id++;
 
   // TODO(MN): Optimize it.

@@ -40,5 +40,7 @@ bool     wndpool_ack(wndpool_t* this, mc_pkt_id id);
 uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer);
 uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_done, void* arg);
 bool     wndpool_is_empty(const wndpool_t* this);
+void     wndpool_update_header(wndpool_t* this);
+
 
 #endif /* MC_MESSAGE_WINDOW_POOL_H_ */
