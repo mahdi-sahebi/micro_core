@@ -352,7 +352,7 @@ mc_result_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
 
   const mc_time_t end_time_us = mc_now_u() + timeout_us;
 
-  while (wndpool_get_count(this->snd) || wndpool_get_count(this->rcv)) {
+  while (!wndpool_is_empty(this->snd) || !wndpool_is_empty(this->rcv)) {
     mc_comm_update(this);
 
     if (mc_now_u() > end_time_us) {
