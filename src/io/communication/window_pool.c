@@ -41,7 +41,7 @@ void wndpool_clear(wndpool_t* this)
   this->bgn_index = 0;
 }
 
-bool wndpool_contains(wndpool_t* this, mc_pkt_id id)
+bool wndpool_contains(const wndpool_t* this, mc_pkt_id id)
 {
   return ((this->bgn_id <= id) && (id < this->bgn_id + this->capacity));
 }
@@ -114,7 +114,7 @@ uint32_t wndpool_pop(wndpool_t* this, void* buffer, uint32_t size)
 
 uint8_t wndpool_get_count(const wndpool_t* this)
 {
-  wnd_t* const window = wndpool_get(this, this->end_id);
+  wnd_t* const window = wndpool_get((wndpool_t*)this, this->end_id);
   const uint8_t incomplete = 0 != window->packet.size;
   return (this->end_id - this->bgn_id) + incomplete;
 }
@@ -122,7 +122,7 @@ uint8_t wndpool_get_count(const wndpool_t* this)
 bool wndpool_is_empty(const wndpool_t* this)
 {
   if (this->end_id == this->bgn_id) {
-    wnd_t* window = wndpool_get(this, this->end_id);
+    wnd_t* window = wndpool_get((wndpool_t*)this, this->end_id);
     return (0 == window->packet.size);
   }
 
@@ -163,7 +163,6 @@ bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
   wnd_t* const window = get_window(this, window_index);
   if (!wnd_is_acked(window)) {
     wnd_ack(window);
-    // [WINDOW %u-%u] Received ACK for packet %u - %uus\n",              this->bgn_id, this->bgn_id+this->capacity-1, window_id, TimeNowU() - window->last_sent_time_us));
   }
 
   if (id == this->bgn_id) {
@@ -214,7 +213,6 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_
 
   return sent_size;
 }
-
 
 
 #undef MIN
