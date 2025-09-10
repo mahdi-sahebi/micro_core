@@ -31,7 +31,7 @@ typedef void (*wndpool_on_done_fn)(mc_buffer buffer, void* arg);
 // TODO(MN): init API
 // TODO(MN): Remove unnecessary const
 void     wndpool_clear(wndpool_t* this);
-bool     wndpool_contains(wndpool_t* this, mc_pkt_id id);
+bool     wndpool_contains(const wndpool_t* this, mc_pkt_id id);
 wnd_t*   wndpool_get(wndpool_t* this, mc_pkt_id id);
 uint8_t  wndpool_get_count(const wndpool_t* this);
 uint8_t  wndpool_get_capacity(const wndpool_t* this);
