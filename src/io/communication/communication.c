@@ -87,10 +87,6 @@ static mc_buffer protocol_send(mc_comm* this, mc_buffer buffer)
 
 static mc_buffer protocol_recv(mc_comm* this, mc_buffer buffer)
 {
-  if (buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
-    return mc_buffer(NULL, 0);
-  }
-
   mc_pkt* const pkt = (mc_pkt*)buffer.data;
 
   if (PKT_ACK == pkt->type) {
@@ -128,32 +124,65 @@ static mc_buffer frame_send(mc_comm* this, mc_buffer buffer)
   return mc_buffer(buffer.data, size);
 }
 
-static mc_buffer frame_recv(mc_comm* this, mc_buffer buffer)
+static void frame_init(wndpool_t* pool, uint16_t window_size, uint8_t windows_capacity)
 {
-  // TODO(MN): Append chunks to complete a full frame. This is not acceptable
-  if (buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
-    return mc_buffer(NULL, 0);
-  }
-
-  mc_pkt* const pkt = (mc_pkt*)buffer.data;
-  if (HEADER != pkt->header) {// TODO(MN): Packet unlocked. Find header
-    return mc_buffer(NULL, 0); // [INVALID] Bad header/type received. 
-  }
-
-  const uint16_t received_crc = pkt->crc;
-  pkt->crc = 0x0000;
-  const uint16_t crc = mc_alg_crc16_ccitt(mc_buffer(pkt, this->rcv->window_size)).value;
-  if (received_crc != crc) {
-    return mc_buffer(NULL, 0);// Data corruption
-  }
-
-  return buffer;
+  wndpool_init(pool, window_size, windows_capacity);
 }
 
-static mc_buffer io_recv(mc_comm* this, mc_buffer buffer)
+static bool frame_is_completed(wndpool_t* pool)
 {
-  const uint32_t read_size = this->io.recv(buffer.data, buffer.capacity);
-  return mc_buffer(buffer.data, read_size);
+  return (pool->temp_stored == pool->window_size);
+}
+
+static bool frame_is_header_valid(const mc_pkt* const pkt)
+{
+   return (HEADER == pkt->header);
+}
+
+static void frame_drop(const mc_pkt* const pkt)
+{
+   // TODO(MN): Drop the data until find correct header
+}
+
+static bool frame_is_crc_valid(wndpool_t* pool, mc_pkt* pkt)
+{
+  const uint16_t received_crc = pkt->crc;
+  pkt->crc = 0x0000;
+  const uint16_t crc = mc_alg_crc16_ccitt(mc_buffer(pkt, pool->window_size)).value;
+  return (received_crc == crc);
+}
+
+static void frame_recv(mc_comm* this)
+{
+  if (!frame_is_completed(this->rcv)) {
+    return;
+  }
+
+  this->rcv->temp_stored = 0;
+  mc_pkt* const pkt = (mc_pkt*)this->rcv->temp_window;
+
+  if (!frame_is_header_valid(pkt)) {// TODO(MN): Packet unlocked. Find header. simulated in tests to unlock
+    frame_drop(pkt);
+    return;
+  }
+  if (!frame_is_crc_valid(this->rcv, pkt)) {// Data corruption
+    return;
+  }
+
+  // TODO(MN): Callback
+  protocol_recv(this, mc_buffer(this->rcv->temp_window, this->rcv->window_size));
+}
+
+static void io_recv(mc_comm* this)
+{
+  const uint32_t required_size = this->rcv->window_size - this->rcv->temp_stored;
+  void* const temp_buffer = (char*)this->rcv->temp_window + this->rcv->temp_stored;
+  const uint32_t read_size = this->io.recv(temp_buffer, required_size);
+  
+  if (0 != read_size) {
+    this->rcv->temp_stored += read_size;
+    frame_recv(this); 
+  }
 }
 
 static mc_buffer pipeline_send(mc_comm* this, mc_buffer buffer)
@@ -164,22 +193,6 @@ static mc_buffer pipeline_send(mc_comm* this, mc_buffer buffer)
   }
 
   buffer = frame_send(this, buffer);
-  return buffer;
-}
-
-static mc_buffer pipeline_recv(mc_comm* this, mc_buffer buffer)
-{
-  buffer = io_recv(this, buffer);
-  if (NULL == buffer.data) {
-    return buffer;
-  }
-
-  buffer = frame_recv(this, buffer);
-  if (NULL == buffer.data) {
-    return buffer;
-  }
-
-  buffer = protocol_recv(this, buffer);
   return buffer;
 }
 
@@ -247,19 +260,11 @@ mc_result_ptr mc_comm_init(
   this->io               = io;
   this->send_delay_us    = MIN_SEND_TIME_US;
 
-  // TODO(MN): Define all buffers
   this->rcv              = (wndpool_t*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
-  this->rcv->window_size = window_size;
-  this->rcv->capacity    = windows_capacity;
-  this->rcv->windows     = (wnd_t*)((char*)(this->rcv->temp_window) + window_size);
+  frame_init(this->rcv, window_size, windows_capacity);
 
   this->snd              = (wndpool_t*)((char*)(this->rcv->windows) + windows_size);
-  this->snd->window_size = window_size;
-  this->snd->capacity    = windows_capacity;
-  this->snd->windows     = (wnd_t*)((char*)(this->snd->temp_window) + window_size);
-
-  wndpool_clear(this->rcv);
-  wndpool_clear(this->snd);
+  frame_init(this->snd, window_size, windows_capacity);
 
   return mc_result_ptr(this, MC_SUCCESS);
 }
@@ -270,7 +275,7 @@ mc_error mc_comm_update(mc_comm* this)
     return MC_ERR_INVALID_ARGUMENT;
   }
 
-  pipeline_recv(this, mc_buffer(this->rcv->temp_window, this->rcv->window_size));
+  io_recv(this);
   send_unacked(this);
 
   return MC_SUCCESS;

@@ -19,15 +19,17 @@ typedef struct __attribute__((packed))
   mc_pkt_id  bgn_id;// TODO(MN): Handle overflow
   mc_pkt_id  end_id;// TODO(MN): Remove
   uint16_t   window_size;
-  uint16_t   stored_size;
+  uint16_t   stored_size;// TODO(MN): Use for sender. Remove it. use packet.size
   mc_wnd_idx bgn_index;
   mc_wnd_idx capacity;
+  uint16_t   temp_stored;// TODO(MN): Check max temp size
   mc_pkt     temp_window[0];
 }wndpool_t;
 
 typedef void (*wndpool_on_done_fn)(mc_buffer buffer, void* arg);
 
 
+void     wndpool_init(wndpool_t* this, uint16_t window_size, uint8_t capacity);
 void     wndpool_clear(wndpool_t* this);
 bool     wndpool_contains(const wndpool_t* this, mc_pkt_id id);
 wnd_t*   wndpool_get(wndpool_t* this, mc_pkt_id id);
