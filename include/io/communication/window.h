@@ -59,18 +59,6 @@ do {\
   (WND)->packet.size = 0;\
 } while (0)
 
-#define wnd_write(WND, BUFFER, ID)\
-do {\
-  (WND)->packet.header = HEADER;\
-  (WND)->packet.crc    = 0x0000;\
-  (WND)->packet.type   = PKT_DATA;\
-  (WND)->is_acked      = false;\
-  /*(WND)->packet.size   = (BUFFER).capacity;*/\
-  (WND)->packet.id     = (ID);\
-  (WND)->sent_time_us  = mc_now_u();\
-  /*memcpy((WND)->packet.data, (BUFFER).data, (BUFFER).capacity);*/\
-} while (0)
-
 #define wnd_get_data(WND)\
   (WND)->packet.data
 

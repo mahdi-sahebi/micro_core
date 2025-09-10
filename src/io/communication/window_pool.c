@@ -80,36 +80,12 @@ bool wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
   
   const mc_wnd_idx index = get_index(this, id);
   wnd_t* const window = get_window(this, index);
-  wnd_write(window, buffer, id);
+  window->packet.id = id;
   window->packet.size = mc_buffer_get_size(buffer);
   memcpy(window->packet.data, buffer.data, mc_buffer_get_size(buffer));
-  window->packet.crc = 0x0000;// TODO(MN): Not necessary here
-  window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
   window->is_acked = true;
 
   return true;
-}
-
-uint32_t wndpool_pop(wndpool_t* this, void* buffer, uint32_t size)
-{
-  if (!is_first_acked(this)) {
-    return 0;
-  }
-
-  // TODO(MN): reading less than window size caues window drop!
-  // Store the last read bytes. requires the continuous data pools
-  // Separate the wnd(s) meta data and data buffers
-  wnd_t* const window = wndpool_get(this, this->bgn_id);
-  const uint32_t read_size = MIN(wnd_get_data_size(window) - this->itr_index, size);
-  memcpy(buffer, wnd_get_data(window) + this->itr_index, read_size);
-
-  this->itr_index += read_size;
-  if (this->itr_index >= wnd_get_data_size(window)) {
-    this->itr_index = 0;
-    remove_first(this);
-  }
-  
-  return read_size;
 }
 
 uint8_t wndpool_get_count(const wndpool_t* this)
@@ -136,25 +112,15 @@ uint8_t wndpool_get_capacity(const wndpool_t* this)
 
 void wndpool_update_header(wndpool_t* this)
 {
-  wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
-  wnd_write(window, buffer, this->end_id);
-  window->packet.crc = 0x0000;
-  window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
-}
+  wnd_t* const window = wndpool_get(this, this->end_id);
 
-bool wndpool_push(wndpool_t* this, mc_buffer buffer)
-{
-  if (wndpool_get_count(this) == this->capacity) {
-    return false; // TODO(MN): Error
-  }
-
-  wndpool_update_header(this);
-  this->end_id++;
-
-  // TODO(MN): Optimize it.
-  wnd_clear(wndpool_get(this, this->end_id));
-
-  return true;
+  window->packet.header = HEADER;
+  window->packet.type   = PKT_DATA;
+  window->is_acked      = false;
+  window->packet.id     = this->end_id;
+  window->sent_time_us  = mc_now_u();
+  window->packet.crc    = 0x0000;
+  window->packet.crc    = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
 }
 
 bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
@@ -174,16 +140,33 @@ bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
 
 uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
 {
-  return wndpool_pop(this, buffer.data, mc_buffer_get_size(buffer));
+  if (!is_first_acked(this)) {
+    return 0;
+  }
+
+  // TODO(MN): reading less than window size caues window drop!
+  // Store the last read bytes. requires the continuous data pools
+  // Separate the wnd(s) meta data and data buffers
+  wnd_t* const window = wndpool_get(this, this->bgn_id);
+  const uint32_t read_size = MIN(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
+  memcpy(buffer.data, wnd_get_data(window) + this->stored_size, read_size);
+
+  this->stored_size += read_size;
+  if (this->stored_size >= wnd_get_data_size(window)) {
+    this->stored_size = 0;
+    remove_first(this);
+  }
+  
+  return read_size;
 }
 
 uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_done, void* arg)
 {
   if (wndpool_get_count(this) == this->capacity) {
-    return 0;
+    return 0;// TODO(MN): Requires always one window be free. solve it
   }
 
-  uint32_t data_size = mc_buffer_get_size(buffer);
+  uint32_t data_size = buffer.capacity;
   uint32_t sent_size = 0;
 
   while (data_size) {
@@ -199,11 +182,11 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_
 
     if (window->packet.size == wnd_get_payload_size(this->window_size)) {
       const mc_buffer window_buffer = mc_buffer(&window->packet, this->window_size);
-      const bool pushed = wndpool_push(this, window_buffer);
+      wndpool_update_header(this);
+      this->end_id++;
 
-      if (!pushed) {
-        break;
-      }
+      // TODO(MN): Optimize it.
+      wnd_clear(wndpool_get(this, this->end_id));
 
       if (NULL != on_done) {
         on_done(window_buffer, arg);

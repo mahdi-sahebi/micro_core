@@ -126,16 +126,11 @@ static mc_buffer frame_send(mc_comm* this, mc_buffer buffer)
 {
   const uint32_t size = wndpool_write(this->snd, buffer, on_send_window_ready, this);
   return mc_buffer(buffer.data, size);
-  // const wnd_t* const window = wndpool_get(this->snd, this->snd->end_id);// TODO(MN): Bad design
-  // if (wndpool_push(this->snd, buffer)) { // TODO(MN): Don't Send incompleted windows, allow further sends attach their data
-  //   return mc_buffer(&window->packet, this->snd->window_size);
-  // }
-
-  // return mc_buffer(NULL, 0);
 }
 
 static mc_buffer frame_recv(mc_comm* this, mc_buffer buffer)
 {
+  // TODO(MN): Append chunks to complete a full frame. This is not acceptable
   if (buffer.capacity != this->rcv->window_size) {// TODO(MN): Full check
     return mc_buffer(NULL, 0);
   }
@@ -155,12 +150,6 @@ static mc_buffer frame_recv(mc_comm* this, mc_buffer buffer)
   return buffer;
 }
 
-static mc_buffer io_send(mc_comm* this, mc_buffer buffer)
-{
-  const uint32_t sent_size = send_buffer(this, buffer.data, buffer.capacity) ? buffer.capacity : 0;
-  return mc_buffer(buffer.data, sent_size);
-}
-
 static mc_buffer io_recv(mc_comm* this, mc_buffer buffer)
 {
   const uint32_t read_size = this->io.recv(buffer.data, buffer.capacity);
@@ -175,11 +164,6 @@ static mc_buffer pipeline_send(mc_comm* this, mc_buffer buffer)
   }
 
   buffer = frame_send(this, buffer);
-  // if (NULL == buffer.data) {
-  //   return buffer;
-  // }
-
-  // buffer = io_send(this, buffer);
   return buffer;
 }
 
