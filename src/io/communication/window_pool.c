@@ -114,7 +114,9 @@ uint32_t wndpool_pop(wndpool_t* this, void* buffer, uint32_t size)
 
 uint8_t wndpool_get_count(const wndpool_t* this)
 {
-  return (this->end_id - this->bgn_id);
+  wnd_t* const window = wndpool_get(this, this->end_id);
+  const uint8_t incomplete = 0 != window->packet.size;
+  return (this->end_id - this->bgn_id) + incomplete;
 }
 
 bool wndpool_is_empty(const wndpool_t* this)
@@ -200,13 +202,12 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_
       const mc_buffer window_buffer = mc_buffer(&window->packet, this->window_size);
       const bool pushed = wndpool_push(this, window_buffer);
 
-      if (NULL != on_done) {
-        on_done(window_buffer, arg);
+      if (!pushed) {
+        break;
       }
 
-      if (!pushed) {
-        printf("sss\n");
-        break;
+      if (NULL != on_done) {
+        on_done(window_buffer, arg);
       }
     }
   }
