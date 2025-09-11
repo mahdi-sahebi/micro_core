@@ -46,6 +46,7 @@ typedef struct __attribute__((packed))// TODO(MN): Pads
 
 
 
+// TODO(MN): Rename to wnd_node_size
 #define wnd_get_size(WINDOW_SIZE)\
   ((WINDOW_SIZE) + (sizeof(wnd_t) - sizeof(mc_pkt)))
 
