@@ -8,9 +8,11 @@ set(HEADERS
     ${PUBLIC_INCLUDE_DIRS}/io/communication/window.h
     ${PUBLIC_INCLUDE_DIRS}/io/communication/window_pool.h
     ${PUBLIC_INCLUDE_DIRS}/io/communication/communication.h
+    mc_frame.h
 )
 set(SOURCES 
     window_pool.c
+    mc_frame.c
     communication.c
 )
 

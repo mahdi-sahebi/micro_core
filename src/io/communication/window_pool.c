@@ -28,6 +28,13 @@ static bool is_first_acked(const wndpool_t* this)
   return wnd_is_valid(window) && wnd_is_acked(window);
 }
 
+void wndpool_init(wndpool_t* this, uint16_t window_size, uint8_t capacity)
+{
+  this->window_size = window_size;
+  this->capacity    = capacity;
+  wndpool_clear(this);
+}
+
 void wndpool_clear(wndpool_t* this)
 {
   // TODO(MN): Ignore this loop. separate data and meta list to exploit memcpy 
