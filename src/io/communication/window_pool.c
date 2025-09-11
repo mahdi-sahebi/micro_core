@@ -32,8 +32,6 @@ void wndpool_init(wndpool_t* this, uint16_t window_size, uint8_t capacity)
 {
   this->window_size = window_size;
   this->capacity    = capacity;
-  this->windows     = (wnd_t*)((char*)(this->temp_window) + window_size);
-
   wndpool_clear(this);
 }
 

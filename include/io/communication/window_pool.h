@@ -14,19 +14,20 @@ typedef uint8_t mc_wnd_idx;
 
 typedef struct __attribute__((packed))
 {
-  wnd_t*     windows;
   mc_time_t  update_time;
   mc_pkt_id  bgn_id;// TODO(MN): Handle overflow
   mc_pkt_id  end_id;// TODO(MN): Remove
   uint16_t   window_size;
-  uint16_t   stored_size;// TODO(MN): Use for sender. Remove it. use packet.size
+  uint16_t   stored_size;// TODO(MN): Use for sender. Remove it. use packet.size. rename to last_window_stored
   mc_wnd_idx bgn_index;
   mc_wnd_idx capacity;
-  uint16_t   temp_stored;// TODO(MN): Check max temp size
-  mc_pkt     temp_window[0];
+  wnd_t      windows[0];
 }wndpool_t;
 
 typedef void (*wndpool_on_done_fn)(mc_buffer buffer, void* arg);
+
+#define WNDPOOL_GET_WINDOWS_SIZE(WINDOW_SIZE, CAPACITY)\
+  ((CAPACITY) * wnd_get_size(WINDOW_SIZE))
 
 
 void     wndpool_init(wndpool_t* this, uint16_t window_size, uint8_t capacity);
