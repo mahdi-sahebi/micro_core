@@ -31,8 +31,9 @@
 #include <unistd.h>
 #include "core/error.h"
 #include "core/time.h"
-#include "io/communication/window.h"
+#include "io/communication/window.h"// TODO(MN): Make it private
 #include "io/communication/window_pool.h"
+#include "mc_frame.h"
 #include "io/communication/communication.h"
 
 
@@ -42,13 +43,6 @@
 #define MIN(A, B)           ((A) <= (B) ? (A) : (B))
 #define MAX(A, B)           ((A) >= (B) ? (A) : (B))
 
-typedef struct __attribute__((packed))
-{
-  // TODO(mn): pad
-  uint16_t  temp_stored;// TODO(MN): Check max temp size
-  mc_pkt*   temp_window;
-  wndpool_t pool;
-}mc_frame;
 
 #define MC_FRAME_GET_SIZE(WINDOW_SIZE, CAPACITY)\
   (sizeof(mc_frame) + (WINDOW_SIZE) + WNDPOOL_GET_WINDOWS_SIZE(WINDOW_SIZE, CAPACITY))
@@ -96,94 +90,36 @@ static mc_buffer protocol_send(mc_comm* this, mc_buffer buffer)
   return buffer;
 }
 
-static mc_buffer protocol_recv(mc_comm* this, mc_buffer buffer)
+static void protocol_recv(const mc_buffer buffer, void* arg)
 {
+  mc_comm* this = (mc_comm*)arg;
   mc_pkt* const pkt = (mc_pkt*)buffer.data;
 
   if (PKT_ACK == pkt->type) {
     if (!wndpool_contains(&this->snd->pool, pkt->id)) {// TODO(MN): Test that not read to send ack to let sender sends more
-      return mc_buffer(NULL, 0);
+      return;
     }
     // TODO(MN): Not per ack
     const uint64_t elapsed_time = mc_now_u() - wndpool_get(&this->snd->pool, pkt->id)->sent_time_us;
     this->send_delay_us = MIN(MAX(elapsed_time * 0.8, MIN_SEND_TIME_US), MAX_SEND_TIME_US);
     wndpool_ack(&this->snd->pool, pkt->id);
-    return mc_buffer(NULL, 0);// done
+    return;// done
   }
 
   if (pkt->id < this->rcv->pool.bgn_id) {// TODO(MN): Handle overflow
     send_ack(this, pkt->id);
-    return mc_buffer(NULL, 0);// done
+    return;// done
   }
 
   if (wndpool_update(&this->rcv->pool, mc_buffer(pkt->data, pkt->size), pkt->id)) {
     send_ack(this, pkt->id);
   }
-
-  return buffer;
 }
 
-static void on_send_window_ready(mc_buffer buffer, void* arg)
+static void on_send_window_ready(const mc_buffer buffer, void* arg)
 {
   mc_comm* this = arg;
   send_buffer(this, buffer.data, buffer.capacity);
-}
-
-static mc_buffer frame_send(mc_comm* this, mc_buffer buffer)
-{
-  const uint32_t size = wndpool_write(&this->snd->pool, buffer, on_send_window_ready, this);
-  return mc_buffer(buffer.data, size);
-}
-
-static void frame_init(mc_frame* frame, uint16_t window_size, uint8_t capacity)
-{
-  wndpool_init(&frame->pool, window_size, capacity);
-  frame->temp_stored = 0;
-  frame->temp_window = (mc_pkt*)((char*)frame->pool.windows + WNDPOOL_GET_WINDOWS_SIZE(window_size, capacity));
-}
-
-static bool frame_is_completed(mc_frame* frame)
-{
-  return (frame->temp_stored == frame->pool.window_size);
-}
-
-static bool frame_is_header_valid(const mc_pkt* const pkt)
-{
-   return (HEADER == pkt->header);
-}
-
-static void frame_drop(const mc_pkt* const pkt)
-{
-   // TODO(MN): Drop the data until find correct header
-}
-
-static bool frame_is_crc_valid(wndpool_t* pool, mc_pkt* pkt)
-{
-  const uint16_t received_crc = pkt->crc;
-  pkt->crc = 0x0000;
-  const uint16_t crc = mc_alg_crc16_ccitt(mc_buffer(pkt, pool->window_size)).value;
-  return (received_crc == crc);
-}
-
-static void frame_recv(mc_comm* this)
-{
-  if (!frame_is_completed(this->rcv)) {
-    return;
-  }
-
-  this->rcv->temp_stored = 0;
-  mc_pkt* const pkt = (mc_pkt*)this->rcv->temp_window;
-
-  if (!frame_is_header_valid(pkt)) {// TODO(MN): Packet unlocked. Find header. simulated in tests to unlock
-    frame_drop(pkt);
-    return;
-  }
-  if (!frame_is_crc_valid(&this->rcv->pool, pkt)) {// Data corruption
-    return;
-  }
-
-  // TODO(MN): Callback
-  protocol_recv(this, mc_buffer(this->rcv->temp_window, this->rcv->pool.window_size));
 }
 
 static void io_recv(mc_comm* this)
@@ -194,7 +130,7 @@ static void io_recv(mc_comm* this)
   
   if (0 != read_size) {
     this->rcv->temp_stored += read_size;
-    frame_recv(this); 
+    frame_recv(this->rcv, protocol_recv, this); 
   }
 }
 
@@ -205,7 +141,7 @@ static mc_buffer pipeline_send(mc_comm* this, mc_buffer buffer)
     return buffer;
   }
 
-  buffer = frame_send(this, buffer);
+  buffer = frame_send(this->snd, buffer, on_send_window_ready, this);
   return buffer;
 }
 
