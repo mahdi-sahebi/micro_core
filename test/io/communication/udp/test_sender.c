@@ -60,9 +60,13 @@ static bool init(void* data)
   client_create();
   let_server_start();
 
-  const uint32_t window_size = 4 * 1024;
-  const uint32_t window_capacity = 5;// TODO(MN): Calculate accoridng the buffer size / window size
-  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, window_capacity);
+  const mc_comm_cfg config = {
+    .io = mc_io(client_read, client_write),
+    .window_size = 4 * 1024,
+    .window_capacity = 5
+  };
+
+  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Result = result_u32.error;
     return false;
@@ -71,7 +75,7 @@ static bool init(void* data)
   AllocBuffer = mc_buffer(malloc(alloc_size), alloc_size);
   memset(AllocBuffer.data, 0x00, alloc_size);
 
-  const mc_result_ptr result = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(client_read, client_write));
+  const mc_result_ptr result = mc_comm_init(AllocBuffer, config);
   if (MC_SUCCESS != result.error) {
     *Result = result.error;
     return false;

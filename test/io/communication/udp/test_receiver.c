@@ -89,9 +89,16 @@ static bool init(void* data)
   server_create();
   flush_receive_buffer();
 
+
+  const mc_comm_cfg config = {
+    .io = mc_io(server_read, server_write),
+    .window_size = 4 * 1024,
+    .window_capacity = 5
+  };
+
   const uint32_t window_size = 4 * 1024;
   const uint32_t window_capacity = 5;
-  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, window_capacity);
+  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Result = result_u32.error;
     return false;
@@ -100,7 +107,7 @@ static bool init(void* data)
   AllocBuffer = mc_buffer(malloc(alloc_size), alloc_size);// TODO(MN): Don't alloc dynamically
   memset(AllocBuffer.data, 0x00, alloc_size);
 
-  const mc_result_ptr result = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(server_read, server_write));
+  const mc_result_ptr result = mc_comm_init(AllocBuffer, config);
   if (MC_SUCCESS != result.error) {
     *Result = result.error;
     return false;

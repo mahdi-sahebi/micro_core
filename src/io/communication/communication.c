@@ -43,43 +43,39 @@
 #define MC_FRAME_GET_SIZE(WINDOW_SIZE, CAPACITY)\
   (sizeof(mc_frame) + (WINDOW_SIZE) + WNDPOOL_GET_WINDOWS_SIZE(WINDOW_SIZE, CAPACITY))
 
-mc_result_u32 mc_comm_get_alloc_size(uint16_t window_size, uint8_t capacity)
+mc_result_u32 mc_comm_get_alloc_size(mc_comm_cfg config)
 {
-  if ((0 == capacity) || (0 == window_size)) {
+  if ((NULL == config.io.recv) || (NULL == config.io.send)) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
-  if ((capacity >= (1 << (sizeof(mc_wnd_idx) * 8))) || (window_size < (sizeof(mc_pkt) + 1))) {
+
+  if ((0 == config.window_capacity) || (0 == config.window_size)) {
+    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+  }
+  if ((config.window_capacity >= (1 << (sizeof(mc_wnd_idx) * 8))) || (config.window_size < (sizeof(mc_pkt) + 1))) {
     return mc_result_u32(0, MC_ERR_BAD_ALLOC);
   }
 
-  const uint32_t frames_size = 2 * MC_FRAME_GET_SIZE(window_size, capacity);
+  const uint32_t frames_size = 2 * MC_FRAME_GET_SIZE(config.window_size, config.window_capacity);
   const uint32_t size = sizeof(mc_comm) + frames_size;
   return mc_result_u32(size, MC_SUCCESS);
 }
 
-mc_result_ptr mc_comm_init(
-  mc_buffer alloc_buffer,
-  uint16_t window_size, 
-  uint8_t capacity, 
-  mc_io io)
+mc_result_ptr mc_comm_init(mc_buffer alloc_buffer, mc_comm_cfg config)
 {
-  if ((NULL == io.recv) || (NULL == io.send)) {
-    return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
-  }
-
-  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(window_size, capacity);
+  const mc_result_u32 result_u32 = mc_comm_get_alloc_size(config);
   if ((MC_SUCCESS != result_u32.error) || (mc_buffer_get_size(alloc_buffer) < result_u32.value)) {
     return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
   
   mc_comm* const this = (mc_comm*)alloc_buffer.data;
-  io_init(&this->io, io);
+  io_init(&this->io, config.io);
 
   this->rcv = (mc_frame*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
-  frame_init(this->rcv, window_size, capacity);
+  frame_init(this->rcv, config.window_size, config.window_capacity);
 
-  this->snd = (mc_frame*)((char*)(this->rcv) + MC_FRAME_GET_SIZE(window_size, capacity));
-  frame_init(this->snd, window_size, capacity);
+  this->snd = (mc_frame*)((char*)(this->rcv) + MC_FRAME_GET_SIZE(config.window_size, config.window_capacity));
+  frame_init(this->snd, config.window_size, config.window_capacity);
   
   protocol_init(this);
 
