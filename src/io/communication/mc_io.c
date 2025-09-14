@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include "mc_frame.h"
 #include "mc_io.h"
 
 
@@ -19,13 +20,13 @@ void io_recv(mc_comm* this, io_data_ready_cb data_ready, void* arg)
   }
 }
 
-bool send_buffer(mc_comm* this, const void* buffer, uint32_t size)
+bool io_send(mc_comm* this, const void* buffer, uint32_t size)
 {
   uint8_t index = 3;
   while (index--) {
     if (size == this->io.send(buffer, size)) {
       return true;
-    }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
+    }// TODO(MN): Handle if send is incomplete
 
     usleep(100);
   }
