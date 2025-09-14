@@ -81,23 +81,14 @@ static void print_progress(float progress)
 
 static bool init(void* data)
 {
-  /* TODO(MN): invalid header, incomplete packet, miss packet pointer, use zero copy
-   */
   Result = (uint32_t*)data;
   *Result = MC_SUCCESS;
 
   server_create();
   flush_receive_buffer();
 
+  const mc_comm_cfg config = mc_comm_cfg_new(mc_io(server_read, server_write), 1377, 3, 739, 5);
 
-  const mc_comm_cfg config = {
-    .io = mc_io(server_read, server_write),
-    .window_size = 4 * 1024,
-    .window_capacity = 5
-  };
-
-  const uint32_t window_size = 4 * 1024;
-  const uint32_t window_capacity = 5;
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Result = result_u32.error;

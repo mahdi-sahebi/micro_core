@@ -60,12 +60,8 @@ static bool init(void* data)
   client_create();
   let_server_start();
 
-  const mc_comm_cfg config = {
-    .io = mc_io(client_read, client_write),
-    .window_size = 4 * 1024,
-    .window_capacity = 5
-  };
-
+  const mc_comm_cfg config = mc_comm_cfg_new(mc_io(client_read, client_write), 739, 5, 1377, 3);
+  
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Result = result_u32.error;
