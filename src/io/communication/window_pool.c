@@ -28,6 +28,13 @@ static bool is_first_acked(const wndpool_t* this)
   return wnd_is_valid(window) && wnd_is_acked(window);
 }
 
+void wndpool_init(wndpool_t* this, uint16_t window_size, uint8_t capacity)
+{
+  this->window_size = window_size;
+  this->capacity    = capacity;
+  wndpool_clear(this);
+}
+
 void wndpool_clear(wndpool_t* this)
 {
   // TODO(MN): Ignore this loop. separate data and meta list to exploit memcpy 
@@ -41,7 +48,7 @@ void wndpool_clear(wndpool_t* this)
   this->bgn_index = 0;
 }
 
-bool wndpool_contains(wndpool_t* this, mc_pkt_id id)
+bool wndpool_contains(const wndpool_t* this, mc_pkt_id id)
 {
   return ((this->bgn_id <= id) && (id < this->bgn_id + this->capacity));
 }
@@ -72,7 +79,7 @@ static void remove_acked(wndpool_t* this)
   }
 }
 
-bool wndpool_update(wndpool_t* this, mc_buffer data, mc_pkt_id id)
+bool wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
 {
   if (!wndpool_contains(this, id)) {
     return false;
@@ -80,15 +87,65 @@ bool wndpool_update(wndpool_t* this, mc_buffer data, mc_pkt_id id)
   
   const mc_wnd_idx index = get_index(this, id);
   wnd_t* const window = get_window(this, index);
-  wnd_write(window, data, id);
-  window->packet.crc = 0x0000;
-  window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
+  window->packet.id = id;
+  window->packet.size = mc_buffer_get_size(buffer);
+  memcpy(window->packet.data, buffer.data, mc_buffer_get_size(buffer));
   window->is_acked = true;
 
   return true;
 }
 
-uint32_t wndpool_pop(wndpool_t* this, void* data, uint32_t size)
+uint8_t wndpool_get_count(const wndpool_t* this)
+{
+  wnd_t* const window = wndpool_get((wndpool_t*)this, this->end_id);
+  const uint8_t incomplete = 0 != window->packet.size;
+  return (this->end_id - this->bgn_id) + incomplete;
+}
+
+bool wndpool_is_empty(const wndpool_t* this)
+{
+  if (this->end_id == this->bgn_id) {
+    wnd_t* window = wndpool_get((wndpool_t*)this, this->end_id);
+    return (0 == window->packet.size);
+  }
+
+  return false;
+}
+
+uint8_t wndpool_get_capacity(const wndpool_t* this)
+{
+  return this->capacity;
+}
+
+void wndpool_update_header(wndpool_t* this)
+{
+  wnd_t* const window = wndpool_get(this, this->end_id);
+
+  window->packet.header = HEADER;
+  window->packet.type   = PKT_DATA;
+  window->is_acked      = false;
+  window->packet.id     = this->end_id;
+  window->sent_time_us  = mc_now_u();
+  window->packet.crc    = 0x0000;
+  window->packet.crc    = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
+}
+
+bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
+{  
+  const uint32_t window_index = get_index(this, id);
+  wnd_t* const window = get_window(this, window_index);
+  if (!wnd_is_acked(window)) {
+    wnd_ack(window);
+  }
+
+  if (id == this->bgn_id) {
+    remove_acked(this);
+  }
+  
+  return true;
+}
+
+uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
 {
   if (!is_first_acked(this)) {
     return 0;
@@ -98,64 +155,53 @@ uint32_t wndpool_pop(wndpool_t* this, void* data, uint32_t size)
   // Store the last read bytes. requires the continuous data pools
   // Separate the wnd(s) meta data and data buffers
   wnd_t* const window = wndpool_get(this, this->bgn_id);
-  const uint32_t read_size = MIN(wnd_get_data_size(window) - this->last_read_size, size);
-  memcpy(data, wnd_get_data(window) + this->last_read_size, read_size);
+  const uint32_t read_size = MIN(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
+  memcpy(buffer.data, wnd_get_data(window) + this->stored_size, read_size);
 
-  this->last_read_size += read_size;
-  if (this->last_read_size >= wnd_get_data_size(window)) {
-    this->last_read_size = 0;
+  this->stored_size += read_size;
+  if (this->stored_size >= wnd_get_data_size(window)) {
+    this->stored_size = 0;
     remove_first(this);
   }
   
   return read_size;
 }
 
-uint8_t wndpool_get_count(const wndpool_t* this)
-{
-  // uint8_t count = 0;
-
-  // for (mc_wnd_idx index = 0; index < this->capacity; index++) {
-  //   count += wnd_is_valid(get_window(this, index));
-  // }
-
-  // return count;
-  return (this->end_id - this->bgn_id);
-}
-
-uint8_t wndpool_get_capacity(const wndpool_t* this)
-{
-  return this->capacity;
-}
-
-bool wndpool_push(wndpool_t* this, mc_buffer data)
+uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_done, void* arg)
 {
   if (wndpool_get_count(this) == this->capacity) {
-    return false; // TODO(MN): Error
+    return 0;// TODO(MN): Requires always one window be free. solve it
   }
 
-  wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
-  wnd_write(window, data, this->end_id);
-  window->packet.crc = 0x0000;
-  window->packet.crc = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
-  this->end_id++;
+  uint32_t data_size = buffer.capacity;
+  uint32_t sent_size = 0;
 
-  return true;
-}
+  while (data_size) {
+    wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
+    const uint32_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
+    const uint32_t seg_size = MIN(data_size, available_size);
+    memcpy(window->packet.data + window->packet.size, buffer.data + sent_size, seg_size);
+    
+    window->packet.size += seg_size;
+    this->update_time = mc_now_m();
+    data_size -= seg_size;
+    sent_size += seg_size;
 
-bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
-{  
-  const uint32_t window_index = get_index(this, id);
-  wnd_t* const window = get_window(this, window_index);
-  if (!wnd_is_acked(window)) {
-    wnd_ack(window);
-    // [WINDOW %u-%u] Received ACK for packet %u - %uus\n",              this->bgn_id, this->bgn_id+this->capacity-1, window_id, TimeNowU() - window->last_sent_time_us));
+    if (window->packet.size == wnd_get_payload_size(this->window_size)) {
+      const mc_buffer window_buffer = mc_buffer(&window->packet, this->window_size);
+      wndpool_update_header(this);
+      this->end_id++;
+
+      // TODO(MN): Optimize it.
+      wnd_clear(wndpool_get(this, this->end_id));
+
+      if (NULL != on_done) {
+        on_done(window_buffer, arg);
+      }
+    }
   }
 
-  if (id == this->bgn_id) {
-    remove_acked(this);
-  }
-  
-  return true;
+  return sent_size;
 }
 
 

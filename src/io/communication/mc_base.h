@@ -1,0 +1,25 @@
+#ifndef MC_IO_COMMUNICATION_BASE_H_
+#define MC_IO_COMMUNICATION_BASE_H_
+
+#include <stdint.h>
+#include "io/communication/communication.h"
+// #include "mc_io.h"
+#include "mc_frame.h"
+
+
+struct _mc_comm_t
+{ 
+  mc_frame* rcv;// TODO(MN): Use array to reduce one pointer size
+  mc_frame* snd;
+  mc_io     io;
+  uint32_t  send_delay_us;// TODO(MN): Use u16 with 100X us resolution
+};
+
+#define MAX_SEND_TIME_US    3000000
+#define MIN_SEND_TIME_US    100
+// TODO(MN): Move to math module
+#define MIN(A, B)           ((A) <= (B) ? (A) : (B))
+#define MAX(A, B)           ((A) >= (B) ? (A) : (B))
+
+
+#endif /* MC_IO_COMMUNICATION_BASE_H_ */

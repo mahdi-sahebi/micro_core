@@ -69,6 +69,7 @@ static bool init(void* data)
   }
   const uint32_t alloc_size = result_u32.value;
   AllocBuffer = mc_buffer(malloc(alloc_size), alloc_size);
+  memset(AllocBuffer.data, 0x00, alloc_size);
 
   const mc_result_ptr result = mc_comm_init(AllocBuffer, window_size, window_capacity, mc_io(client_read, client_write));
   if (MC_SUCCESS != result.error) {

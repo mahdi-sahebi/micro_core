@@ -46,25 +46,18 @@ typedef struct __attribute__((packed))// TODO(MN): Pads
 
 
 
+// TODO(MN): Rename to wnd_node_size
 #define wnd_get_size(WINDOW_SIZE)\
   ((WINDOW_SIZE) + (sizeof(wnd_t) - sizeof(mc_pkt)))
+
+#define wnd_get_payload_size(WINDOW_SIZE)\
+  ((WINDOW_SIZE) - sizeof(mc_pkt))
 
 #define wnd_clear(WND)\
 do {\
   (WND)->packet.id = INVALID_ID;\
   (WND)->is_acked  = true;\
-} while (0)
-
-#define wnd_write(WND, BUFFER, ID)\
-do {\
-  (WND)->packet.header = HEADER;\
-  (WND)->packet.crc    = 0x0000;\
-  (WND)->packet.type   = PKT_DATA;\
-  (WND)->is_acked      = false;\
-  (WND)->packet.size   = (BUFFER).capacity;\
-  (WND)->packet.id     = (ID);\
-  (WND)->sent_time_us  = mc_now_u();\
-  memcpy((WND)->packet.data, (BUFFER).data, (BUFFER).capacity);\
+  (WND)->packet.size = 0;\
 } while (0)
 
 #define wnd_get_data(WND)\
