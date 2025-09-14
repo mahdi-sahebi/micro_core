@@ -49,7 +49,6 @@ void frame_recv(mc_frame* this, mc_data_ready_cb data_ready, void* arg)
     return;
   }
 
-  // TODO(MN): Callback
   if (NULL != data_ready) {
     data_ready(mc_buffer(this->temp_window, this->pool.window_size), arg);
   }
