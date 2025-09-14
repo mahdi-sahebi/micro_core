@@ -10,15 +10,19 @@ typedef struct _mc_comm_t mc_comm;
 
 typedef struct
 {
-  mc_io    io;
-  uint16_t window_size;
-  uint16_t window_capacity;
+  uint16_t size;
+  uint8_t  capacity;
+}mc_comm_window_cfg;
+
+typedef struct
+{
+  mc_io              io;
+  mc_comm_window_cfg recv;
+  mc_comm_window_cfg send;
 }mc_comm_cfg;
 
 
-#define mc_comm_cfg(IO, WND_SIZE, WND_CAPACITY)\
-	(mc_comm_cfg){.io = (IO), .window_size = (WND_SIZE), .window_capacity = (WND_CAPACITY)}
-
+mc_comm_cfg    mc_comm_cfg_new(mc_io io, uint16_t recv_window_size, uint16_t recv_window_capacity, uint16_t send_window_size, uint16_t send_window_capacity);
 mc_result_u32  mc_comm_get_alloc_size(mc_comm_cfg config);
 mc_result_ptr  mc_comm_init  (mc_buffer alloc_buffer, mc_comm_cfg config);
 mc_error       mc_comm_update(mc_comm* this);

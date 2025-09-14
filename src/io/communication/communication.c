@@ -43,20 +43,37 @@
 #define MC_FRAME_GET_SIZE(WINDOW_SIZE, CAPACITY)\
   (sizeof(mc_frame) + (WINDOW_SIZE) + WNDPOOL_GET_WINDOWS_SIZE(WINDOW_SIZE, CAPACITY))
 
+mc_comm_cfg mc_comm_cfg_new(
+  mc_io io, 
+  uint16_t recv_window_size, uint16_t recv_window_capacity, 
+  uint16_t send_window_size, uint16_t send_window_capacity)
+{
+  mc_comm_cfg config = {
+    .io = io,
+    .recv = {.size = recv_window_size, .capacity = recv_window_capacity},
+    .send = {.size = send_window_size, .capacity = send_window_capacity}
+  };
+
+  return config;
+}
+
 mc_result_u32 mc_comm_get_alloc_size(mc_comm_cfg config)
 {
   if ((NULL == config.io.recv) || (NULL == config.io.send)) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  if ((0 == config.window_capacity) || (0 == config.window_size)) {
+  if ((0 == config.recv.capacity) || (0 == config.recv.size) ||
+      (0 == config.send.capacity) || (0 == config.send.size)) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
-  if ((config.window_capacity >= (1 << (sizeof(mc_wnd_idx) * 8))) || (config.window_size < (sizeof(mc_pkt) + 1))) {
+  if ((config.recv.size < (sizeof(mc_pkt) + 1)) || (config.send.size < (sizeof(mc_pkt) + 1))) {
     return mc_result_u32(0, MC_ERR_BAD_ALLOC);
   }
 
-  const uint32_t frames_size = 2 * MC_FRAME_GET_SIZE(config.window_size, config.window_capacity);
+  const uint32_t recv_frame_size = MC_FRAME_GET_SIZE(config.recv.size, config.recv.capacity);
+  const uint32_t send_frame_size = MC_FRAME_GET_SIZE(config.send.size, config.send.capacity);
+  const uint32_t frames_size = recv_frame_size + send_frame_size;
   const uint32_t size = sizeof(mc_comm) + frames_size;
   return mc_result_u32(size, MC_SUCCESS);
 }
@@ -72,10 +89,10 @@ mc_result_ptr mc_comm_init(mc_buffer alloc_buffer, mc_comm_cfg config)
   io_init(&this->io, config.io);
 
   this->rcv = (mc_frame*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
-  frame_init(this->rcv, config.window_size, config.window_capacity);
+  frame_init(this->rcv, config.recv.size, config.recv.capacity);// TODO(MN): Pass mc_comm_window_cfg
 
-  this->snd = (mc_frame*)((char*)(this->rcv) + MC_FRAME_GET_SIZE(config.window_size, config.window_capacity));
-  frame_init(this->snd, config.window_size, config.window_capacity);
+  this->snd = (mc_frame*)((char*)(this->rcv) + MC_FRAME_GET_SIZE(config.recv.size, config.recv.capacity));
+  frame_init(this->snd, config.send.size, config.send.capacity);
   
   protocol_init(this);
 
