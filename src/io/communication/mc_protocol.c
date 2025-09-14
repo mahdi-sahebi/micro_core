@@ -56,7 +56,6 @@ void protocol_recv(const mc_buffer buffer, void* arg)
 
 mc_buffer protocol_send(mc_comm* this, mc_buffer buffer)
 {
-  mc_comm_update(this);
   buffer = frame_send(this->snd, buffer, on_send_window_ready, this);
   return buffer;
 }
