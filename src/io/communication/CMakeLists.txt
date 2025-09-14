@@ -11,11 +11,13 @@ set(HEADERS
     mc_base.h
     mc_io.h
     mc_frame.h
+    mc_protocol.h
 )
 set(SOURCES 
     window_pool.c
     mc_io.c
     mc_frame.c
+    mc_protocol.c
     communication.c
 )
 
