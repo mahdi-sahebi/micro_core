@@ -106,9 +106,6 @@ static bool read_message_header(mc_msg* this)
     return false;
   }
 
-if (this->recv_pool.capacity == 120)
-  printf("f\n");
-  
   this->recv_pool_stored += result.value;
   return true;
 }

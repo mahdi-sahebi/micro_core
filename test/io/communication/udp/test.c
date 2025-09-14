@@ -60,28 +60,40 @@ static int invalid_creation()
   mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
   mc_result_ptr result_ptr = {0};
   mc_comm* message = NULL;
+  mc_comm_cfg config = {0};
   
-  result_ptr = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(NULL, write_api));
+  config = mc_comm_cfg_new(mc_io(NULL, write_api), 1024, 3, 1024, 3);
+  result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  result_ptr = mc_comm_init(alloc_buffer, DATA_LEN * sizeof(uint32_t), 3, mc_io(read_api, NULL));
+  config = mc_comm_cfg_new(mc_io(read_api, NULL), 1024, 3, 1024, 3);
+  result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  result_ptr = mc_comm_init(alloc_buffer, 0, 3, mc_io(read_api, write_api));
+  config = mc_comm_cfg_new(mc_io(read_api, write_api), 1024, 3, 0, 3);
+  result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  result_ptr = mc_comm_init(alloc_buffer, 0, 0, mc_io(read_api, write_api));
+  config = mc_comm_cfg_new(mc_io(read_api, write_api), 0, 3, 1024, 3);
+  result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  result_ptr = mc_comm_init(alloc_buffer, 1, 3, mc_io(read_api, write_api));
+  config = mc_comm_cfg_new(mc_io(read_api, write_api), 1024, 3, 1024, 3);
+  result_ptr = mc_comm_init(alloc_buffer, config);
+  if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  config = mc_comm_cfg_new(mc_io(read_api, write_api), 1, 3, 1, 3);
+  result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -95,7 +107,9 @@ static int valid_creation()
   mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
   const uint32_t capcity = 3;
   
-  const mc_result_ptr result = mc_comm_init(alloc_buffer, 5 * sizeof(uint32_t), capcity, mc_io(read_api, write_api));
+  mc_comm_cfg config = mc_comm_cfg_new(
+    mc_io(read_api, write_api), 5 * sizeof(uint32_t), capcity, 5 * sizeof(uint32_t), capcity);
+  const mc_result_ptr result = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS != result.error) || (NULL == result.data)) {
     return MC_ERR_BAD_ALLOC;
   }

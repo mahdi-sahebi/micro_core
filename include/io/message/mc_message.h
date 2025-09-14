@@ -18,6 +18,7 @@ typedef struct
   uint16_t ids_capacity;
 }mc_msg_cfg;
 
+
 #define mc_msg_cfg(IO, POOL_SIZE, WND_SIZE)\
 	(mc_msg_cfg){.io = (IO), .recv_pool_size = (POOL_SIZE), .window_size = (WND_SIZE)}
 
