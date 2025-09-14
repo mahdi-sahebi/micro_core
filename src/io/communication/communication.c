@@ -33,8 +33,9 @@
 #include "core/time.h"
 #include "io/communication/window.h"// TODO(MN): Make it private
 #include "io/communication/window_pool.h"
+#include "mc_base.h"
+#include "mc_io.h"
 #include "mc_frame.h"
-#include "io/communication/communication.h"
 
 
 #define MAX_SEND_TIME_US    3000000
@@ -47,29 +48,7 @@
 #define MC_FRAME_GET_SIZE(WINDOW_SIZE, CAPACITY)\
   (sizeof(mc_frame) + (WINDOW_SIZE) + WNDPOOL_GET_WINDOWS_SIZE(WINDOW_SIZE, CAPACITY))
 
-struct _mc_comm_t
-{ 
-  mc_frame* rcv;// TODO(MN): Use array to reduce one pointer size
-  mc_frame* snd;
-  mc_io     io;
-  uint32_t  send_delay_us;// TODO(MN): Use u16 with 100X us resolution
-};
 
-
-
-static bool send_buffer(mc_comm* this, const void* buffer, uint32_t size)
-{
-  uint8_t index = 3;
-  while (index--) {
-    if (size == this->io.send(buffer, size)) {
-      return true;
-    }// TODO(MN): Handle if send is incomplete. attempt 3 times! 
-
-    usleep(100);
-  }
-  
-  return false;
-}
 
 static void send_ack(mc_comm* this, uint32_t id)
 {
@@ -81,7 +60,7 @@ static void send_ack(mc_comm* this, uint32_t id)
   pkt->crc    = 0x0000;
   pkt->crc    = mc_alg_crc16_ccitt(mc_buffer(pkt, this->snd->pool.window_size)).value;
 
-  send_buffer(this, pkt, this->rcv->pool.window_size);
+  io_send(this, pkt, this->rcv->pool.window_size);
 }
 
 static mc_buffer protocol_send(mc_comm* this, mc_buffer buffer)
@@ -119,21 +98,10 @@ static void protocol_recv(const mc_buffer buffer, void* arg)
 static void on_send_window_ready(const mc_buffer buffer, void* arg)
 {
   mc_comm* this = arg;
-  send_buffer(this, buffer.data, buffer.capacity);
+  io_send(this, buffer.data, buffer.capacity);
 }
 
-static void io_recv(mc_comm* this)
-{
-  const uint32_t required_size = this->rcv->pool.window_size - this->rcv->temp_stored;
-  void* const temp_buffer = (char*)this->rcv->temp_window + this->rcv->temp_stored;
-  const uint32_t read_size = this->io.recv(temp_buffer, required_size);
-  
-  if (0 != read_size) {
-    this->rcv->temp_stored += read_size;
-    frame_recv(this->rcv, protocol_recv, this); 
-  }
-}
-
+// TODO(MN): Remove this pipeline and use event-driven
 static mc_buffer pipeline_send(mc_comm* this, mc_buffer buffer)
 {
   buffer = protocol_send(this, buffer);
@@ -155,7 +123,7 @@ static void send_unacked(mc_comm* const this)
       continue;
     }
 
-    if (send_buffer(this, &window->packet, this->snd->pool.window_size)) {
+    if (io_send(this, &window->packet, this->snd->pool.window_size)) {
       // window->sent_time_us = mc_now_u();
     }
   }
@@ -202,7 +170,7 @@ mc_result_ptr mc_comm_init(
   }
   
   mc_comm* const this = (mc_comm*)alloc_buffer.data;
-  this->io            = io;
+  io_init(&this->io, io);
   this->send_delay_us = MIN_SEND_TIME_US;
 
   this->rcv = (mc_frame*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
@@ -220,7 +188,8 @@ mc_error mc_comm_update(mc_comm* this)
     return MC_ERR_INVALID_ARGUMENT;
   }
 
-  io_recv(this);
+  // mc_buffer buffer;
+  io_recv(this, protocol_recv, this);
   send_unacked(this);
 
   return MC_SUCCESS;
