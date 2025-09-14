@@ -60,7 +60,7 @@ static void send_ack(mc_comm* this, uint32_t id)
   pkt->crc    = 0x0000;
   pkt->crc    = mc_alg_crc16_ccitt(mc_buffer(pkt, this->snd->pool.window_size)).value;
 
-  send_buffer(this, pkt, this->rcv->pool.window_size);
+  io_send(this, pkt, this->rcv->pool.window_size);
 }
 
 static mc_buffer protocol_send(mc_comm* this, mc_buffer buffer)
@@ -98,9 +98,10 @@ static void protocol_recv(const mc_buffer buffer, void* arg)
 static void on_send_window_ready(const mc_buffer buffer, void* arg)
 {
   mc_comm* this = arg;
-  send_buffer(this, buffer.data, buffer.capacity);
+  io_send(this, buffer.data, buffer.capacity);
 }
 
+// TODO(MN): Remove this pipeline and use event-driven
 static mc_buffer pipeline_send(mc_comm* this, mc_buffer buffer)
 {
   buffer = protocol_send(this, buffer);
@@ -122,7 +123,7 @@ static void send_unacked(mc_comm* const this)
       continue;
     }
 
-    if (send_buffer(this, &window->packet, this->snd->pool.window_size)) {
+    if (io_send(this, &window->packet, this->snd->pool.window_size)) {
       // window->sent_time_us = mc_now_u();
     }
   }
