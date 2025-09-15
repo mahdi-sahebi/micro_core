@@ -8,6 +8,7 @@ set(HEADERS
     ${PUBLIC_INCLUDE_DIRS}/io/communication/window.h
     ${PUBLIC_INCLUDE_DIRS}/io/communication/window_pool.h
     ${PUBLIC_INCLUDE_DIRS}/io/communication/communication.h
+    mc_base.h
     mc_io.h
     mc_frame.h
 )
