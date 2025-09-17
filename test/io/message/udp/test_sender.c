@@ -74,6 +74,11 @@ static bool init(void* data)
     *Error = result_u32.error;
     return false;
   }
+
+  if (sizeof(AllocBuffer) < result_u32.value) {
+    *Error = MC_ERR_NO_SPACE;
+    return false;
+  }
   
   const mc_result_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
