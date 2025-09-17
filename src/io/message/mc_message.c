@@ -2,6 +2,7 @@
  * ID-base messages
  * Event-driven
  * Test: Allow to zero pool size for small messages without buffering
+ * Don't set window_capacity, calculate according to the buffer size
  */
 
 #include <stdlib.h>
@@ -160,9 +161,10 @@ mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 
   mc_msg* this = (mc_msg*)alloc_buffer.data;
 
+  mc_comm_cfg* comm_config = (mc_comm_cfg*)&config;
   const mc_buffer comm_buffer = mc_buffer(
-    alloc_buffer.data + sizeof(mc_msg), mc_comm_get_alloc_size(*(mc_comm_cfg*)&config).value);
-  this->comm = mc_comm_init(comm_buffer, *(mc_comm_cfg*)&config).data;
+    alloc_buffer.data + sizeof(mc_msg), mc_comm_get_alloc_size(*comm_config).value);
+  this->comm = mc_comm_init(comm_buffer, *comm_config).data;
 
   this->recv_pool = mc_buffer(mc_buffer_end(comm_buffer), config.pool_size);
   this->recv_pool_stored = 0;
