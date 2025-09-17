@@ -87,11 +87,11 @@ static bool init(void* data)
 
   server_create();
   flush_receive_buffer();
-
   memset(TempBuffer, 0x00, sizeof(TempBuffer));
 
-  const mc_comm_cfg config = mc_comm_cfg_new(mc_io(server_read, server_write), 1379, 2, 159, 3);
-
+  const mc_comm_cfg config = mc_comm_cfg(mc_io(server_read, server_write),
+    mc_comm_wnd(1379, 2), mc_comm_wnd(159, 3));
+    
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Result = result_u32.error;

@@ -31,43 +31,55 @@ static int invalid_creation()
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 0);
+  config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 0), mc_comm_wnd(100, 100), 50, 5);
   result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_msg_cfg(mc_io(io_recv, io_send), 0, 37);
+  config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(0, 100), mc_comm_wnd(100, 100), 50, 5);
   result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_msg_cfg(mc_io(NULL, io_send), 100, 37);
+  config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(0, 100), 50, 5);
   result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_msg_cfg(mc_io(io_recv, NULL), 100, 37);
+  config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 0), 50, 5);
   result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 37);
+  config = mc_msg_cfg(mc_io(NULL, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
+  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  config = mc_msg_cfg(mc_io(io_recv, NULL), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
+  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  if (MC_ERR_INVALID_ARGUMENT != result.error) {
+    return MC_ERR_BAD_ALLOC;
+  }
+
+  config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
   result = mc_msg_init(mc_buffer(memory, 0), config);
   if (MC_ERR_BAD_ALLOC != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 37);
+  config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
   result = mc_msg_init(mc_buffer(NULL, sizeof(memory)), config);
   if (MC_ERR_BAD_ALLOC != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_msg_cfg(mc_io(io_recv, io_send), 2048, 37);
+  config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
   result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
   if (MC_ERR_BAD_ALLOC != result.error) {
     return MC_ERR_BAD_ALLOC;
@@ -81,7 +93,7 @@ static int valid_creation()
   mc_result_ptr result;
   char memory[2048];
 
-  mc_msg_cfg config = mc_msg_cfg(mc_io(io_recv, io_send), 100, 37);
+  mc_msg_cfg config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 3), mc_comm_wnd(50, 2), 200, 15);
   result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
   if ((MC_SUCCESS != result.error) || (NULL == result.data)) {
     return MC_ERR_BAD_ALLOC;

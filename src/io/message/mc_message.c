@@ -1,6 +1,7 @@
 /* TODO(MN): Authentication: Pre-shared keys - Dynamic keys
  * ID-base messages
  * Event-driven
+ * Test: Allow to zero pool size for small messages without buffering
  */
 
 #include <stdlib.h>
@@ -123,12 +124,11 @@ static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
 
 mc_result_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
 { 
-  if ((NULL == config.io.recv) || (NULL == config.io.send) ||
-    (0 == config.recv_pool_size) || (0 == config.window_size)) {
+  if (0 == config.pool_size) {
     return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  mc_result_u32 result = mc_comm_get_alloc_size(config.window_size, 3);
+  mc_result_u32 result = mc_comm_get_alloc_size(*(mc_comm_cfg*)&config);
   if (MC_SUCCESS != result.error) {
     return result;
   }
@@ -143,13 +143,13 @@ mc_result_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
     ids_size = result.value;
   }
 
-  const uint32_t size = sizeof(mc_msg) + comm_size + config.recv_pool_size;
+  const uint32_t size = sizeof(mc_msg) + comm_size + config.pool_size;
   return mc_result_u32(size, MC_SUCCESS);
 }
 
 mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 {
-  // handle if pkt->size or even pkt_hdr are larger than recv_pool_size
+  // handle if pkt->size or even pkt_hdr are larger than pool_size
   const mc_result_u32 result = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result.error) {
     return mc_result_ptr(NULL, result.error);
@@ -161,10 +161,10 @@ mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
   mc_msg* this = (mc_msg*)alloc_buffer.data;
 
   const mc_buffer comm_buffer = mc_buffer(
-    alloc_buffer.data + sizeof(mc_msg), mc_comm_get_alloc_size(config.window_size, 3).value);
-  this->comm = mc_comm_init(comm_buffer, config.window_size, 3, config.io).data;
+    alloc_buffer.data + sizeof(mc_msg), mc_comm_get_alloc_size(*(mc_comm_cfg*)&config).value);
+  this->comm = mc_comm_init(comm_buffer, *(mc_comm_cfg*)&config).data;
 
-  this->recv_pool = mc_buffer(mc_buffer_end(comm_buffer), config.recv_pool_size);
+  this->recv_pool = mc_buffer(mc_buffer_end(comm_buffer), config.pool_size);
   this->recv_pool_stored = 0;
 
   this->ids = NULL;
