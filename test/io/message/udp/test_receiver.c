@@ -183,8 +183,9 @@ static bool init(void* data)
   const mc_msg_cfg config =
   {
     .io = mc_io(server_read, server_write),
-    .window_size = 37,
-    .recv_pool_size = 150,
+    .recv = mc_comm_wnd(37, 2),
+    .send = mc_comm_wnd(37, 2),
+    .pool_size = 150,
     .ids_capacity = 10
   };
   const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);

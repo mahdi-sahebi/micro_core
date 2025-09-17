@@ -40,22 +40,8 @@
 
 
 
-#define MC_FRAME_GET_SIZE(WINDOW_SIZE, CAPACITY)\
+#define FRAME_GET_SIZE(WINDOW_SIZE, CAPACITY)\
   (sizeof(mc_frame) + (WINDOW_SIZE) + WNDPOOL_GET_WINDOWS_SIZE(WINDOW_SIZE, CAPACITY))
-
-mc_comm_cfg mc_comm_cfg_new(
-  mc_io io, 
-  uint16_t recv_window_size, uint16_t recv_window_capacity, 
-  uint16_t send_window_size, uint16_t send_window_capacity)
-{
-  mc_comm_cfg config = {
-    .io = io,
-    .recv = {.size = recv_window_size, .capacity = recv_window_capacity},
-    .send = {.size = send_window_size, .capacity = send_window_capacity}
-  };
-
-  return config;
-}
 
 mc_result_u32 mc_comm_get_alloc_size(mc_comm_cfg config)
 {
@@ -71,8 +57,8 @@ mc_result_u32 mc_comm_get_alloc_size(mc_comm_cfg config)
     return mc_result_u32(0, MC_ERR_BAD_ALLOC);
   }
 
-  const uint32_t recv_frame_size = MC_FRAME_GET_SIZE(config.recv.size, config.recv.capacity);
-  const uint32_t send_frame_size = MC_FRAME_GET_SIZE(config.send.size, config.send.capacity);
+  const uint32_t recv_frame_size = FRAME_GET_SIZE(config.recv.size, config.recv.capacity);
+  const uint32_t send_frame_size = FRAME_GET_SIZE(config.send.size, config.send.capacity);
   const uint32_t frames_size = recv_frame_size + send_frame_size;
   const uint32_t size = sizeof(mc_comm) + frames_size;
   return mc_result_u32(size, MC_SUCCESS);
@@ -89,9 +75,9 @@ mc_result_ptr mc_comm_init(mc_buffer alloc_buffer, mc_comm_cfg config)
   io_init(&this->io, config.io);
 
   this->rcv = (mc_frame*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
-  frame_init(this->rcv, config.recv.size, config.recv.capacity);// TODO(MN): Pass mc_comm_window_cfg
+  frame_init(this->rcv, config.recv.size, config.recv.capacity);// TODO(MN): Pass mc_comm_wnd
 
-  this->snd = (mc_frame*)((char*)(this->rcv) + MC_FRAME_GET_SIZE(config.recv.size, config.recv.capacity));
+  this->snd = (mc_frame*)((char*)(this->rcv) + FRAME_GET_SIZE(config.recv.size, config.recv.capacity));
   frame_init(this->snd, config.send.size, config.send.capacity);
   
   protocol_init(this);
@@ -194,7 +180,7 @@ mc_result_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
   return mc_result_bool(true, MC_SUCCESS);
 }
 
-
+#undef FRAME_GET_SIZE
 #undef MAX_SEND_TIME_US
 #undef MIN_SEND_TIME_US
 #undef MIN
