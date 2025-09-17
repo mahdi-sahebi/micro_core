@@ -98,24 +98,25 @@ static void print_progress(float progress)
 static void on_string_received(mc_msg_id id, mc_buffer buffer)
 {
   if ((77 != id) || mc_buffer_is_null(buffer) || (9 != mc_buffer_get_size(buffer))) {
+    printf("[ERR Data String] wrong data received\n");
     *Error = MC_ERR_RUNTIME;
     return;
   }
   
   if (0 != memcmp(&buffer.data[0], "!p", 2)) {
-    printf("[ERR Data 1] wrong data received\n");
+    printf("[ERR Data String] wrong data received\n");
     *Error = MC_ERR_RUNTIME;
   }
 
   if (0 != memcmp(&buffer.data[5], ".?I", 3)) {
-    printf("[ERR Data 1] wrong data received\n");
+    printf("[ERR Data String] wrong data received\n");
     *Error = MC_ERR_RUNTIME;
   }
 
   char num_text[4] = {0};
   sprintf(num_text, "%03u", TestCounter % 1000);
   if (0 != memcmp(num_text, &buffer.data[2], 3)) {
-    printf("[ERR Data 1] wrong data received\n");
+    printf("[ERR Data String] wrong data received\n");
     *Error = MC_ERR_RUNTIME;
   }
 
@@ -125,6 +126,7 @@ static void on_string_received(mc_msg_id id, mc_buffer buffer)
 static void on_large_received(mc_msg_id id, mc_buffer buffer)
 {
   if ((101 != id) || mc_buffer_is_null(buffer) || (32 * sizeof(uint32_t) != mc_buffer_get_size(buffer))) {
+    printf("[ERR Data Large] wrong data received\n");
     *Error = MC_ERR_RUNTIME;
     return;
   }
@@ -135,7 +137,7 @@ static void on_large_received(mc_msg_id id, mc_buffer buffer)
   for (uint32_t index = 0; index < count; index++) {
     const uint32_t expected = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (TestCounter + 1) + index;
     if (data[index] != expected) {
-      printf("[ERR Data 2] Received: %u, Expected: %u\n", data[index], expected);
+      printf("[ERR Data Large] Received: %u, Expected: %u\n", data[index], expected);
       *Error = MC_ERR_RUNTIME;
     }
   }
@@ -146,6 +148,7 @@ static void on_large_received(mc_msg_id id, mc_buffer buffer)
 static void on_tiny_received(mc_msg_id id, mc_buffer buffer)
 {
   if ((19 != id) || mc_buffer_is_null(buffer) || (sizeof(bool) != mc_buffer_get_size(buffer))) {
+    printf("[ERR Data Tiny] wrong data received\n");
     *Error = MC_ERR_RUNTIME;
     return;
   }
@@ -153,7 +156,7 @@ static void on_tiny_received(mc_msg_id id, mc_buffer buffer)
   const bool* const data = (const bool* const)buffer.data;
 
   if ((TestCounter & 1) != *data) {
-    printf("[ERR Data 1] wrong data received\n");
+    printf("[ERR Data Tiny] wrong data received\n");
     *Error = MC_ERR_RUNTIME;
   }
 
@@ -163,6 +166,7 @@ static void on_tiny_received(mc_msg_id id, mc_buffer buffer)
 static void on_signal_received(mc_msg_id id, mc_buffer buffer)
 {
   if ((9910 != id) || !mc_buffer_is_empty(buffer)) {
+    printf("[ERR Data Signal] wrong data received\n");
     *Error = MC_ERR_RUNTIME;
     return;
   }
