@@ -13,7 +13,8 @@
 static int ClientSocket = -1;
 static mc_comm* message = NULL;
 static uint32_t* Result = NULL;
-static mc_buffer AllocBuffer = {0};
+static char TempBuffer[6 * 1024] = {0};
+static mc_buffer AllocBuffer = mc_buffer(TempBuffer, sizeof(TempBuffer));
 
 
 static void client_create()
@@ -60,17 +61,21 @@ static bool init(void* data)
   client_create();
   let_server_start();
 
-  const mc_comm_cfg config = mc_comm_cfg_new(mc_io(client_read, client_write), 739, 5, 1377, 3);
-  
+  memset(TempBuffer, 0x00, sizeof(TempBuffer));
+
+  const mc_comm_cfg config = mc_comm_cfg_new(mc_io(client_read, client_write), 159, 2, 1379, 3);
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Result = result_u32.error;
     return false;
   }
-  const uint32_t alloc_size = result_u32.value;
-  AllocBuffer = mc_buffer(malloc(alloc_size), alloc_size);
-  memset(AllocBuffer.data, 0x00, alloc_size);
-
+  if (AllocBuffer.capacity < result_u32.value) {
+    printf("[Send] Not enough space for test\n");
+    *Result = MC_ERR_OUT_OF_RANGE;
+    return false;
+  }
+  
+  AllocBuffer.capacity = result_u32.value;
   const mc_result_ptr result = mc_comm_init(AllocBuffer, config);
   if (MC_SUCCESS != result.error) {
     *Result = result.error;
@@ -84,7 +89,6 @@ static bool init(void* data)
 static void deinit()
 {
   client_close();
-  free(AllocBuffer.data);
 }
 
 static bool send_data(const void* data, uint32_t size)
