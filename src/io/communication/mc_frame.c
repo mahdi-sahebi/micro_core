@@ -22,6 +22,7 @@ static bool frame_is_crc_valid(wndpool_t* pool, mc_pkt* pkt)
   const uint16_t received_crc = pkt->crc;
   pkt->crc = 0x0000;
   const uint16_t crc = mc_alg_crc16_ccitt(mc_buffer(pkt, pool->window_size)).value;
+  pkt->crc = received_crc;
   return (received_crc == crc);
 }
 
