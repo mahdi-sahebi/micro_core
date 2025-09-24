@@ -157,7 +157,7 @@ static void wait_for_sender()
 
   while (mc_now_m() < end_time) {
     mc_comm_update(message);
-  }
+  } 
 }
 
 static bool recv_data(void* data, uint32_t size)

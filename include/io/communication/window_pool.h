@@ -14,7 +14,7 @@ typedef uint8_t mc_wnd_idx;
 
 typedef struct __attribute__((packed))
 {
-  mc_time_t  update_time;
+  mc_time_t  update_time;// TODO(MN): Rename to _ms
   mc_pkt_id  bgn_id;// TODO(MN): Handle overflow
   mc_pkt_id  end_id;// TODO(MN): Remove
   uint16_t   window_size;
