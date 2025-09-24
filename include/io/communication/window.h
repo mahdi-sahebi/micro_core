@@ -58,6 +58,7 @@ bool is_sent;// TODO(MN): Rename
 do {\
   (WND)->packet.id = INVALID_ID;\
   (WND)->is_acked  = true;\
+  (WND)->is_sent   = false;\
   (WND)->packet.size = 0;\
 } while (0)
 

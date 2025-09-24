@@ -4,6 +4,8 @@
 #include "mc_protocol.h"
 
 
+#define AUTO_FLUSH_TIMEOUT_MS     250
+
 static void send_ack(mc_comm* this, uint32_t id)
 {
   mc_pkt* const pkt = this->snd->temp_window;
@@ -14,7 +16,7 @@ static void send_ack(mc_comm* this, uint32_t id)
   pkt->crc    = 0x0000;
   pkt->crc    = mc_alg_crc16_ccitt(mc_buffer(pkt, this->snd->pool.window_size)).value;
 
-  io_send(this, pkt, this->rcv->pool.window_size);
+  io_send(this, pkt, this->snd->pool.window_size);
 }
 
 static void on_send_window_ready(const mc_buffer buffer, void* arg)
@@ -76,13 +78,22 @@ void protocol_send_unacked(mc_comm* const this)
     }
   }
 
-  if (!wndpool_is_empty(&this->snd->pool)) {
-    if (mc_now_m() > (this->snd->pool.update_time + 1000)) {
-      wndpool_update_header(&this->snd->pool);
 
-      wnd_t* const window = wndpool_get(&this->snd->pool, this->snd->pool.end_id);// TODO(MN): Use index
-      mc_buffer last_buffer = mc_buffer(&window->packet, this->snd->pool.window_size);
-      on_send_window_ready(last_buffer, this);
+  // TODO(MN): wndpool_is_empty is wrong condition. has_incomplete_frame(). then we must clear the window
+  if (!wndpool_is_empty(&this->snd->pool)) {
+    wnd_t* const window = wndpool_get(&this->snd->pool, this->snd->pool.end_id);// TODO(MN): [PR2]: Pass window, instead of get window
+    if ((0 < window->packet.size) && (window->packet.size != wnd_get_payload_size(this->snd->pool.window_size))) {
+      if (mc_now_m() > (this->snd->pool.update_time + 250)) {// TODO(MN): Update time is extra?
+        if (!window->is_sent) {
+          wndpool_update_header(&this->snd->pool);
+        }
+
+        mc_buffer last_buffer = mc_buffer(&window->packet, this->snd->pool.window_size);
+        // TODO(MN): Call directly
+        on_send_window_ready(last_buffer, this);// TODO(MN): [PR0]: Don't let write this window any longer. Test: send and wait more than this threasold, then continue wriring
+      }
     }
   }
 }
+
+#undef AUTO_FLUSH_TIMEOUT_MS
