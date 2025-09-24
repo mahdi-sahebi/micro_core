@@ -180,6 +180,11 @@ void cfg_set_periodic_duration(uint32_t duration_ms)
   Periodic.duration_ms = duration_ms;
 }
 
+uint32_t cfg_get_periodic_duration()
+{
+  return Periodic.duration_ms;
+}
+
 uint32_t cfg_get_iterations()
 {
   return TestIterations;
