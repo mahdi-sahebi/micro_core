@@ -15,7 +15,7 @@ struct _mc_comm_t
   uint32_t  send_delay_us;// TODO(MN): Use u16 with 100X us resolution
 };
 
-#define MAX_SEND_TIME_US    3000000
+#define MAX_SEND_TIME_US    1000000
 #define MIN_SEND_TIME_US    100
 // TODO(MN): Move to math module
 #define MIN(A, B)           ((A) <= (B) ? (A) : (B))

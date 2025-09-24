@@ -22,6 +22,7 @@ static bool frame_is_crc_valid(wndpool_t* pool, mc_pkt* pkt)
   const uint16_t received_crc = pkt->crc;
   pkt->crc = 0x0000;
   const uint16_t crc = mc_alg_crc16_ccitt(mc_buffer(pkt, pool->window_size)).value;
+  pkt->crc = received_crc;
   return (received_crc == crc);
 }
 
@@ -45,6 +46,7 @@ void frame_recv(mc_frame* this, mc_data_ready_cb data_ready, void* arg)
     frame_drop(pkt);
     return;
   }
+  
   if (!frame_is_crc_valid(&this->pool, pkt)) {// Data corruption
     return;
   }
@@ -59,3 +61,4 @@ mc_buffer frame_send(mc_frame* this, mc_buffer buffer, mc_data_ready_cb data_rea
   const uint32_t size = wndpool_write(&this->pool, buffer, data_ready, arg);
   return mc_buffer(buffer.data, size);
 }
+

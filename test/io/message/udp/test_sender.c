@@ -64,12 +64,19 @@ static bool init(void* data)
   const mc_msg_cfg config =
   {
     .io = mc_io(client_read, client_write),
-    .window_size = 37,
-    .recv_pool_size = 120
+    .recv = mc_comm_wnd(37, 2),
+    .send = mc_comm_wnd(37, 2),
+    .pool_size = 120,
+    .ids_capacity = 0
   };
   const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Error = result_u32.error;
+    return false;
+  }
+
+  if (sizeof(AllocBuffer) < result_u32.value) {
+    *Error = MC_ERR_NO_SPACE;
     return false;
   }
   

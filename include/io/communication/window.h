@@ -29,7 +29,7 @@ typedef enum __attribute__((packed))
 
 typedef struct __attribute__((packed))// TODO(MN): Pads
 {
-  mc_pkt_hdr  header;
+  mc_pkt_hdr  header;// TODO(NM): Rename to hdr
   uint16_t    crc;
   mc_pkt_type type;// TODO(MN) : 1;
   mc_pkt_id   id;
@@ -41,6 +41,7 @@ typedef struct __attribute__((packed))// TODO(MN): Pads
 {
   mc_time_t sent_time_us;
   bool      is_acked;// TODO(MN): 1 bit
+bool is_sent;// TODO(MN): Rename
   mc_pkt    packet;
 }wnd_t;
 
@@ -49,7 +50,7 @@ typedef struct __attribute__((packed))// TODO(MN): Pads
 // TODO(MN): Rename to wnd_node_size
 #define wnd_get_size(WINDOW_SIZE)\
   ((WINDOW_SIZE) + (sizeof(wnd_t) - sizeof(mc_pkt)))
-
+// TODO(MN): Use in some places
 #define wnd_get_payload_size(WINDOW_SIZE)\
   ((WINDOW_SIZE) - sizeof(mc_pkt))
 
@@ -57,6 +58,7 @@ typedef struct __attribute__((packed))// TODO(MN): Pads
 do {\
   (WND)->packet.id = INVALID_ID;\
   (WND)->is_acked  = true;\
+  (WND)->is_sent   = false;\
   (WND)->packet.size = 0;\
 } while (0)
 
