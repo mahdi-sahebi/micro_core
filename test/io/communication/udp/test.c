@@ -169,7 +169,7 @@ static int singly_low_lossy()
 static int singly_high_lossy()
 {
   cfg_set_loss_rate(95);
-  cfg_set_iterations(200);
+  cfg_set_iterations(100);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;

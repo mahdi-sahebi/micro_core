@@ -15,7 +15,7 @@
 static int ServerSocket = -1;
 static uint32_t* Result = NULL;
 static mc_comm* message = NULL;
-static char TempBuffer[6 * 1024] = {0};
+static char TempBuffer[5 * 1024] = {0};
 static mc_buffer AllocBuffer = mc_buffer(TempBuffer, sizeof(TempBuffer));
 static mc_time_t BeginTime = 0;
 static mc_time_t EndTime = 0;
@@ -34,6 +34,13 @@ static void server_create()
 
   struct timeval timeout = {0, 10000};
   setsockopt(ServerSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+  int recv_buf_size = 1460;
+  if (setsockopt(ServerSocket, SOL_SOCKET, SO_RCVBUF, &recv_buf_size, sizeof(recv_buf_size)) < 0) {
+    perror("setsockopt SO_RCVBUF failed");
+    close(ServerSocket);
+    exit(EXIT_FAILURE);
+  }
 }
 
 static uint32_t server_write(const void* const data, uint32_t size)
@@ -45,6 +52,7 @@ static uint32_t server_read(void* const data, uint32_t size)
 {
   return socket_read(ServerSocket, data, size);
 }
+
 static void server_close()
 {
   close(ServerSocket);
@@ -90,7 +98,7 @@ static bool init(void* data)
   memset(TempBuffer, 0x00, sizeof(TempBuffer));
 
   const mc_comm_cfg config = mc_comm_cfg(mc_io(server_read, server_write),
-    mc_comm_wnd(1379, 2), mc_comm_wnd(159, 3));
+    mc_comm_wnd(1157, 3), mc_comm_wnd(59, 1));
     
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
@@ -227,7 +235,7 @@ static bool recv_tiny_size(uint32_t seed)
   }
 
   if ((seed & 1) != data) {
-    printf("[ERR Data 1] wrong data received\n");
+    printf("[ERR Data 3] wrong data received\n");
     return false;
   }
 
