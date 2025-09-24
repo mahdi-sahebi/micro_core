@@ -153,9 +153,9 @@ static void deinit()
 static void wait_for_sender()
 {
   EndTime = mc_now();
-  const mc_time_t end_time = mc_now_u() + 500000 * ((cfg_get_loss_rate() / 10) + 1);
+  const mc_time_t end_time = mc_now_m() + (cfg_get_periodic_duration() * 1)  + (100 * cfg_get_loss_rate());
 
-  while (mc_now_u() < end_time) {
+  while (mc_now_m() < end_time) {
     mc_comm_update(message);
   }
 }
