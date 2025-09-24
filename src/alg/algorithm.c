@@ -86,3 +86,23 @@ mc_result_u32 mc_alg_crc16_ccitt(mc_buffer buffer)
   
   return mc_result_u32(crc, MC_SUCCESS);
 }
+
+mc_result_u32 mc_alg_crc32(mc_buffer buffer)
+{
+  uint32_t crc = 0xffffffff;
+  uint32_t size = buffer.capacity * buffer.data_size;
+  const uint8_t* itr = buffer.data;
+
+  for (size_t i = 0; i < size; i++) {
+    crc ^= itr[i];
+    for (int j = 8; j > 0; j--) {
+      if (crc & 1)
+          crc = (crc >> 1) ^ 0xEDB88320;
+      else
+          crc >>= 1;
+    }
+  }
+
+  crc = ~crc;
+  return mc_result_u32(crc, MC_SUCCESS);
+}

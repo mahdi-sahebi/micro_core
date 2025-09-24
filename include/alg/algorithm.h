@@ -15,6 +15,7 @@ mc_result_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_distance_fn 
 
 // TODO(MN): Separate and move to error module
 mc_result_u32 mc_alg_crc16_ccitt(mc_buffer buffer);
+mc_result_u32 mc_alg_crc32(mc_buffer buffer);
 
 
 #endif /* MC_ALG_ALGORITHM_H_ */
