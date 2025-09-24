@@ -152,6 +152,7 @@ static int singly_repetitive()
 {
   cfg_set_repetitive_send(true);
   cfg_set_iterations(200);
+  cfg_set_periodic_duration(0);
   const int result = singly_direction();
   cfg_set_repetitive_send(true);
   return result;
@@ -161,6 +162,7 @@ static int singly_low_lossy()
 {
   cfg_set_loss_rate(20);
   cfg_set_iterations(200);
+  cfg_set_periodic_duration(100);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
@@ -168,8 +170,9 @@ static int singly_low_lossy()
 
 static int singly_high_lossy()
 {
-  cfg_set_loss_rate(95);
+  cfg_set_loss_rate(98);
   cfg_set_iterations(100);
+  cfg_set_periodic_duration(5000);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
