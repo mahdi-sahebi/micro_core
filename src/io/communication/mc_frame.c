@@ -45,6 +45,7 @@ void frame_recv(mc_frame* this, mc_data_ready_cb data_ready, void* arg)
     frame_drop(pkt);
     return;
   }
+  
   if (!frame_is_crc_valid(&this->pool, pkt)) {// Data corruption
     return;
   }
@@ -59,3 +60,4 @@ mc_buffer frame_send(mc_frame* this, mc_buffer buffer, mc_data_ready_cb data_rea
   const uint32_t size = wndpool_write(&this->pool, buffer, data_ready, arg);
   return mc_buffer(buffer.data, size);
 }
+

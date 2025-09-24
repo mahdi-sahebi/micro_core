@@ -16,7 +16,7 @@ static mc_wnd_idx get_index(const wndpool_t* this, const mc_pkt_id id)
   return (this->bgn_id + dif) % this->capacity;
 }
 
-static wnd_t* get_window(const wndpool_t* this, const mc_wnd_idx index)
+static wnd_t* get_window(const wndpool_t* this, const mc_wnd_idx index)// TODO(MN): inline
 {
   // TODO(MN): Optimize
   return (wnd_t*)((char*)(this->windows) + (index * wnd_get_size(this->window_size)));// TODO(MN): Rcv/snd
@@ -119,19 +119,20 @@ uint8_t wndpool_get_capacity(const wndpool_t* this)
 
 void wndpool_update_header(wndpool_t* this)
 {
-  wnd_t* const window = wndpool_get(this, this->end_id);
+  wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): [PR2]: Pass window, instead of get window
 
   window->packet.header = HEADER;
   window->packet.type   = PKT_DATA;
-  window->is_acked      = false;
   window->packet.id     = this->end_id;
   window->sent_time_us  = mc_now_u();
   window->packet.crc    = 0x0000;
   window->packet.crc    = mc_alg_crc16_ccitt(mc_buffer(&window->packet, this->window_size)).value;
+  window->is_acked      = false;
+  window->is_sent       = true;
 }
 
 bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
-{  
+{
   const uint32_t window_index = get_index(this, id);
   wnd_t* const window = get_window(this, window_index);
   if (!wnd_is_acked(window)) {
@@ -159,6 +160,7 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
   memcpy(buffer.data, wnd_get_data(window) + this->stored_size, read_size);
 
   this->stored_size += read_size;
+
   if (this->stored_size >= wnd_get_data_size(window)) {
     this->stored_size = 0;
     remove_first(this);
