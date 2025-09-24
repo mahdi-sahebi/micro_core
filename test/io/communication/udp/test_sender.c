@@ -34,12 +34,12 @@ static void client_create()
 
 static uint32_t client_write(const void* const data, uint32_t size)
 {
-    return socket_write(ClientSocket, data, size, "127.0.0.1", SERVER_PORT);
+  return socket_write(ClientSocket, data, size, "127.0.0.1", SERVER_PORT);
 }
 
 static uint32_t client_read(void* data, uint32_t size)
 {
-    return socket_read(ClientSocket, data, size);
+  return socket_read(ClientSocket, data, size);
 }
 
 static void client_close()
@@ -63,7 +63,7 @@ static bool init(void* data)
   memset(TempBuffer, 0x00, sizeof(TempBuffer));
 
   const mc_comm_cfg config = mc_comm_cfg(mc_io(client_read, client_write), 
-    mc_comm_wnd(159, 2), mc_comm_wnd(1379, 3));
+    mc_comm_wnd(59, 2), mc_comm_wnd(1157, 4));
     
   const mc_result_u32 result_u32 = mc_comm_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
