@@ -21,8 +21,10 @@
  * Get comm interface.
  * Test of incomplete send/recv, packet unlock/lock
  * Use one temp window for send/recv
- * 
+ * ID -1 is not allowed
  * Doc: Concat the data like TCP.
+ * In message: UDP reading small size from a big segment, causes lost of whole of segment. 
+ * update reading size as big as possible. Like reading header size then data
  */
 
 #include <stdlib.h>
@@ -137,6 +139,7 @@ mc_result_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, u
   mc_error error = MC_SUCCESS;
   const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
 
+  // TODO(MN): This loop is repetitive in the wndpool_write
   while (size) {
     const uint32_t seg_size = MIN(size, this->snd->pool.window_size - sizeof(mc_pkt));
     mc_buffer buffer = mc_buffer((char*)src_data + sent_size, seg_size);
@@ -148,8 +151,8 @@ mc_result_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, u
     } else {
       mc_comm_update(this);
       usleep(MIN_SEND_TIME_US);
-    }
-    
+    } 
+
     if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
       error = MC_ERR_TIMEOUT;
       break;
