@@ -11,14 +11,14 @@
 #include "io/message/mc_message.h"
 
 
-typedef struct __attribute__((packed))
+typedef struct// __attribute__((packed))
 {
   uint16_t  size;
   mc_msg_id msg_id;
-  char      data[0];
+  uint8_t   data[0];
 }pkt_hdr;
 
-typedef struct __attribute__((packed))
+typedef struct// __attribute__((packed))
 {
   mc_msg_receive_cb on_receive;
   mc_msg_id         id;
@@ -84,10 +84,7 @@ static bool is_message_stored(mc_msg* const this)
   if (this->recv_pool_stored != expected_size) {
     const uint32_t size = remaining_message_size(this, pkt);
 
-    mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
-    if (!mc_result_is_ok(result) && (MC_ERR_TIMEOUT != result.error)) {
-      return false;
-    }
+    const mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
     this->recv_pool_stored += result.value; 
   }
 
@@ -104,12 +101,8 @@ static bool read_message_header(mc_msg* this)
   const uint32_t size = remaining_header_size(this);
   const mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
   
-  if (!mc_result_is_ok(result)) {
-    return false;
-  }
-
   this->recv_pool_stored += result.value;
-  return true;
+  return (this->recv_pool_stored >= sizeof(pkt_hdr));
 }
 
 static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
@@ -119,7 +112,9 @@ static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
   
   if (mc_result_is_ok(result) && (NULL != result.data)) {
     const id_node* const node = result.data;
-    node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+    if (temp_node.id == node->id) {
+      node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+    }
   }
 }
 
@@ -249,7 +244,7 @@ mc_result_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t
     .size = size,
     .msg_id = id
   };
-  
+  // TODO(MN): Handle header sent, data not and vice versa in different call
   mc_result_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
   if (!mc_result_is_ok(result)) {
     return result;

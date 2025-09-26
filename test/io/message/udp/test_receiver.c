@@ -17,7 +17,7 @@ static char ClientIP[INET_ADDRSTRLEN];
 static uint16_t ClientPort = 0;
 static mc_error* Error = NULL;
 static mc_msg* message = NULL;
-static char AllocBuffer[2 * 1024];
+static char AllocBuffer[600];
 static uint32_t TestCounter = 0;
 static bool IsStringReceived = false;
 static bool IsLargeReceived  = false;
@@ -126,7 +126,7 @@ static void on_string_received(mc_msg_id id, mc_buffer buffer)
 static void on_large_received(mc_msg_id id, mc_buffer buffer)
 {
   if ((101 != id) || mc_buffer_is_null(buffer) || (32 * sizeof(uint32_t) != mc_buffer_get_size(buffer))) {
-    printf("[ERR Data Large] wrong data received\n");
+    printf("[ERR Data Large] Invalid size\n");
     *Error = MC_ERR_RUNTIME;
     return;
   }
@@ -187,8 +187,8 @@ static bool init(void* data)
   const mc_msg_cfg config =
   {
     .io = mc_io(server_read, server_write),
-    .recv = mc_comm_wnd(37, 2),
-    .send = mc_comm_wnd(37, 2),
+    .recv = mc_comm_wnd(39, 2),
+    .send = mc_comm_wnd(37, 1),
     .pool_size = 150,
     .ids_capacity = 10
   };

@@ -13,7 +13,7 @@
 static int ClientSocket = -1;
 static mc_msg* message = NULL;
 static mc_error* Error = NULL;
-static char AllocBuffer[1 * 1024];
+static char AllocBuffer[600];
 
 
 static void client_create()
@@ -64,8 +64,8 @@ static bool init(void* data)
   const mc_msg_cfg config =
   {
     .io = mc_io(client_read, client_write),
-    .recv = mc_comm_wnd(37, 2),
-    .send = mc_comm_wnd(37, 2),
+    .recv = mc_comm_wnd(37, 1),
+    .send = mc_comm_wnd(39, 3),
     .pool_size = 120,
     .ids_capacity = 0
   };
@@ -86,7 +86,7 @@ static bool init(void* data)
     return false;
   }
 
-  message = result.data;;
+  message = result.data;
   return true;
 }
 
