@@ -119,7 +119,9 @@ static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
   
   if (mc_result_is_ok(result) && (NULL != result.data)) {
     const id_node* const node = result.data;
-    node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+    if (temp_node.id == node->id) {
+      node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+    }
   }
 }
 
