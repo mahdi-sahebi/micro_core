@@ -36,7 +36,7 @@ struct _mc_msg
 #define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y)) // TODO(MN): Move to math
 
 
-static float id_compare(const void* a, const void* b)
+static float id_compare(cvoid* a, cvoid* b)
 {
   const mc_msg_id id_1 = ((id_node*)a)->id;
   const mc_msg_id id_2 = ((id_node*)b)->id;

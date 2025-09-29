@@ -15,7 +15,7 @@ static uint32_t io_recv(void* const data, uint32_t size)
   return 0;
 }
 
-static uint32_t io_send(const void* const data, uint32_t size)
+static uint32_t io_send(cvoid* const data, uint32_t size)
 {
   return 0;
 }

@@ -129,7 +129,7 @@ mc_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeo
   return mc_u32(read_size, error);
 }
 
-mc_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32_t timeout_us)
+mc_u32 mc_comm_send(mc_comm* this, cvoid* src_data, uint32_t size, uint32_t timeout_us)
 {
   if ((NULL == this) || (NULL == src_data)) {
     return mc_u32(0, MC_ERR_INVALID_ARGUMENT);

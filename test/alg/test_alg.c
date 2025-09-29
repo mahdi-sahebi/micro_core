@@ -7,7 +7,7 @@
 #include "alg/algorithm.h"
 
 
-static float distance_i16(const void* data_1, const void* data_2) 
+static float distance_i16(cvoid* data_1, cvoid* data_2) 
 {
   const int16_t a = *(const int16_t*)data_1;
   const int16_t b = *(const int16_t*)data_2;

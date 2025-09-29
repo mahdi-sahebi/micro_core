@@ -21,7 +21,7 @@ static uint32_t read_api(void* const data, uint32_t size)
   return size;
 }
 
-static uint32_t write_api(const void* const data, uint32_t size)
+static uint32_t write_api(cvoid* const data, uint32_t size)
 {
   return size;
 }

@@ -32,7 +32,7 @@ static void client_create()
   setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 }
 
-static uint32_t client_write(const void* const data, uint32_t size)
+static uint32_t client_write(cvoid* const data, uint32_t size)
 {
   return socket_write(ClientSocket, data, size, "127.0.0.1", SERVER_PORT);
 }
@@ -92,7 +92,7 @@ static void deinit()
   client_close();
 }
 
-static bool send_data(const void* data, uint32_t size)
+static bool send_data(cvoid* data, uint32_t size)
 {
   const mc_u32 result = mc_comm_send(message, data, size, TEST_TIMEOUT_US);
   if ((MC_SUCCESS != result.error) || (result.value != size)) {

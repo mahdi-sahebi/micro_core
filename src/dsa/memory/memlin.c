@@ -113,24 +113,24 @@ static void init_32(void* const this, uint64_t size)
     ((meta_32*)this)->size = 0;
 }
 
-static uint32_t get_capacity_08(const void* const this)
+static uint32_t get_capacity_08(cvoid* const this)
 {
     return ((meta_08*)this)->capacity;
 }
 
-static uint32_t get_capacity_16(const void* const this)
+static uint32_t get_capacity_16(cvoid* const this)
 {
     return ((meta_16*)this)->capacity;
 }
 
-static uint32_t get_capacity_32(const void* const this)
+static uint32_t get_capacity_32(cvoid* const this)
 {
     return ((meta_32*)this)->capacity;
 }
 
-static uint32_t get_capacity(const void* this)
+static uint32_t get_capacity(cvoid* this)
 {
-    typedef uint32_t (*cb_getter)(const void* const);
+    typedef uint32_t (*cb_getter)(cvoid* const);
     const cb_getter getter[] = {
         [WORD_08_BITS] = get_capacity_08,
         [WORD_16_BITS] = get_capacity_16,
@@ -140,24 +140,24 @@ static uint32_t get_capacity(const void* this)
     return getter[get_word_size(this)](this);
 }
 
-static uint32_t get_size_08(const void* const this)
+static uint32_t get_size_08(cvoid* const this)
 {
     return ((meta_08*)this)->size;
 }
 
-static uint32_t get_size_16(const void* const this)
+static uint32_t get_size_16(cvoid* const this)
 {
     return ((meta_16*)this)->size;
 }
 
-static uint32_t get_size_32(const void* const this)
+static uint32_t get_size_32(cvoid* const this)
 {
     return ((meta_32*)this)->size;
 }
 
-static uint32_t get_size(const void* this)
+static uint32_t get_size(cvoid* this)
 {
-    typedef uint32_t (*cb_getter)(const void* const);
+    typedef uint32_t (*cb_getter)(cvoid* const);
     const cb_getter getter[] = {
         [WORD_08_BITS] = get_size_08,
         [WORD_16_BITS] = get_size_16,
@@ -194,24 +194,24 @@ static void set_size(void* this, uint32_t size)
     getter[get_word_size(this)](this, size);
 }
 
-static void* get_data_08(const void* const this, uint32_t index)
+static void* get_data_08(cvoid* const this, uint32_t index)
 {
     return ((meta_08*)this)->data;
 }
 
-static void* get_data_16(const void* const this, uint32_t index)
+static void* get_data_16(cvoid* const this, uint32_t index)
 {
     return ((meta_16*)this)->data;
 }
 
-static void* get_data_32(const void* const this, uint32_t index)
+static void* get_data_32(cvoid* const this, uint32_t index)
 {
     return ((meta_32*)this)->data;
 }
 
-static void* get_data(const void* const this, uint32_t index)
+static void* get_data(cvoid* const this, uint32_t index)
 {
-    typedef void* (*cb_getter)(const void* const, uint32_t index);
+    typedef void* (*cb_getter)(cvoid* const, uint32_t index);
     const cb_getter getter[] = {
         [WORD_08_BITS] = get_data_08,
         [WORD_16_BITS] = get_data_16,
