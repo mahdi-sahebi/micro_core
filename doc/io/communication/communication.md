@@ -43,7 +43,11 @@ The design prioritizes **safety, predictability, and low resource usage**, makin
 
 - **Timeout-Based Non-Blocking APIs** for deterministic response times and real-time operation  
 
-- **Deterministic Timing**, no heap use or runtime memory growth — essential for real-time embedded systems  
+- **Deterministic Timing**, no heap use or runtime memory growth — essential for real-time embedded systems
+
+- **Congestion Control:** Prevents continuous re-sending by monitoring ACK arrival times before retransmission
+
+- **Adaptive Timing:** Adjusts retransmission timing dynamically based on observed ACK round-trip times
 
 
 
