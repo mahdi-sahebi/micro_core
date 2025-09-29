@@ -113,7 +113,7 @@ uint32_t socket_write(int socket_fd, cvoid* data, uint32_t size, char* const dst
 uint32_t socket_read(int socket_fd, void* data, uint32_t size, char src_ip[INET_ADDRSTRLEN], uint16_t* src_port)
 {
   // TODO(MN): Tests of droping a small part of receiving packet
-  const uint32_t read_size = base_socket_read(socket_fd, data, size, src_ip, src_port);
+  cuint32_t read_size = base_socket_read(socket_fd, data, size, src_ip, src_port);
 
   if (0 != Periodic.duration_ms) {
     if ((mc_now_m() - Periodic.last_time) > Periodic.duration_ms) {

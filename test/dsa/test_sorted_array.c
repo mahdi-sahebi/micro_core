@@ -638,7 +638,7 @@ static int test_remove_middle()
 
   uint8_t index = mc_sarray_get_capacity(array).value;
   while (index--) {
-    const uint32_t mid = (mc_sarray_get_count(array).value - 1) / 2;
+    cuint32_t mid = (mc_sarray_get_count(array).value - 1) / 2;
     mc_err result = mc_sarray_remove_at(array, mid);
     if (MC_ERR_OUT_OF_RANGE != result) {
       return result;

@@ -105,7 +105,7 @@ static bool send_data(cvoid* data, uint32_t size)
 static bool send_string(uint32_t seed)
 {
   char data[9] = {0};
-  const uint32_t size = sizeof(data);
+  cuint32_t size = sizeof(data);
   sprintf(data, "!p%03u.?I", seed % 1000);
 
   return send_data(data, size);
@@ -114,9 +114,9 @@ static bool send_string(uint32_t seed)
 static bool send_variadic_size(uint32_t seed)
 {
   uint32_t data[1024] = {0};
-  const uint32_t random_count = (seed * 1664525) + 1013904223;
-  const uint32_t count = (random_count % 997) + 27;
-  const uint32_t size = count * sizeof(*data);
+  cuint32_t random_count = (seed * 1664525) + 1013904223;
+  cuint32_t count = (random_count % 997) + 27;
+  cuint32_t size = count * sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
     data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
@@ -128,7 +128,7 @@ static bool send_variadic_size(uint32_t seed)
 static bool send_tiny_size(uint32_t seed)
 {
   bool data = (seed & 1);
-  const uint32_t size = sizeof(data);
+  cuint32_t size = sizeof(data);
 
   return send_data(&data, size);
 }
