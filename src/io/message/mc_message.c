@@ -3,6 +3,7 @@
  * Event-driven
  * Test: Allow to zero pool size for small messages without buffering
  * Don't set window_capacity, calculate according to the buffer size
+ * If large message is detected, read again(more) until available?
  */
 
 #include <stdlib.h>
@@ -11,14 +12,14 @@
 #include "io/message/mc_message.h"
 
 
-typedef struct// __attribute__((packed))
+typedef struct
 {
   uint16_t  size;
   mc_msg_id msg_id;
   uint8_t   data[0];
 }pkt_hdr;
 
-typedef struct// __attribute__((packed))
+typedef struct
 {
   mc_msg_receive_cb on_receive;
   mc_msg_id         id;
@@ -32,8 +33,8 @@ struct _mc_msg
   uint32_t  recv_pool_stored;
 };
 
+#define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y)) // TODO(MN): Move to math
 
-#define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y))
 
 static float id_compare(const void* a, const void* b)
 {
@@ -64,7 +65,7 @@ static mc_error drop_message(mc_msg* const this)
 
   if (mc_buffer_get_size(this->recv_pool) < expected_size) {// Droping message until the end because receive pool is smaller than message size
     const uint32_t seg_size = MIN(mc_buffer_get_size(this->recv_pool) - sizeof(pkt_hdr), expected_size - this->recv_pool_stored);// TODO(MN): Check minimum of sizeof(pkt_hdr)
-    mc_result_u32 res = mc_comm_recv(this->comm, this->recv_pool.data + sizeof(pkt_hdr), seg_size, 1000000);
+    mc_u32 res = mc_comm_recv(this->comm, this->recv_pool.data + sizeof(pkt_hdr), seg_size, 1000);
     this->recv_pool_stored += res.value;
     if (this->recv_pool_stored == expected_size) {
       this->recv_pool_stored = 0;
@@ -84,7 +85,7 @@ static bool is_message_stored(mc_msg* const this)
   if (this->recv_pool_stored != expected_size) {
     const uint32_t size = remaining_message_size(this, pkt);
 
-    const mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
+    const mc_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
     this->recv_pool_stored += result.value; 
   }
 
@@ -99,7 +100,7 @@ static bool is_message_stored(mc_msg* const this)
 static bool read_message_header(mc_msg* this)
 {
   const uint32_t size = remaining_header_size(this);
-  const mc_result_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
+  const mc_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
   
   this->recv_pool_stored += result.value;
   return (this->recv_pool_stored >= sizeof(pkt_hdr));
@@ -118,13 +119,13 @@ static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
   }
 }
 
-mc_result_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
+mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
 { 
   if (0 == config.pool_size) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  mc_result_u32 result = mc_comm_get_alloc_size(*(mc_comm_cfg*)&config);
+  mc_u32 result = mc_comm_get_alloc_size(*(mc_comm_cfg*)&config);
   if (MC_SUCCESS != result.error) {
     return result;
   }
@@ -140,13 +141,13 @@ mc_result_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
   }
 
   const uint32_t size = sizeof(mc_msg) + comm_size + config.pool_size;
-  return mc_result_u32(size, MC_SUCCESS);
+  return mc_u32(size, MC_SUCCESS);
 }
 
 mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 {
   // handle if pkt->size or even pkt_hdr are larger than pool_size
-  const mc_result_u32 result = mc_msg_get_alloc_size(config);
+  const mc_u32 result = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result.error) {
     return mc_result_ptr(NULL, result.error);
   }
@@ -232,10 +233,10 @@ mc_error mc_msg_unsubscribe(mc_msg* this, mc_msg_id id)
   return mc_sarray_remove(this->ids, &node);
 }
 
-mc_result_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeout_us)
+mc_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeout_us)
 {// TODO(MN): Handle total timeout_us
   if ((NULL == this) || (mc_buffer_is_null(buffer))) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
   const uint32_t size = mc_buffer_get_size(buffer);
@@ -245,7 +246,7 @@ mc_result_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t
     .msg_id = id
   };
   // TODO(MN): Handle header sent, data not and vice versa in different call
-  mc_result_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
+  mc_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
   if (!mc_result_is_ok(result)) {
     return result;
   }
@@ -255,13 +256,13 @@ mc_result_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t
     return result;
   }
 
-  return mc_result_u32(size, MC_SUCCESS);
+  return mc_u32(size, MC_SUCCESS);
 }
 
-mc_result_u32 mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
+mc_u32 mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
 {// TODO(MN): Handle total timeout_us
   if (NULL == this) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
   pkt_hdr pkt = {
@@ -269,12 +270,12 @@ mc_result_u32 mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
     .msg_id = id
   };
   
-  mc_result_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
+  mc_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
   if (!mc_result_is_ok(result)) {
     return result;
   }
 
-  return mc_result_u32(0, MC_SUCCESS);
+  return mc_u32(0, MC_SUCCESS);
 }
 
 mc_result_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us)

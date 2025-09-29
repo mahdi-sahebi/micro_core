@@ -295,28 +295,28 @@ mc_result_bool mc_memlin_is_full(const mc_memlin* this)
     return mc_result_bool(get_capacity(this) == get_size(this), MC_SUCCESS);
 }
 
-mc_result_u32 mc_memlin_get_capacity(const mc_memlin* this)
+mc_u32 mc_memlin_get_capacity(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+        return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_result_u32(get_capacity(this), MC_SUCCESS);
+    return mc_u32(get_capacity(this), MC_SUCCESS);
 }
 
-mc_result_u32 mc_memlin_get_size(const mc_memlin* this)
+mc_u32 mc_memlin_get_size(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+        return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_result_u32(get_size(this), MC_SUCCESS);
+    return mc_u32(get_size(this), MC_SUCCESS);
 }
 
-mc_result_u32 mc_memlin_get_meta_size(const mc_memlin* this)
+mc_u32 mc_memlin_get_meta_size(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+        return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
     }
 
     const struct _mc_memlin* const obj = (struct _mc_memlin*)this;
@@ -327,5 +327,5 @@ mc_result_u32 mc_memlin_get_meta_size(const mc_memlin* this)
         [WORD_32_BITS] = sizeof(meta_32),
     };
 
-    return mc_result_u32(META_SIZES[obj->word_size], MC_SUCCESS);
+    return mc_u32(META_SIZES[obj->word_size], MC_SUCCESS);
 }

@@ -3,15 +3,15 @@
 #include "alg/algorithm.h"
 
 
-mc_result_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_distance_fn distance_fn)
+mc_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_distance_fn distance_fn)
 {
   if ((NULL == data) || (NULL == distance_fn) || 
       mc_buffer_is_null(buffer) || (0 == buffer.data_size)) {
-    return mc_result_u32(buffer.capacity, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(buffer.capacity, MC_ERR_INVALID_ARGUMENT);
   }
 
   if (mc_buffer_is_empty(buffer)) {
-    return mc_result_u32(buffer.capacity, MC_SUCCESS);
+    return mc_u32(buffer.capacity, MC_SUCCESS);
   }
 
   uint32_t bgn = 0;
@@ -40,12 +40,12 @@ mc_result_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_distance
     }
   }
 
-  return mc_result_u32(bgn, MC_SUCCESS);
+  return mc_u32(bgn, MC_SUCCESS);
 }
 
-mc_result_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_distance_fn distance_fn)
+mc_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_distance_fn distance_fn)
 {
-  mc_result_u32 result = mc_alg_lower_bound(buffer, data, distance_fn);
+  mc_u32 result = mc_alg_lower_bound(buffer, data, distance_fn);
   if (!mc_result_is_ok(result)) {
     return result;
   }
@@ -55,22 +55,22 @@ mc_result_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_distance_fn 
   }
 
   if (result.value == buffer.capacity) {
-    return mc_result_u32(buffer.capacity - 1, MC_SUCCESS);
+    return mc_u32(buffer.capacity - 1, MC_SUCCESS);
   }
 
   const float distance_cur = distance_fn(data, (char*)buffer.data + ((result.value - 0) * buffer.data_size));
   const float distance_prv = distance_fn(data, (char*)buffer.data + ((result.value - 1) * buffer.data_size));
   if (fabsf(distance_prv) < fabsf(distance_cur)) {
-    return mc_result_u32(result.value - 1, MC_SUCCESS);
+    return mc_u32(result.value - 1, MC_SUCCESS);
   }
 
-  return mc_result_u32(result.value, MC_SUCCESS);
+  return mc_u32(result.value, MC_SUCCESS);
 }
 
-mc_result_u32 mc_alg_crc16_ccitt(mc_buffer buffer)
+mc_u32 mc_alg_crc16_ccitt(mc_buffer buffer)
 {
   if (mc_buffer_is_null(buffer)) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
   uint32_t size = buffer.capacity * buffer.data_size;
@@ -84,5 +84,5 @@ mc_result_u32 mc_alg_crc16_ccitt(mc_buffer buffer)
       }
   }
   
-  return mc_result_u32(crc, MC_SUCCESS);
+  return mc_u32(crc, MC_SUCCESS);
 }
