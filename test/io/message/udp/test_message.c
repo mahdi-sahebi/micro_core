@@ -160,7 +160,7 @@ static int singly_high_lossy()
 int main()
 {
   printf("[MICRO CORE %u.%u.%u - IO - MESSAGE]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
-  mc_error result = MC_SUCCESS;
+  mc_err result = MC_SUCCESS;
 
   printf("[invalid_creation]\n");
   {

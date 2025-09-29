@@ -12,7 +12,7 @@
 
 static int ClientSocket = -1;
 static mc_msg* message = NULL;
-static mc_error* Error = NULL;
+static mc_err* Error = NULL;
 static char AllocBuffer[600];
 
 
@@ -55,7 +55,7 @@ static void let_server_start()
 
 static bool init(void* data)
 {
-  Error = (mc_error*)data;
+  Error = (mc_err*)data;
   *Error = MC_SUCCESS;
   
   client_create();

@@ -87,7 +87,7 @@ mc_ptr mc_comm_init(mc_buffer alloc_buffer, mc_comm_cfg config)
   return mc_ptr(this, MC_SUCCESS);
 }
 
-mc_error mc_comm_update(mc_comm* this)
+mc_err mc_comm_update(mc_comm* this)
 {
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;
@@ -106,7 +106,7 @@ mc_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeo
   }
 
   uint32_t read_size = 0;
-  mc_error error = MC_SUCCESS;
+  mc_err error = MC_SUCCESS;
   const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
 
   while (size) {
@@ -136,7 +136,7 @@ mc_u32 mc_comm_send(mc_comm* this, cvoid* src_data, uint32_t size, uint32_t time
   }
 
   uint32_t sent_size = 0;
-  mc_error error = MC_SUCCESS;
+  mc_err error = MC_SUCCESS;
   const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
 
   // TODO(MN): This loop is repetitive in the wndpool_write

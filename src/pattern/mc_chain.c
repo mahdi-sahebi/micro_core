@@ -24,7 +24,7 @@ mc_ptr mc_chain_init(mc_buffer alloc_buffer, uint8_t capacity)
   return mc_ptr(this, MC_SUCCESS);
 }
 
-mc_error mc_chain_clear(mc_chain* this)
+mc_err mc_chain_clear(mc_chain* this)
 {
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;
@@ -34,7 +34,7 @@ mc_error mc_chain_clear(mc_chain* this)
   return MC_SUCCESS;
 }
 
-mc_error mc_chain_push(mc_chain* this, mc_cb_chain api, void* arg)
+mc_err mc_chain_push(mc_chain* this, mc_cb_chain api, void* arg)
 {
   if ((NULL == this) || (NULL == api)) {
     return MC_ERR_INVALID_ARGUMENT;
