@@ -7,7 +7,7 @@
 
 #include "core/time.h"
 #include "alg/algorithm.h"
-#include "window.h"
+#include "mc_window.h"
 
 
 typedef uint8_t mc_wnd_idx;

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "io/communication/window_pool.h"
+#include "mc_window_pool.h"
 
 
 #define MIN(A, B)           ((A) <= (B) ? (A) : (B))
