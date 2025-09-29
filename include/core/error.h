@@ -20,13 +20,13 @@ typedef enum __attribute__((packed))
   MC_ERR_INCOMPLETE,// TODO(MN): Remove
   MC_ERR_NO_SPACE,
   MC_ERR_RUNTIME
-}mc_error;
+}mc_err;
 
 
 typedef struct
 {
   uint32_t value;
-  mc_error error;
+  mc_err error;
 }mc_u32;
 
 #define mc_u32(VALUE, ERROR)     ((mc_u32){.value = (VALUE), .error = (ERROR)})
@@ -35,7 +35,7 @@ typedef struct
 typedef struct
 {
   bool     value;
-  mc_error error;
+  mc_err error;
 }mc_bool;
 
 #define mc_bool(BOOL, ERROR)     ((mc_bool){.value = (BOOL), .error = (ERROR)})
@@ -44,7 +44,7 @@ typedef struct
 typedef struct
 {
   void*    data;
-  mc_error error;
+  mc_err error;
 }mc_ptr;
 
 #define mc_ptr(DATA, ERROR)      ((mc_ptr){.data = (DATA), .error = (ERROR)})

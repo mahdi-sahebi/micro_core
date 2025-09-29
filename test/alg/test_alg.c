@@ -400,7 +400,7 @@ int main()
   printf("[lower_bound_invalid_arguments]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_invalid_arguments();
+    const mc_err result = lower_bound_invalid_arguments();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -412,7 +412,7 @@ int main()
   printf("[lower_bound_empty_buffer]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_empty_buffer();
+    const mc_err result = lower_bound_empty_buffer();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -424,7 +424,7 @@ int main()
   printf("[lower_bound_present]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_present();
+    const mc_err result = lower_bound_present();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -436,7 +436,7 @@ int main()
   printf("[lower_bound_not_present]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_not_present();
+    const mc_err result = lower_bound_not_present();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -448,7 +448,7 @@ int main()
   printf("[lower_bound_greater_than_all]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_greater_than_all();
+    const mc_err result = lower_bound_greater_than_all();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -460,7 +460,7 @@ int main()
   printf("[lower_bound_less_than_all]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_less_than_all();
+    const mc_err result = lower_bound_less_than_all();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -472,7 +472,7 @@ int main()
   printf("[lower_bound_first_duplicate]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_first_duplicate();
+    const mc_err result = lower_bound_first_duplicate();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -484,7 +484,7 @@ int main()
   printf("[lower_bound_last_element]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_last_element();
+    const mc_err result = lower_bound_last_element();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -496,7 +496,7 @@ int main()
   printf("[lower_bound_prepresent_with_duplicate]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_prepresent_with_duplicate();
+    const mc_err result = lower_bound_prepresent_with_duplicate();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -508,7 +508,7 @@ int main()
   printf("[lower_bound_large_array]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = lower_bound_large_array();
+    const mc_err result = lower_bound_large_array();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -521,7 +521,7 @@ int main()
   printf("[nearest_invalid_arguments]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_invalid_arguments();
+    const mc_err result = nearest_invalid_arguments();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -533,7 +533,7 @@ int main()
   printf("[nearest_empty_buffer]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_empty_buffer();
+    const mc_err result = nearest_empty_buffer();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -545,7 +545,7 @@ int main()
   printf("[nearest_present]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_present();
+    const mc_err result = nearest_present();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -557,7 +557,7 @@ int main()
   printf("[nearest_not_present]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_not_present();
+    const mc_err result = nearest_not_present();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -569,7 +569,7 @@ int main()
   printf("[nearest_greater_than_all]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_greater_than_all();
+    const mc_err result = nearest_greater_than_all();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -581,7 +581,7 @@ int main()
   printf("[nearest_less_than_all]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_less_than_all();
+    const mc_err result = nearest_less_than_all();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -593,7 +593,7 @@ int main()
   printf("[nearest_first_duplicate]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_first_duplicate();
+    const mc_err result = nearest_first_duplicate();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -605,7 +605,7 @@ int main()
   printf("[nearest_last_element]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_last_element();
+    const mc_err result = nearest_last_element();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -617,7 +617,7 @@ int main()
   printf("[nearest_prepresent_with_duplicate]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_prepresent_with_duplicate();
+    const mc_err result = nearest_prepresent_with_duplicate();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
@@ -629,7 +629,7 @@ int main()
   printf("[nearest_large_array]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    const mc_error result = nearest_large_array();
+    const mc_err result = nearest_large_array();
     total_failed += (MC_SUCCESS != result);
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);

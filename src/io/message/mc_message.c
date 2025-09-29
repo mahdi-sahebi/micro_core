@@ -58,7 +58,7 @@ static uint32_t remaining_header_size(const mc_msg* const this)
   return (sizeof(pkt_hdr) - this->recv_pool_stored);
 }
 
-static mc_error drop_message(mc_msg* const this)
+static mc_err drop_message(mc_msg* const this)
 {
   const pkt_hdr* const pkt = (pkt_hdr*)this->recv_pool.data;
   const uint32_t expected_size = pkt->size + sizeof(pkt_hdr);
@@ -175,7 +175,7 @@ mc_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
   return mc_ptr(this, MC_SUCCESS);
 }
 
-mc_error mc_msg_update(mc_msg* this)
+mc_err mc_msg_update(mc_msg* this)
 {
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;
@@ -192,7 +192,7 @@ mc_error mc_msg_update(mc_msg* this)
     return MC_SUCCESS;
   }
 
-  mc_error error = MC_SUCCESS;
+  mc_err error = MC_SUCCESS;
   if (error = drop_message(this)) {
     return error;
   }
@@ -205,7 +205,7 @@ mc_error mc_msg_update(mc_msg* this)
   return MC_SUCCESS;
 }
 
-mc_error mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_cb_receive on_receive)
+mc_err mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_cb_receive on_receive)
 {
   if ((NULL == this) || (NULL == on_receive)) {
     return MC_ERR_INVALID_ARGUMENT;
@@ -219,7 +219,7 @@ mc_error mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_cb_receive on_recei
   return mc_sarray_insert(this->ids, &node);
 }
 
-mc_error mc_msg_unsubscribe(mc_msg* this, mc_msg_id id)
+mc_err mc_msg_unsubscribe(mc_msg* this, mc_msg_id id)
 {
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;

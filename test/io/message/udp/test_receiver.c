@@ -15,7 +15,7 @@
 static int ServerSocket = -1;
 static char ClientIP[INET_ADDRSTRLEN];
 static uint16_t ClientPort = 0;
-static mc_error* Error = NULL;
+static mc_err* Error = NULL;
 static mc_msg* message = NULL;
 static char AllocBuffer[600];
 static uint32_t TestCounter = 0;
@@ -178,7 +178,7 @@ static bool init(void* data)
 {
   /* TODO(MN): invalid header, incomplete packet, miss packet pointer, use zero copy
    */
-  Error = (mc_error*)data;
+  Error = (mc_err*)data;
   *Error = MC_SUCCESS;
 
   server_create();
@@ -210,7 +210,7 @@ static bool init(void* data)
   }
   message = result.data;
 
-  mc_error error = MC_SUCCESS;
+  mc_err error = MC_SUCCESS;
   error = mc_msg_subscribe(message, 77, on_string_received);
   if (MC_SUCCESS != error) {
     *Error = error;
@@ -291,7 +291,7 @@ static void reset_flags()
 static bool recv_messages()
 {
   do {
-    const mc_error error = mc_msg_update(message);
+    const mc_err error = mc_msg_update(message);
     if ((MC_SUCCESS != error) && (MC_ERR_NO_SPACE != error)) {
       *Error = MC_ERR_TIMEOUT;
       break;

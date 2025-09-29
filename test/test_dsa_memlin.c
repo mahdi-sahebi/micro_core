@@ -193,7 +193,7 @@ int main()
 {
   printf("[MICRO CORE - DSA - MEMLIN - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
 
-  mc_error result = MC_SUCCESS;
+  mc_err result = MC_SUCCESS;
 
   result = create_8();
   if (MC_SUCCESS != result) {
