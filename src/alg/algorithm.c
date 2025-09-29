@@ -46,7 +46,7 @@ mc_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_distance_fn dis
 mc_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_distance_fn distance_fn)
 {
   mc_u32 result = mc_alg_lower_bound(buffer, data, distance_fn);
-  if (!mc_result_is_ok(result)) {
+  if (!mc_is_ok(result)) {
     return result;
   }
 

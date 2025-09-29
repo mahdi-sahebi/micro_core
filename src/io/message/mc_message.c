@@ -111,7 +111,7 @@ static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
   id_node temp_node = {.id = pkt->msg_id};
   const mc_ptr result = mc_sarray_find(this->ids, &temp_node);
   
-  if (mc_result_is_ok(result) && (NULL != result.data)) {
+  if (mc_is_ok(result) && (NULL != result.data)) {
     const id_node* const node = result.data;
     if (temp_node.id == node->id) {
       node->on_receive(node->id, mc_buffer(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
@@ -247,12 +247,12 @@ mc_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeou
   };
   // TODO(MN): Handle header sent, data not and vice versa in different call
   mc_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
-  if (!mc_result_is_ok(result)) {
+  if (!mc_is_ok(result)) {
     return result;
   }
 
   result = mc_comm_send(this->comm, buffer.data, size, timeout_us);
-  if (!mc_result_is_ok(result)) {
+  if (!mc_is_ok(result)) {
     return result;
   }
 
@@ -271,7 +271,7 @@ mc_u32 mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
   };
   
   mc_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
-  if (!mc_result_is_ok(result)) {
+  if (!mc_is_ok(result)) {
     return result;
   }
 

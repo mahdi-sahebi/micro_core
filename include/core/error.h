@@ -48,7 +48,7 @@ typedef struct
 
 #define mc_ptr(DATA, ERROR)      (mc_ptr){.data = (DATA), .error = (ERROR)}
 
-#define mc_result_is_ok(RESULT)         (MC_SUCCESS == (RESULT).error)
+#define mc_is_ok(RESULT)         (MC_SUCCESS == (RESULT).error)
 
 
 #endif /* MC_ERROR_H_ */
