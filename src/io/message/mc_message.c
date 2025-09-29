@@ -125,7 +125,7 @@ mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
     return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  mc_u32 result = mc_comm_get_alloc_size(*(mc_comm_cfg*)&config);
+  mc_u32 result = mc_comm_req_size(*(mc_comm_cfg*)&config);
   if (MC_SUCCESS != result.error) {
     return result;
   }
@@ -159,7 +159,7 @@ mc_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 
   mc_comm_cfg* comm_config = (mc_comm_cfg*)&config;
   const mc_buffer comm_buffer = mc_buffer(
-    alloc_buffer.data + sizeof(mc_msg), mc_comm_get_alloc_size(*comm_config).value);
+    alloc_buffer.data + sizeof(mc_msg), mc_comm_req_size(*comm_config).value);
   this->comm = mc_comm_init(comm_buffer, *comm_config).data;
 
   this->recv_pool = mc_buffer(mc_buffer_end(comm_buffer), config.pool_size);
