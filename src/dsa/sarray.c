@@ -180,22 +180,22 @@ mc_error mc_sarray_remove(mc_sarray this, const void* data)
   return MC_SUCCESS;
 }
 
-mc_result_bool mc_sarray_is_empty(const mc_sarray this)
+mc_bool mc_sarray_is_empty(const mc_sarray this)
 {
   if (NULL == this) {
-    return mc_result_bool(false, MC_ERR_INVALID_ARGUMENT);
+    return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
   }
 
-  return mc_result_bool(0 == this->count, MC_SUCCESS);
+  return mc_bool(0 == this->count, MC_SUCCESS);
 }
 
-mc_result_bool mc_sarray_is_full(const mc_sarray this)
+mc_bool mc_sarray_is_full(const mc_sarray this)
 {
   if (NULL == this) {
-    return mc_result_bool(false, MC_ERR_INVALID_ARGUMENT);
+    return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
   }
 
-  return mc_result_bool(this->capacity == this->count, MC_SUCCESS);
+  return mc_bool(this->capacity == this->count, MC_SUCCESS);
 }
 
 

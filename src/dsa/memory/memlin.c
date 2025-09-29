@@ -277,22 +277,22 @@ mc_error mc_memlin_clear(mc_memlin* this)
     return MC_SUCCESS;
 }
 
-mc_result_bool mc_memlin_is_empty(const mc_memlin* this)
+mc_bool mc_memlin_is_empty(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_bool(false, MC_ERR_INVALID_ARGUMENT);
+        return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_result_bool(0 == get_size(this), MC_SUCCESS);
+    return mc_bool(0 == get_size(this), MC_SUCCESS);
 }
 
-mc_result_bool mc_memlin_is_full(const mc_memlin* this)
+mc_bool mc_memlin_is_full(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_bool(false, MC_ERR_INVALID_ARGUMENT);
+        return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_result_bool(get_capacity(this) == get_size(this), MC_SUCCESS);
+    return mc_bool(get_capacity(this) == get_size(this), MC_SUCCESS);
 }
 
 mc_u32 mc_memlin_get_capacity(const mc_memlin* this)
