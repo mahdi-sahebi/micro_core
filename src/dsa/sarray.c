@@ -32,15 +32,15 @@ mc_u32 mc_sarray_required_size(uint32_t data_size, uint32_t capacity)// TODO(MN)
   return mc_u32(sizeof(struct _mc_sarray) + (capacity * data_size), MC_SUCCESS);
 }
 
-mc_result_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_distance_fn distance)
+mc_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_distance_fn distance)
 {
   if (mc_buffer_is_null(buffer) || (0 == capacity) || (0 == data_size) || (NULL == distance)) {
-    return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
+    return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
   const uint32_t required_size = sizeof(struct _mc_sarray) + (capacity * data_size);
   if (mc_buffer_get_size(buffer) < required_size) {
-    return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
+    return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
 
   mc_sarray this  = (mc_sarray)buffer.data;
@@ -49,7 +49,7 @@ mc_result_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capa
   this->count     = 0;
   this->data_size = data_size;
 
-  return mc_result_ptr(this, MC_SUCCESS);
+  return mc_ptr(this, MC_SUCCESS);
 }
 
 mc_error mc_sarray_clear(mc_sarray this)
@@ -90,26 +90,26 @@ mc_u32 mc_sarray_get_data_size(const mc_sarray this)
   return mc_u32(this->data_size, MC_SUCCESS);
 }
 
-mc_result_ptr mc_sarray_get(const mc_sarray this, uint32_t index)
+mc_ptr mc_sarray_get(const mc_sarray this, uint32_t index)
 {
   if (NULL == this) {
-    return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
+    return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
   if (index >= this->capacity) {
-    return mc_result_ptr(NULL, MC_ERR_OUT_OF_RANGE);
+    return mc_ptr(NULL, MC_ERR_OUT_OF_RANGE);
   }
 
-  return mc_result_ptr(GET_DATA(this, index), MC_SUCCESS);
+  return mc_ptr(GET_DATA(this, index), MC_SUCCESS);
 }
 
-mc_result_ptr mc_sarray_find(const mc_sarray this, const void* const data)
+mc_ptr mc_sarray_find(const mc_sarray this, const void* const data)
 {
   if ((NULL == this) || (NULL == data)) {
-    return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
+    return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
   if (0 == this->count) {
-    return mc_result_ptr(NULL, MC_SUCCESS);
+    return mc_ptr(NULL, MC_SUCCESS);
   }
   
   const mc_u32 result = mc_alg_lower_bound(
@@ -119,7 +119,7 @@ mc_result_ptr mc_sarray_find(const mc_sarray this, const void* const data)
   
   void* itr = (result.value == this->count) ? NULL :
     this->data + (result.value * this->data_size);
-  return mc_result_ptr(itr, MC_SUCCESS);
+  return mc_ptr(itr, MC_SUCCESS);
 }
 
 mc_error mc_sarray_insert(mc_sarray this, const void* data)
@@ -166,7 +166,7 @@ mc_error mc_sarray_remove(mc_sarray this, const void* data)
     return MC_ERR_OUT_OF_RANGE;
   }
 
-  const mc_result_ptr result = mc_sarray_find(this, data);
+  const mc_ptr result = mc_sarray_find(this, data);
   if ((MC_SUCCESS != result.error) || (NULL == result.data)) { 
     return result.error;
   }

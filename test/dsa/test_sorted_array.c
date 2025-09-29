@@ -78,7 +78,7 @@ static int test_invalid_creation()
 {
   char memory[20];
   mc_buffer buffer = mc_buffer(memory, sizeof(memory));
-  mc_result_ptr result = {0};
+  mc_ptr result = {0};
   
   result = mc_sarray_init(mc_buffer(NULL, 10), sizeof(int16_t), 5, comparator_i16);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
@@ -117,7 +117,7 @@ static int test_correct_creation_i16()
 {
   int16_t memory[25];
   
-  mc_result_ptr result_ptr = mc_sarray_init(
+  mc_ptr result_ptr = mc_sarray_init(
     mc_buffer(memory, sizeof(memory)),
     sizeof(int16_t), 
     10, 
@@ -148,7 +148,7 @@ static int test_correct_creation_i16()
 static int test_correct_creation_str()
 {
   char memory[60];
-  mc_result_ptr result_ptr = {0};
+  mc_ptr result_ptr = {0};
   mc_u32 result_u32 = {0};
   
   result_ptr = mc_sarray_init(
@@ -183,7 +183,7 @@ static int test_empty()
 {
   int16_t memory[25];
   mc_bool result_bool = {0};
-  mc_result_ptr result_ptr = {0};
+  mc_ptr result_ptr = {0};
   
   mc_sarray array = mc_sarray_init(
     mc_buffer(memory, sizeof(memory)), 
@@ -239,7 +239,7 @@ static int test_insert_on_empty()
     return MC_ERR_RUNTIME;
   }
     
-  mc_result_ptr result_ptr = mc_sarray_get(array, 0);
+  mc_ptr result_ptr = mc_sarray_get(array, 0);
   if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
     return MC_ERR_OUT_OF_RANGE;
   }
@@ -273,7 +273,7 @@ static int test_insert_ascending()
       return MC_ERR_BAD_ALLOC;
     }
 
-    mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    mc_ptr result_ptr = mc_sarray_find(array, &x);
     if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
       return result_ptr.error;
     }
@@ -307,7 +307,7 @@ static int test_insert_descending()
       return MC_ERR_BAD_ALLOC;
     }
 
-    mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    mc_ptr result_ptr = mc_sarray_find(array, &x);
     if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
       return result_ptr.error;
     }
@@ -341,7 +341,7 @@ static int test_insert_not_ordered()
       return MC_ERR_BAD_ALLOC;
     }
 
-    mc_result_ptr result_ptr = mc_sarray_find(array, &nums[index]);
+    mc_ptr result_ptr = mc_sarray_find(array, &nums[index]);
     if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
       return result_ptr.error;
     }
@@ -389,7 +389,7 @@ static int test_get()
   const uint8_t capacity = mc_sarray_get_capacity(array).value;
 
   for (uint8_t index = 0; index < capacity; index++) {
-    const mc_result_ptr result = mc_sarray_get(array, index);
+    const mc_ptr result = mc_sarray_get(array, index);
     if ((MC_SUCCESS != result.error) || (NULL == result.data)){
       return result.error;
     }
@@ -418,7 +418,7 @@ static int test_remove()
 
   uint8_t index = capacity;
   while (index--) {
-    mc_result_ptr result = mc_sarray_get(array, index);
+    mc_ptr result = mc_sarray_get(array, index);
     if ((MC_SUCCESS != result.error) || (NULL == result.data)){
       return result.error;
     }
@@ -456,7 +456,7 @@ static int test_find()
   uint8_t index = capacity;
   while (index--) {
     int16_t x = (index * 100) + 600;
-    mc_result_ptr result_ptr = mc_sarray_find(array, &x);
+    mc_ptr result_ptr = mc_sarray_find(array, &x);
     if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data) || 
         (x != *((int16_t*)result_ptr.data))) {
       return MC_ERR_OUT_OF_RANGE;

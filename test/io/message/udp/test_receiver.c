@@ -203,7 +203,7 @@ static bool init(void* data)
     return false;
   }
 
-  const mc_result_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
+  const mc_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
     *Error = result.error;
     return false;

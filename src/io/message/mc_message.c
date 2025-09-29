@@ -109,7 +109,7 @@ static bool read_message_header(mc_msg* this)
 static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
 {
   id_node temp_node = {.id = pkt->msg_id};
-  const mc_result_ptr result = mc_sarray_find(this->ids, &temp_node);
+  const mc_ptr result = mc_sarray_find(this->ids, &temp_node);
   
   if (mc_result_is_ok(result) && (NULL != result.data)) {
     const id_node* const node = result.data;
@@ -144,15 +144,15 @@ mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
   return mc_u32(size, MC_SUCCESS);
 }
 
-mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
+mc_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 {
   // handle if pkt->size or even pkt_hdr are larger than pool_size
   const mc_u32 result = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result.error) {
-    return mc_result_ptr(NULL, result.error);
+    return mc_ptr(NULL, result.error);
   }
   if (mc_buffer_get_size(alloc_buffer) < result.value) {
-    return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
+    return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
 
   mc_msg* this = (mc_msg*)alloc_buffer.data;
@@ -172,7 +172,7 @@ mc_result_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
     this->ids = mc_sarray_init(ids_buffer, sizeof(id_node), config.ids_capacity, id_compare).data;
   }
 
-  return mc_result_ptr(this, MC_SUCCESS);
+  return mc_ptr(this, MC_SUCCESS);
 }
 
 mc_error mc_msg_update(mc_msg* this)

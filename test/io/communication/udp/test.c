@@ -30,7 +30,7 @@ static int invalid_creation()
 {
   char memory[1024];
   mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
-  mc_result_ptr result_ptr = {0};
+  mc_ptr result_ptr = {0};
   mc_comm* message = NULL;
   mc_comm_cfg config = {0};
   
@@ -83,7 +83,7 @@ static int valid_creation()
     mc_io(read_api, write_api), 
     mc_comm_wnd(5 * sizeof(uint32_t), capcity), 
     mc_comm_wnd(5 * sizeof(uint32_t), capcity));
-  const mc_result_ptr result = mc_comm_init(alloc_buffer, config);
+  const mc_ptr result = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS != result.error) || (NULL == result.data)) {
     return MC_ERR_BAD_ALLOC;
   }

@@ -221,10 +221,10 @@ static void* get_data(const void* const this, uint32_t index)
     return getter[get_word_size(this)](this, index);
 }
 
-mc_result_ptr mc_memlin_create(const mc_buffer buffer)
+mc_ptr mc_memlin_create(const mc_buffer buffer)
 {
     if ((NULL == buffer.data) || (0 == buffer.capacity)) {// TODO(MN): API
-        return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
+        return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
     }
     
     const initiator inits[] = {
@@ -238,7 +238,7 @@ mc_result_ptr mc_memlin_create(const mc_buffer buffer)
     memory->word_size = word;
     inits[word](memory, buffer.capacity);
 
-    return mc_result_ptr(memory, MC_SUCCESS);
+    return mc_ptr(memory, MC_SUCCESS);
 }
 
 mc_error mc_memlin_destroy(mc_memlin** this)
@@ -251,20 +251,20 @@ mc_error mc_memlin_destroy(mc_memlin** this)
     return MC_SUCCESS;
 }
 
-mc_result_ptr mc_memlin_alloc(mc_memlin* this, uint32_t size)
+mc_ptr mc_memlin_alloc(mc_memlin* this, uint32_t size)
 {
     if (NULL == this) {
-        return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
+        return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
     }
 
     const uint32_t cur_size = get_size(this);
     if ((cur_size + size) > get_capacity(this)) {
-        return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
+        return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
     }
 
     void* const data = get_data(this, cur_size);
     set_size(this, cur_size + size);
-    return mc_result_ptr(data, MC_SUCCESS);
+    return mc_ptr(data, MC_SUCCESS);
 }
 
 mc_error mc_memlin_clear(mc_memlin* this)

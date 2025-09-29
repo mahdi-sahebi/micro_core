@@ -35,7 +35,7 @@ typedef struct  // TODO(MN): Remove pads. Align array
   mc_chain_data(mc_buffer_null(), ERROR)
 
 mc_u32 mc_chain_get_alloc_size(uint8_t capacity);
-mc_result_ptr mc_chain_init(mc_buffer alloc_buffer, uint8_t capacity);
+mc_ptr mc_chain_init(mc_buffer alloc_buffer, uint8_t capacity);
 mc_error      mc_chain_clear(mc_chain* this);
 mc_error      mc_chain_push(mc_chain* this, mc_chain_cb api, void* arg);
 mc_chain_data mc_chain_run(mc_chain* this, mc_buffer buffer);

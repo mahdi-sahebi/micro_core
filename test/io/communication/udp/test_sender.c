@@ -77,7 +77,7 @@ static bool init(void* data)
   }
   
   AllocBuffer.capacity = result_u32.value;
-  const mc_result_ptr result = mc_comm_init(AllocBuffer, config);
+  const mc_ptr result = mc_comm_init(AllocBuffer, config);
   if (MC_SUCCESS != result.error) {
     *Result = result.error;
     return false;
