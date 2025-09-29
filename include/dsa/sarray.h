@@ -13,7 +13,7 @@ typedef struct _mc_sarray* mc_sarray;
 
 // TODO(MN): Rename to get_alloc_size
 mc_u32  mc_sarray_required_size(uint32_t data_size, uint32_t capacity);
-mc_ptr  mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_distance_fn distance);// TODO(MN): Swap cap and data size
+mc_ptr  mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_fn_distance distance);// TODO(MN): Swap cap and data size
 mc_error       mc_sarray_clear(mc_sarray this);
 mc_u32  mc_sarray_get_count(const mc_sarray this);
 mc_u32  mc_sarray_get_capacity(const mc_sarray this);

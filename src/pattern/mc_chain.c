@@ -34,7 +34,7 @@ mc_error mc_chain_clear(mc_chain* this)
   return MC_SUCCESS;
 }
 
-mc_error mc_chain_push(mc_chain* this, mc_chain_cb api, void* arg)
+mc_error mc_chain_push(mc_chain* this, mc_cb_chain api, void* arg)
 {
   if ((NULL == this) || (NULL == api)) {
     return MC_ERR_INVALID_ARGUMENT;

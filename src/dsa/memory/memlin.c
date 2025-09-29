@@ -130,8 +130,8 @@ static uint32_t get_capacity_32(const void* const this)
 
 static uint32_t get_capacity(const void* this)
 {
-    typedef uint32_t (*getter_cb)(const void* const);
-    const getter_cb getter[] = {
+    typedef uint32_t (*cb_getter)(const void* const);
+    const cb_getter getter[] = {
         [WORD_08_BITS] = get_capacity_08,
         [WORD_16_BITS] = get_capacity_16,
         [WORD_32_BITS] = get_capacity_32,
@@ -157,8 +157,8 @@ static uint32_t get_size_32(const void* const this)
 
 static uint32_t get_size(const void* this)
 {
-    typedef uint32_t (*getter_cb)(const void* const);
-    const getter_cb getter[] = {
+    typedef uint32_t (*cb_getter)(const void* const);
+    const cb_getter getter[] = {
         [WORD_08_BITS] = get_size_08,
         [WORD_16_BITS] = get_size_16,
         [WORD_32_BITS] = get_size_32,
@@ -184,8 +184,8 @@ static void set_size_32(void* const this, uint32_t size)
 
 static void set_size(void* this, uint32_t size)
 {
-    typedef void (*getter_cb)(void* const, uint32_t);
-    const getter_cb getter[] = {
+    typedef void (*cb_getter)(void* const, uint32_t);
+    const cb_getter getter[] = {
         [WORD_08_BITS] = set_size_08,
         [WORD_16_BITS] = set_size_16,
         [WORD_32_BITS] = set_size_32,
@@ -211,8 +211,8 @@ static void* get_data_32(const void* const this, uint32_t index)
 
 static void* get_data(const void* const this, uint32_t index)
 {
-    typedef void* (*getter_cb)(const void* const, uint32_t index);
-    const getter_cb getter[] = {
+    typedef void* (*cb_getter)(const void* const, uint32_t index);
+    const cb_getter getter[] = {
         [WORD_08_BITS] = get_data_08,
         [WORD_16_BITS] = get_data_16,
         [WORD_32_BITS] = get_data_32,

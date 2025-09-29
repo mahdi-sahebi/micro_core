@@ -3,9 +3,9 @@
 #include "alg/algorithm.h"
 
 
-mc_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_distance_fn distance_fn)
+mc_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_fn_distance fn_distance)
 {
-  if ((NULL == data) || (NULL == distance_fn) || 
+  if ((NULL == data) || (NULL == fn_distance) || 
       mc_buffer_is_null(buffer) || (0 == buffer.data_size)) {
     return mc_u32(buffer.capacity, MC_ERR_INVALID_ARGUMENT);
   }
@@ -19,7 +19,7 @@ mc_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_distance_fn dis
 
   while (bgn <= end) {
     const uint32_t mid = (bgn + end) >> 1;
-    const float distance = distance_fn(data, (char*)buffer.data + (mid * buffer.data_size));
+    const float distance = fn_distance(data, (char*)buffer.data + (mid * buffer.data_size));
 
     if        (distance > 0.0F) {
       if (buffer.capacity == mid) {
@@ -43,9 +43,9 @@ mc_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_distance_fn dis
   return mc_u32(bgn, MC_SUCCESS);
 }
 
-mc_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_distance_fn distance_fn)
+mc_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_fn_distance fn_distance)
 {
-  mc_u32 result = mc_alg_lower_bound(buffer, data, distance_fn);
+  mc_u32 result = mc_alg_lower_bound(buffer, data, fn_distance);
   if (!mc_is_ok(result)) {
     return result;
   }
@@ -58,8 +58,8 @@ mc_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_distance_fn distanc
     return mc_u32(buffer.capacity - 1, MC_SUCCESS);
   }
 
-  const float distance_cur = distance_fn(data, (char*)buffer.data + ((result.value - 0) * buffer.data_size));
-  const float distance_prv = distance_fn(data, (char*)buffer.data + ((result.value - 1) * buffer.data_size));
+  const float distance_cur = fn_distance(data, (char*)buffer.data + ((result.value - 0) * buffer.data_size));
+  const float distance_prv = fn_distance(data, (char*)buffer.data + ((result.value - 1) * buffer.data_size));
   if (fabsf(distance_prv) < fabsf(distance_cur)) {
     return mc_u32(result.value - 1, MC_SUCCESS);
   }

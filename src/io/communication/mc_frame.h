@@ -20,8 +20,8 @@ typedef struct __attribute__((packed))
 
 
 void      frame_init(mc_frame* this, uint16_t window_size, uint8_t capacity);
-void      frame_recv(mc_frame* this, mc_data_ready_cb data_ready, void* arg);
-mc_buffer frame_send(mc_frame* this, mc_buffer buffer, mc_data_ready_cb data_ready, void* arg);
+void      frame_recv(mc_frame* this, mc_cb_data_ready data_ready, void* arg);
+mc_buffer frame_send(mc_frame* this, mc_buffer buffer, mc_cb_data_ready data_ready, void* arg);
 
 
 #endif /* MC_IO_COMMUNICATION_FRAME_H_ */

@@ -21,7 +21,7 @@ typedef struct
 
 typedef struct
 {
-  mc_msg_receive_cb on_receive;
+  mc_msg_cb_receive on_receive;
   mc_msg_id         id;
 }id_node;
 
@@ -205,7 +205,7 @@ mc_error mc_msg_update(mc_msg* this)
   return MC_SUCCESS;
 }
 
-mc_error mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_receive_cb on_receive)
+mc_error mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_cb_receive on_receive)
 {
   if ((NULL == this) || (NULL == on_receive)) {
     return MC_ERR_INVALID_ARGUMENT;
