@@ -265,7 +265,7 @@ void* rcv_start(void* data)
   }
 
   if (MC_SUCCESS == *Result) {
-    const mc_result_bool result = mc_comm_flush(message, TEST_TIMEOUT_US);
+    const mc_bool result = mc_comm_flush(message, TEST_TIMEOUT_US);
     if ((MC_SUCCESS != result.error) || !result.value) {
       printf("mc_comm_flush failed\n");
       *Result = MC_ERR_TIMEOUT;

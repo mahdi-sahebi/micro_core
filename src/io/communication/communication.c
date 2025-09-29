@@ -162,10 +162,10 @@ mc_u32 mc_comm_send(mc_comm* this, const void* src_data, uint32_t size, uint32_t
   return mc_u32(sent_size, error);
 }
 
-mc_result_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
+mc_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
 {
   if (NULL == this) {
-    return mc_result_bool(false, MC_ERR_INVALID_ARGUMENT);
+    return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
   }
 
   const mc_time_t end_time_us = mc_now_u() + timeout_us;
@@ -174,13 +174,13 @@ mc_result_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
     mc_comm_update(this);
 
     if (mc_now_u() > end_time_us) {
-      return mc_result_bool(false, MC_ERR_TIMEOUT);
+      return mc_bool(false, MC_ERR_TIMEOUT);
     }
 
     usleep(MIN_SEND_TIME_US);
   }
   
-  return mc_result_bool(true, MC_SUCCESS);
+  return mc_bool(true, MC_SUCCESS);
 }
 
 #undef FRAME_GET_SIZE

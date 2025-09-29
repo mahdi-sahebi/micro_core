@@ -35,9 +35,9 @@ typedef struct
 {
   bool     value;
   mc_error error;
-}mc_result_bool;
+}mc_bool;
 
-#define mc_result_bool(BOOL, ERROR)     (mc_result_bool){.value = (BOOL), .error = (ERROR)}
+#define mc_bool(BOOL, ERROR)     (mc_bool){.value = (BOOL), .error = (ERROR)}
 
 
 typedef struct

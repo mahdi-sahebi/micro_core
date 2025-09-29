@@ -31,7 +31,7 @@ mc_error       mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_receive_cb on
 mc_error       mc_msg_unsubscribe(mc_msg* this, mc_msg_id id);
 mc_u32  mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeout_us);
 mc_u32  mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us);
-mc_result_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us);
+mc_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us);
 
 
 #endif /* MC_IO_MESSAGE_H_ */

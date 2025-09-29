@@ -23,8 +23,8 @@ mc_result_ptr  mc_sarray_find(const mc_sarray this, const void* const data);
 mc_error       mc_sarray_insert(mc_sarray this, const void* data);
 mc_error       mc_sarray_remove_at(mc_sarray this, uint32_t index);
 mc_error       mc_sarray_remove(mc_sarray this, const void* data);
-mc_result_bool mc_sarray_is_empty(const mc_sarray this);
-mc_result_bool mc_sarray_is_full(const mc_sarray this);
+mc_bool mc_sarray_is_empty(const mc_sarray this);
+mc_bool mc_sarray_is_full(const mc_sarray this);
 
 
 #endif /* MC_DSA_SORTED_ARRAY_H_ */

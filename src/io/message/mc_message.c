@@ -278,7 +278,7 @@ mc_u32 mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
   return mc_u32(0, MC_SUCCESS);
 }
 
-mc_result_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us)
+mc_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us)
 {
   return mc_comm_flush(this->comm, timeout_us);
 }

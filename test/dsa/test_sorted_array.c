@@ -182,7 +182,7 @@ static int test_correct_creation_str()
 static int test_empty()
 {
   int16_t memory[25];
-  mc_result_bool result_bool = {0};
+  mc_bool result_bool = {0};
   mc_result_ptr result_ptr = {0};
   
   mc_sarray array = mc_sarray_init(
