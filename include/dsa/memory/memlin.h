@@ -24,9 +24,9 @@ mc_error      mc_memlin_clear(mc_memlin* this);
 mc_result_bool mc_memlin_is_empty(const mc_memlin* this);
 mc_result_bool mc_memlin_is_full(const mc_memlin* this);
 
-mc_result_u32  mc_memlin_get_capacity(const mc_memlin* this);
-mc_result_u32  mc_memlin_get_size(const mc_memlin* this);
-mc_result_u32  mc_memlin_get_meta_size(const mc_memlin* this);
+mc_u32  mc_memlin_get_capacity(const mc_memlin* this);
+mc_u32  mc_memlin_get_size(const mc_memlin* this);
+mc_u32  mc_memlin_get_meta_size(const mc_memlin* this);
 
 
 #endif /* MC_MEMORY_LINEAR_H_ */

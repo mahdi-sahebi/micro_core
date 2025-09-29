@@ -23,13 +23,13 @@ struct _mc_sarray
 
 
 // TODO(MN): Should it be meta_data_size/minimum_required_size
-mc_result_u32 mc_sarray_required_size(uint32_t data_size, uint32_t capacity)// TODO(MN): u16, 
+mc_u32 mc_sarray_required_size(uint32_t data_size, uint32_t capacity)// TODO(MN): u16, 
 {
   if ((0 == capacity) || (0 == data_size)) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  return mc_result_u32(sizeof(struct _mc_sarray) + (capacity * data_size), MC_SUCCESS);
+  return mc_u32(sizeof(struct _mc_sarray) + (capacity * data_size), MC_SUCCESS);
 }
 
 mc_result_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_distance_fn distance)
@@ -63,31 +63,31 @@ mc_error mc_sarray_clear(mc_sarray this)
   return MC_SUCCESS;
 }
 
-mc_result_u32 mc_sarray_get_count(const mc_sarray this)
+mc_u32 mc_sarray_get_count(const mc_sarray this)
 {
   if (NULL == this) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  return mc_result_u32(this->count, MC_SUCCESS);
+  return mc_u32(this->count, MC_SUCCESS);
 }
 
-mc_result_u32 mc_sarray_get_capacity(const mc_sarray this)
+mc_u32 mc_sarray_get_capacity(const mc_sarray this)
 {
   if (NULL == this) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  return mc_result_u32(this->capacity, MC_SUCCESS);
+  return mc_u32(this->capacity, MC_SUCCESS);
 }
 
-mc_result_u32 mc_sarray_get_data_size(const mc_sarray this)
+mc_u32 mc_sarray_get_data_size(const mc_sarray this)
 {
   if (NULL == this) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  return mc_result_u32(this->data_size, MC_SUCCESS);
+  return mc_u32(this->data_size, MC_SUCCESS);
 }
 
 mc_result_ptr mc_sarray_get(const mc_sarray this, uint32_t index)
@@ -112,7 +112,7 @@ mc_result_ptr mc_sarray_find(const mc_sarray this, const void* const data)
     return mc_result_ptr(NULL, MC_SUCCESS);
   }
   
-  const mc_result_u32 result = mc_alg_lower_bound(
+  const mc_u32 result = mc_alg_lower_bound(
     mc_buffer_raw(this->data, this->data_size * this->count, this->data_size), 
     data, 
     this->distance);

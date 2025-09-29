@@ -26,7 +26,7 @@ static int create_8()
     return result_1.error;
   }
 
-  const mc_result_u32 result_2 = mc_memlin_get_meta_size(result_1.data);
+  const mc_u32 result_2 = mc_memlin_get_meta_size(result_1.data);
   if ((MC_SUCCESS != result_2.error) || (3 != result_2.value)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -43,7 +43,7 @@ static int create_16()
     return result_1.error;
   }
 
-  const mc_result_u32 result_2 = mc_memlin_get_meta_size(result_1.data);
+  const mc_u32 result_2 = mc_memlin_get_meta_size(result_1.data);
   if ((MC_SUCCESS != result_2.error) || (5 != result_2.value)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -60,7 +60,7 @@ static int create_32()
     return result_1.error;
   }
 
-  const mc_result_u32 result_2 = mc_memlin_get_meta_size(result_1.data);
+  const mc_u32 result_2 = mc_memlin_get_meta_size(result_1.data);
   if ((MC_SUCCESS != result_2.error) || (9 != result_2.value)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -85,7 +85,7 @@ static int get_capacity_8()
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_08_BIT);
   const mc_memlin* const memory = mc_memlin_create(buffer).data;
   
-  const mc_result_u32 result = mc_memlin_get_capacity(memory); 
+  const mc_u32 result = mc_memlin_get_capacity(memory); 
   if ((MC_SUCCESS != result.error) || (0 == result.value)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -102,7 +102,7 @@ static int get_capacity_16()
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_16_BIT);
   const mc_memlin* const memory = mc_memlin_create(buffer).data;
 
-  const mc_result_u32 result = mc_memlin_get_capacity(memory); 
+  const mc_u32 result = mc_memlin_get_capacity(memory); 
   if ((MC_SUCCESS != result.error) || (0 == result.value)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -119,7 +119,7 @@ static int get_capacity_32()
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_32_BIT);
   const mc_memlin* const memory = mc_memlin_create(buffer).data;
 
-  const mc_result_u32 result = mc_memlin_get_capacity(memory);  
+  const mc_u32 result = mc_memlin_get_capacity(memory);  
   if ((MC_SUCCESS != result.error) || (0 == result.value)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -136,7 +136,7 @@ static int get_size_8()
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_08_BIT);
   mc_memlin* const memory = mc_memlin_create(buffer).data;
 
-  const mc_result_u32 result = mc_memlin_get_size(memory);
+  const mc_u32 result = mc_memlin_get_size(memory);
   if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
@@ -149,7 +149,7 @@ static int get_size_16()
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_16_BIT);
   mc_memlin* const memory = mc_memlin_create(buffer).data;
 
-  const mc_result_u32 result = mc_memlin_get_size(memory);
+  const mc_u32 result = mc_memlin_get_size(memory);
   if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
@@ -162,7 +162,7 @@ static int get_size_32()
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_32_BIT);
   mc_memlin* const memory = mc_memlin_create(buffer).data;
 
-  const mc_result_u32 result = mc_memlin_get_size(memory);
+  const mc_u32 result = mc_memlin_get_size(memory);
   if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }

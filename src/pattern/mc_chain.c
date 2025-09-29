@@ -2,14 +2,14 @@
 #include <pattern/mc_chain.h>
 
 
-mc_result_u32 mc_chain_get_alloc_size(uint8_t capacity)
+mc_u32 mc_chain_get_alloc_size(uint8_t capacity)
 {
   if (0 == capacity) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
   const uint32_t size = sizeof(mc_chain) + (sizeof(mc_chain_node) * capacity);
-  return mc_result_u32(size, MC_SUCCESS);
+  return mc_u32(size, MC_SUCCESS);
 }
 
 mc_result_ptr mc_chain_init(mc_buffer alloc_buffer, uint8_t capacity)

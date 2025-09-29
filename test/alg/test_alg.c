@@ -19,7 +19,7 @@ static int lower_bound_invalid_arguments()
 {
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(NULL, 0, sizeof(key));
-  mc_result_u32 result = {0};
+  mc_u32 result = {0};
 
   result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if (buffer.capacity != result.value) {
@@ -62,7 +62,7 @@ static int lower_bound_empty_buffer()
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (buffer.capacity != result.value)) {
     return result.error;
   }
@@ -75,7 +75,7 @@ static int lower_bound_present()
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (2 != result.value)) {
     return result.error;
   }
@@ -88,7 +88,7 @@ static int lower_bound_not_present()
   int16_t key = 6;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (3 != result.value)) {
     return result.error;
   }
@@ -101,7 +101,7 @@ static int lower_bound_greater_than_all()
   int16_t key = 10;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (5 != result.value)) {
     return result.error;
   }
@@ -114,7 +114,7 @@ static int lower_bound_less_than_all()
   int16_t key = 0;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
@@ -127,7 +127,7 @@ static int lower_bound_first_duplicate()
   int16_t key = 2;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (1 != result.value)) {
     return result.error;
   }
@@ -140,7 +140,7 @@ static int lower_bound_last_element()
   int16_t key = 3;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (4 != result.value)) {
     return result.error;
   }
@@ -153,7 +153,7 @@ static int lower_bound_prepresent_with_duplicate()
   int16_t key = 2;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
@@ -173,7 +173,7 @@ static int lower_bound_large_array()
     int16_t key = index;
     const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-    const mc_result_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
+    const mc_u32 result = mc_alg_lower_bound(buffer, &key, distance_i16);
     if ((MC_SUCCESS != result.error) || (index != result.value)) {
       return result.error;
     }
@@ -187,7 +187,7 @@ static int nearest_invalid_arguments()
 {
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(NULL, 0, sizeof(key));
-  mc_result_u32 result = {0};
+  mc_u32 result = {0};
 
   result = mc_alg_nearest(buffer, &key, distance_i16);
   if (buffer.capacity != result.value) {
@@ -230,7 +230,7 @@ static int nearest_empty_buffer()
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (buffer.capacity != result.value)) {
     return result.error;
   }
@@ -243,7 +243,7 @@ static int nearest_present()
   int16_t key = 5;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (2 != result.value)) {
     return result.error;
   }
@@ -256,7 +256,7 @@ static int nearest_not_present()
   int16_t key = 6;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  mc_result_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
+  mc_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (2 != result.value)) {
     return result.error;
   }
@@ -282,7 +282,7 @@ static int nearest_greater_than_all()
   int16_t key = 81;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  mc_result_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
+  mc_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (4 != result.value)) {
     return result.error;
   }
@@ -302,7 +302,7 @@ static int nearest_less_than_all()
   int16_t key = 0;
   const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
-  mc_result_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
+  mc_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
@@ -322,7 +322,7 @@ static int nearest_first_duplicate()
   int16_t key = 17;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
   
-  mc_result_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
+  mc_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (1 != result.value)) {
     return result.error;
   }
@@ -342,7 +342,7 @@ static int nearest_last_element()
   int16_t key = 3;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  mc_result_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
+  mc_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (4 != result.value)) {
     return result.error;
   }
@@ -362,7 +362,7 @@ static int nearest_prepresent_with_duplicate()
   int16_t key = 2;
   mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-  const mc_result_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
+  const mc_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
   if ((MC_SUCCESS != result.error) || (0 != result.value)) {
     return result.error;
   }
@@ -383,7 +383,7 @@ static int nearest_large_array()
     int16_t key = index - 1;
     const mc_buffer buffer = mc_buffer_raw(array, sizeof(array), sizeof(key));
 
-    const mc_result_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
+    const mc_u32 result = mc_alg_nearest(buffer, &key, distance_i16);
     if ((MC_SUCCESS != result.error) || (index != result.value)) {
       return result.error;
     }

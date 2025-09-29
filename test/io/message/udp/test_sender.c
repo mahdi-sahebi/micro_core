@@ -69,7 +69,7 @@ static bool init(void* data)
     .pool_size = 120,
     .ids_capacity = 0
   };
-  const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
+  const mc_u32 result_u32 = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Error = result_u32.error;
     return false;
@@ -97,7 +97,7 @@ static void deinit()
 
 static bool send_data(mc_buffer buffer, mc_msg_id id)
 {
-  const mc_result_u32 result = mc_msg_send(message, buffer, id, TEST_TIMEOUT_US);
+  const mc_u32 result = mc_msg_send(message, buffer, id, TEST_TIMEOUT_US);
   if ((MC_SUCCESS != result.error) || (result.value != mc_buffer_get_size(buffer))) {
     *Error = MC_ERR_TIMEOUT;
     return false;

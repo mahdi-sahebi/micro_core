@@ -38,7 +38,7 @@ static void fill_i16(mc_sarray array)
 
 static int test_required_size()
 {
-  mc_result_u32 result = {0};
+  mc_u32 result = {0};
   
   result = mc_sarray_required_size(sizeof(char), 7);
   if ((MC_SUCCESS != result.error) || 
@@ -127,7 +127,7 @@ static int test_correct_creation_i16()
     return MC_ERR_BAD_ALLOC;
   }
 
-  mc_result_u32 result_u32 = mc_sarray_get_capacity(array);
+  mc_u32 result_u32 = mc_sarray_get_capacity(array);
   if ((MC_SUCCESS != result_u32.error) || (10 != result_u32.value)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -149,7 +149,7 @@ static int test_correct_creation_str()
 {
   char memory[60];
   mc_result_ptr result_ptr = {0};
-  mc_result_u32 result_u32 = {0};
+  mc_u32 result_u32 = {0};
   
   result_ptr = mc_sarray_init(
     mc_buffer(memory, sizeof(memory)), 
@@ -196,7 +196,7 @@ static int test_empty()
     return MC_ERR_RUNTIME;
   }
   
-  mc_result_u32 result_u32 = mc_sarray_get_count(array);
+  mc_u32 result_u32 = mc_sarray_get_count(array);
   if ((MC_SUCCESS != result_u32.error) || (0 != result_u32.value)) {
     return MC_ERR_RUNTIME;
   }
@@ -377,7 +377,7 @@ static int test_insert_on_full()
 
 static int test_get()
 {
-  mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
+  mc_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
   uint16_t memory[25];
 
   mc_sarray array = mc_sarray_init(
@@ -405,7 +405,7 @@ static int test_get()
 
 static int test_remove()
 {
-  mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
+  mc_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
   uint16_t memory[25];
 
   mc_sarray array = mc_sarray_init(
@@ -442,7 +442,7 @@ static int test_remove()
 
 static int test_find()
 {
-  mc_result_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
+  mc_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
   uint16_t memory[25];
 
   mc_sarray array = mc_sarray_init(
