@@ -113,25 +113,25 @@ static void init_32(void* const this, uint64_t size)
     ((meta_32*)this)->size = 0;
 }
 
-static uint32_t get_capacity_08(const void* const this)
+static uint32_t get_capacity_08(cvoid* const this)
 {
     return ((meta_08*)this)->capacity;
 }
 
-static uint32_t get_capacity_16(const void* const this)
+static uint32_t get_capacity_16(cvoid* const this)
 {
     return ((meta_16*)this)->capacity;
 }
 
-static uint32_t get_capacity_32(const void* const this)
+static uint32_t get_capacity_32(cvoid* const this)
 {
     return ((meta_32*)this)->capacity;
 }
 
-static uint32_t get_capacity(const void* this)
+static uint32_t get_capacity(cvoid* this)
 {
-    typedef uint32_t (*getter_cb)(const void* const);
-    const getter_cb getter[] = {
+    typedef uint32_t (*cb_getter)(cvoid* const);
+    const cb_getter getter[] = {
         [WORD_08_BITS] = get_capacity_08,
         [WORD_16_BITS] = get_capacity_16,
         [WORD_32_BITS] = get_capacity_32,
@@ -140,25 +140,25 @@ static uint32_t get_capacity(const void* this)
     return getter[get_word_size(this)](this);
 }
 
-static uint32_t get_size_08(const void* const this)
+static uint32_t get_size_08(cvoid* const this)
 {
     return ((meta_08*)this)->size;
 }
 
-static uint32_t get_size_16(const void* const this)
+static uint32_t get_size_16(cvoid* const this)
 {
     return ((meta_16*)this)->size;
 }
 
-static uint32_t get_size_32(const void* const this)
+static uint32_t get_size_32(cvoid* const this)
 {
     return ((meta_32*)this)->size;
 }
 
-static uint32_t get_size(const void* this)
+static uint32_t get_size(cvoid* this)
 {
-    typedef uint32_t (*getter_cb)(const void* const);
-    const getter_cb getter[] = {
+    typedef uint32_t (*cb_getter)(cvoid* const);
+    const cb_getter getter[] = {
         [WORD_08_BITS] = get_size_08,
         [WORD_16_BITS] = get_size_16,
         [WORD_32_BITS] = get_size_32,
@@ -184,8 +184,8 @@ static void set_size_32(void* const this, uint32_t size)
 
 static void set_size(void* this, uint32_t size)
 {
-    typedef void (*getter_cb)(void* const, uint32_t);
-    const getter_cb getter[] = {
+    typedef void (*cb_getter)(void* const, uint32_t);
+    const cb_getter getter[] = {
         [WORD_08_BITS] = set_size_08,
         [WORD_16_BITS] = set_size_16,
         [WORD_32_BITS] = set_size_32,
@@ -194,25 +194,25 @@ static void set_size(void* this, uint32_t size)
     getter[get_word_size(this)](this, size);
 }
 
-static void* get_data_08(const void* const this, uint32_t index)
+static void* get_data_08(cvoid* const this, uint32_t index)
 {
     return ((meta_08*)this)->data;
 }
 
-static void* get_data_16(const void* const this, uint32_t index)
+static void* get_data_16(cvoid* const this, uint32_t index)
 {
     return ((meta_16*)this)->data;
 }
 
-static void* get_data_32(const void* const this, uint32_t index)
+static void* get_data_32(cvoid* const this, uint32_t index)
 {
     return ((meta_32*)this)->data;
 }
 
-static void* get_data(const void* const this, uint32_t index)
+static void* get_data(cvoid* const this, uint32_t index)
 {
-    typedef void* (*getter_cb)(const void* const, uint32_t index);
-    const getter_cb getter[] = {
+    typedef void* (*cb_getter)(cvoid* const, uint32_t index);
+    const cb_getter getter[] = {
         [WORD_08_BITS] = get_data_08,
         [WORD_16_BITS] = get_data_16,
         [WORD_32_BITS] = get_data_32,
@@ -221,10 +221,10 @@ static void* get_data(const void* const this, uint32_t index)
     return getter[get_word_size(this)](this, index);
 }
 
-mc_result_ptr mc_memlin_create(const mc_buffer buffer)
+mc_ptr mc_memlin_create(const mc_buffer buffer)
 {
     if ((NULL == buffer.data) || (0 == buffer.capacity)) {// TODO(MN): API
-        return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
+        return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
     }
     
     const initiator inits[] = {
@@ -238,10 +238,10 @@ mc_result_ptr mc_memlin_create(const mc_buffer buffer)
     memory->word_size = word;
     inits[word](memory, buffer.capacity);
 
-    return mc_result_ptr(memory, MC_SUCCESS);
+    return mc_ptr(memory, MC_SUCCESS);
 }
 
-mc_error mc_memlin_destroy(mc_memlin** this)
+mc_err mc_memlin_destroy(mc_memlin** this)
 {
     if ((NULL == this) || (NULL == *this)) {
         return MC_ERR_INVALID_ARGUMENT;
@@ -251,23 +251,23 @@ mc_error mc_memlin_destroy(mc_memlin** this)
     return MC_SUCCESS;
 }
 
-mc_result_ptr mc_memlin_alloc(mc_memlin* this, uint32_t size)
+mc_ptr mc_memlin_alloc(mc_memlin* this, uint32_t size)
 {
     if (NULL == this) {
-        return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
+        return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
     }
 
-    const uint32_t cur_size = get_size(this);
+    cuint32_t cur_size = get_size(this);
     if ((cur_size + size) > get_capacity(this)) {
-        return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
+        return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
     }
 
     void* const data = get_data(this, cur_size);
     set_size(this, cur_size + size);
-    return mc_result_ptr(data, MC_SUCCESS);
+    return mc_ptr(data, MC_SUCCESS);
 }
 
-mc_error mc_memlin_clear(mc_memlin* this)
+mc_err mc_memlin_clear(mc_memlin* this)
 {
     if (NULL == this) {
         return MC_ERR_INVALID_ARGUMENT;
@@ -277,46 +277,46 @@ mc_error mc_memlin_clear(mc_memlin* this)
     return MC_SUCCESS;
 }
 
-mc_result_bool mc_memlin_is_empty(const mc_memlin* this)
+mc_bool mc_memlin_is_empty(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_bool(false, MC_ERR_INVALID_ARGUMENT);
+        return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_result_bool(0 == get_size(this), MC_SUCCESS);
+    return mc_bool(0 == get_size(this), MC_SUCCESS);
 }
 
-mc_result_bool mc_memlin_is_full(const mc_memlin* this)
+mc_bool mc_memlin_is_full(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_bool(false, MC_ERR_INVALID_ARGUMENT);
+        return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_result_bool(get_capacity(this) == get_size(this), MC_SUCCESS);
+    return mc_bool(get_capacity(this) == get_size(this), MC_SUCCESS);
 }
 
-mc_result_u32 mc_memlin_get_capacity(const mc_memlin* this)
+mc_u32 mc_memlin_get_capacity(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+        return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_result_u32(get_capacity(this), MC_SUCCESS);
+    return mc_u32(get_capacity(this), MC_SUCCESS);
 }
 
-mc_result_u32 mc_memlin_get_size(const mc_memlin* this)
+mc_u32 mc_memlin_get_size(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+        return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_result_u32(get_size(this), MC_SUCCESS);
+    return mc_u32(get_size(this), MC_SUCCESS);
 }
 
-mc_result_u32 mc_memlin_get_meta_size(const mc_memlin* this)
+mc_u32 mc_memlin_get_meta_size(const mc_memlin* this)
 {
     if (NULL == this) {
-        return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+        return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
     }
 
     const struct _mc_memlin* const obj = (struct _mc_memlin*)this;
@@ -327,5 +327,5 @@ mc_result_u32 mc_memlin_get_meta_size(const mc_memlin* this)
         [WORD_32_BITS] = sizeof(meta_32),
     };
 
-    return mc_result_u32(META_SIZES[obj->word_size], MC_SUCCESS);
+    return mc_u32(META_SIZES[obj->word_size], MC_SUCCESS);
 }

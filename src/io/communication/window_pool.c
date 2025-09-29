@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "io/communication/window_pool.h"
+#include "mc_window_pool.h"
 
 
 #define MIN(A, B)           ((A) <= (B) ? (A) : (B))
@@ -26,6 +26,27 @@ static bool is_first_acked(const wndpool_t* this)
 {
   const wnd_t* window = get_window(this, this->bgn_index);
   return wnd_is_valid(window) && wnd_is_acked(window);
+}
+
+static void remove_first(wndpool_t* this)
+{
+  wnd_clear(get_window(this, this->bgn_index));
+
+  this->bgn_id++;
+  this->bgn_index = (this->bgn_index + 1) % this->capacity;
+
+  if (this->end_id < this->bgn_id) {
+    this->end_id = this->bgn_id;
+  }
+}
+
+static void remove_acked(wndpool_t* this)
+{
+  while (is_first_acked(this)) {
+    wnd_t* const window = get_window(this, this->bgn_index);
+    wnd_clear(window);
+    remove_first(this);
+  }
 }
 
 void wndpool_init(wndpool_t* this, uint16_t window_size, uint8_t capacity)
@@ -58,25 +79,9 @@ wnd_t* wndpool_get(wndpool_t* this, mc_pkt_id id)
   return get_window(this, get_index(this, id));
 }
 
-static void remove_first(wndpool_t* this)
+wnd_t* wndpool_get_last(wndpool_t* this)
 {
-  wnd_clear(get_window(this, this->bgn_index));
-
-  this->bgn_id++;
-  this->bgn_index = (this->bgn_index + 1) % this->capacity;
-
-  if (this->end_id < this->bgn_id) {
-    this->end_id = this->bgn_id;
-  }
-}
-
-static void remove_acked(wndpool_t* this)
-{
-  while (is_first_acked(this)) {
-    wnd_t* const window = get_window(this, this->bgn_index);
-    wnd_clear(window);
-    remove_first(this);
-  }
+  return wndpool_get(this, this->end_id);
 }
 
 bool wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
@@ -94,31 +99,31 @@ bool wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
   return true;
 }
 
-uint8_t wndpool_get_count(const wndpool_t* this)
+uint8_t wndpool_get_count(wndpool_t* this)
 {
-  wnd_t* const window = wndpool_get((wndpool_t*)this, this->end_id);
+  wnd_t* const window = wndpool_get_last(this);
   const uint8_t incomplete = 0 != window->packet.size;
   return (this->end_id - this->bgn_id) + incomplete;
 }
 
-bool wndpool_is_empty(const wndpool_t* this)
+bool wndpool_is_empty(wndpool_t* this)
 {
   if (this->end_id == this->bgn_id) {
-    wnd_t* window = wndpool_get((wndpool_t*)this, this->end_id);
+    wnd_t* window = wndpool_get_last(this);
     return (0 == window->packet.size);
   }
 
   return false;
 }
 
-uint8_t wndpool_get_capacity(const wndpool_t* this)
+uint8_t wndpool_get_capacity(wndpool_t* this)
 {
   return this->capacity;
 }
 
 void wndpool_update_header(wndpool_t* this)
 {
-  wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): [PR2]: Pass window, instead of get window
+  wnd_t* const window = wndpool_get_last(this);// TODO(MN): [PR2]: Pass window, instead of get window
 
   window->packet.header = HEADER;
   window->packet.type   = PKT_DATA;
@@ -132,7 +137,7 @@ void wndpool_update_header(wndpool_t* this)
 
 bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
 {
-  const uint32_t window_index = get_index(this, id);
+  cuint32_t window_index = get_index(this, id);
   wnd_t* const window = get_window(this, window_index);
   if (!wnd_is_acked(window)) {
     wnd_ack(window);
@@ -155,7 +160,7 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
   // Store the last read bytes. requires the continuous data pools
   // Separate the wnd(s) meta data and data buffers
   wnd_t* const window = wndpool_get(this, this->bgn_id);
-  const uint32_t read_size = MIN(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
+  cuint32_t read_size = MIN(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
   memcpy(buffer.data, wnd_get_data(window) + this->stored_size, read_size);
 
   this->stored_size += read_size;
@@ -168,33 +173,25 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
   return read_size;
 }
 
-uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_done, void* arg)
+uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_done, void* arg)
 {
-  if (wndpool_get_count(this) == this->capacity) {
+  if ((wndpool_get_count(this) == this->capacity) ||
+      (0 == buffer.capacity) ||
+      wndpool_get_last(this)->is_sent){
     return 0;// TODO(MN): Requires always one window be free. solve it
-  }
-  if (0 == buffer.capacity) {
-    return 0;
-  }
-
-  {// TODO(MN): Bad design
-    wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
-    if (window->is_sent) {
-      return 0;
-    }
   }
 
   uint32_t data_size = buffer.capacity;
   uint32_t sent_size = 0;
 
   while (data_size) {
-    wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
+    wnd_t* const window = wndpool_get_last(this);// TODO(MN): Use index
     if (window->is_sent) {
       return 0;
     }  
 
-    const uint32_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
-    const uint32_t seg_size = MIN(data_size, available_size);
+    cuint32_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
+    cuint32_t seg_size = MIN(data_size, available_size);
     memcpy(window->packet.data + window->packet.size, buffer.data + sent_size, seg_size);
     
     window->packet.size += seg_size;
@@ -209,7 +206,7 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_
       if (wndpool_get_count(this) < this->capacity) {
         wndpool_update_header(this);// TODO(MN): Get window - opt
         this->end_id++;// TODO(MN): Handle overflow. Add tests for long-term
-        wnd_clear(wndpool_get(this, this->end_id));
+        wnd_clear(wndpool_get_last(this));
       }
 
       if (NULL != on_done) {
@@ -219,6 +216,18 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_
   }
 
   return sent_size;
+}
+
+bool wndpool_has_incomplete(wndpool_t* this)
+{
+  if (!wndpool_is_empty(this)) {
+    const wnd_t* const window = wndpool_get_last(this);// TODO(MN): [PR2]: Pass window, instead of get window
+    if ((0 < window->packet.size) && (window->packet.size != wnd_get_payload_size(this->window_size))) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 

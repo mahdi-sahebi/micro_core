@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include "core/time.h"
+#include "core/error.h"
 #include "test_common.h"
 
 
@@ -31,7 +32,7 @@ static bool simulate_loss()
   return ((random() / (float)RAND_MAX) * 100) < LossRate;
 }
 
-static uint32_t base_socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
+static uint32_t base_socket_write(int socket_fd, cvoid* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {
   usleep(171);
 
@@ -75,14 +76,14 @@ static uint32_t base_socket_read(int socket_fd, void* data, uint32_t size, char 
   return read_size;
 }
 
-uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
+uint32_t socket_write(int socket_fd, cvoid* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {   
   if (!Periodic.is_connected) {
     return 0;
   }
 
   uint8_t count = RepetitiveSendEnable ? 2 : 1;
-  const void* data_buffer = data;
+  cvoid* data_buffer = data;
 
   if (simulate_loss()) {
     static bool packetDrop = false;// TODO(MN): static variables are being used for both client and server

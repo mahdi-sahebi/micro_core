@@ -4,7 +4,10 @@
 #include "mc_protocol.h"
 
 
-#define AUTO_FLUSH_TIMEOUT_MS     250
+enum
+{
+  FLUSH_TIMEOUT_MS = 250,
+};
 
 static void send_ack(mc_comm* this, uint32_t id)
 {
@@ -25,6 +28,22 @@ static void on_send_window_ready(const mc_buffer buffer, void* arg)
   io_send(this, buffer.data, buffer.capacity);
 }
 
+static void send_stale_incomplete(mc_comm* const this)
+{
+#define WNDPOOL    this->snd->pool
+  if (wndpool_has_incomplete(&WNDPOOL)) {
+    if (mc_now_m() > (WNDPOOL.update_time + FLUSH_TIMEOUT_MS)) {// TODO(MN): Update time is extra?
+      wnd_t* const window = wndpool_get_last(&WNDPOOL);// TODO(MN): [PR2]: Pass window, instead of get window. Called twice
+      if (!window->is_sent) {
+        wndpool_update_header(&WNDPOOL);
+      }
+
+      io_send(this, &window->packet, WNDPOOL.window_size);
+    }
+  }
+#undef WNDPOOL
+}
+
 void protocol_init(mc_comm* this)
 {
   this->send_delay_us = MIN_SEND_TIME_US;
@@ -41,10 +60,10 @@ void protocol_recv(const mc_buffer buffer, void* arg)
     }
     
     // TODO(MN): Not per ack
-    const uint64_t elapsed_time = mc_now_u() - wndpool_get(&this->snd->pool, pkt->id)->sent_time_us;
+    cuint64_t elapsed_time = mc_now_u() - wndpool_get(&this->snd->pool, pkt->id)->sent_time_us;
     this->send_delay_us = MIN(MAX(elapsed_time * 0.8, MIN_SEND_TIME_US), MAX_SEND_TIME_US);
     wndpool_ack(&this->snd->pool, pkt->id);
-    return;// done
+    return;
   }
 
   if (pkt->id < this->rcv->pool.bgn_id) {// TODO(MN): Handle overflow
@@ -74,26 +93,11 @@ void protocol_send_unacked(mc_comm* const this)
     }
 
     if (io_send(this, &window->packet, this->snd->pool.window_size)) {
-      // window->sent_time_us = mc_now_u();
+      // window->sent_time_us = mc_now_u(); // TODO(MN): Why makes slower?
     }
   }
 
-
-  // TODO(MN): wndpool_is_empty is wrong condition. has_incomplete_frame(). then we must clear the window
-  if (!wndpool_is_empty(&this->snd->pool)) {
-    wnd_t* const window = wndpool_get(&this->snd->pool, this->snd->pool.end_id);// TODO(MN): [PR2]: Pass window, instead of get window
-    if ((0 < window->packet.size) && (window->packet.size != wnd_get_payload_size(this->snd->pool.window_size))) {
-      if (mc_now_m() > (this->snd->pool.update_time + 250)) {// TODO(MN): Update time is extra?
-        if (!window->is_sent) {
-          wndpool_update_header(&this->snd->pool);
-        }
-
-        mc_buffer last_buffer = mc_buffer(&window->packet, this->snd->pool.window_size);
-        // TODO(MN): Call directly
-        on_send_window_ready(last_buffer, this);// TODO(MN): [PR0]: Don't let write this window any longer. Test: send and wait more than this threasold, then continue wriring
-      }
-    }
-  }
+  send_stale_incomplete(this);
 }
 
 #undef AUTO_FLUSH_TIMEOUT_MS
