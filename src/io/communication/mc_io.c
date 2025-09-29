@@ -20,7 +20,7 @@ void io_recv(mc_comm* this, io_cb_data_ready data_ready, void* arg)
   }
 }
 
-bool io_send(mc_comm* this, const void* buffer, uint32_t size)
+bool io_send(mc_comm* this, cvoid* buffer, uint32_t size)
 {
   uint8_t index = 3;
   while (index--) {

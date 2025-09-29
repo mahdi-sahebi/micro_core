@@ -3,7 +3,7 @@
 #include "alg/algorithm.h"
 
 
-mc_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_fn_distance fn_distance)
+mc_u32 mc_alg_lower_bound(mc_buffer buffer, cvoid* data, mc_fn_distance fn_distance)
 {
   if ((NULL == data) || (NULL == fn_distance) || 
       mc_buffer_is_null(buffer) || (0 == buffer.data_size)) {
@@ -43,7 +43,7 @@ mc_u32 mc_alg_lower_bound(mc_buffer buffer, const void* data, mc_fn_distance fn_
   return mc_u32(bgn, MC_SUCCESS);
 }
 
-mc_u32 mc_alg_nearest(mc_buffer buffer, const void* data, mc_fn_distance fn_distance)
+mc_u32 mc_alg_nearest(mc_buffer buffer, cvoid* data, mc_fn_distance fn_distance)
 {
   mc_u32 result = mc_alg_lower_bound(buffer, data, fn_distance);
   if (!mc_is_ok(result)) {

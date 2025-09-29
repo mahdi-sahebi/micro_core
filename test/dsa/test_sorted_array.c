@@ -8,7 +8,7 @@
 #include "dsa/sarray.h"
 
 
-static mc_cmp comparator_i16(const void* data_1, const void* data_2) 
+static mc_cmp comparator_i16(cvoid* data_1, cvoid* data_2) 
 {
   const int16_t a = *(int16_t*)data_1;
   const int16_t b = *(int16_t*)data_2;
@@ -21,7 +21,7 @@ static mc_cmp comparator_i16(const void* data_1, const void* data_2)
   return MC_ALG_EQ;
 }
 
-static mc_cmp comparator_str(const void* a, const void* b) 
+static mc_cmp comparator_str(cvoid* a, cvoid* b) 
 {
   return strcmp(a, b);
 }

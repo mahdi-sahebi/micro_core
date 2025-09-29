@@ -43,7 +43,7 @@ static void server_create()
   }
 }
 
-static uint32_t server_write(const void* const data, uint32_t size)
+static uint32_t server_write(cvoid* const data, uint32_t size)
 {
   return socket_write(ServerSocket, data, size, "127.0.0.1", CLIENT_PORT);
 }

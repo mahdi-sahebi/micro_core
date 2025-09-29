@@ -46,7 +46,7 @@ static void server_create()
   setsockopt(ServerSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 }
 
-static uint32_t server_write(const void* const data, uint32_t size)
+static uint32_t server_write(cvoid* const data, uint32_t size)
 {
   return socket_write(ServerSocket, data, size, ClientIP, ClientPort);
 }

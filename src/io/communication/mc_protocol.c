@@ -41,7 +41,7 @@ void protocol_recv(const mc_buffer buffer, void* arg)
     }
     
     // TODO(MN): Not per ack
-    const uint64_t elapsed_time = mc_now_u() - wndpool_get(&this->snd->pool, pkt->id)->sent_time_us;
+    cuint64_t elapsed_time = mc_now_u() - wndpool_get(&this->snd->pool, pkt->id)->sent_time_us;
     this->send_delay_us = MIN(MAX(elapsed_time * 0.8, MIN_SEND_TIME_US), MAX_SEND_TIME_US);
     wndpool_ack(&this->snd->pool, pkt->id);
     return;// done
