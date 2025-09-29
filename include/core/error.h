@@ -1,5 +1,6 @@
 /* TODO(MN): typedef const uint32_t cuint32_t;
  * Reduce text size of this module.
+ * TODO(MN): Rename 'value' to have unique name for all result types
  */
 #ifndef MC_ERROR_H_
 #define MC_ERROR_H_
@@ -24,11 +25,11 @@ typedef enum __attribute__((packed))
 
 typedef struct
 {
-  uint32_t value;// TODO(MN): Rename to have unique name for all result types
+  uint32_t value;
   mc_error error;
 }mc_u32;
 
-#define mc_u32(VALUE, ERROR)     (mc_u32){.value = (VALUE), .error = (ERROR)}
+#define mc_u32(VALUE, ERROR)     ((mc_u32){.value = (VALUE), .error = (ERROR)})
 
 
 typedef struct
@@ -37,7 +38,7 @@ typedef struct
   mc_error error;
 }mc_bool;
 
-#define mc_bool(BOOL, ERROR)     (mc_bool){.value = (BOOL), .error = (ERROR)}
+#define mc_bool(BOOL, ERROR)     ((mc_bool){.value = (BOOL), .error = (ERROR)})
 
 
 typedef struct
@@ -46,7 +47,7 @@ typedef struct
   mc_error error;
 }mc_ptr;
 
-#define mc_ptr(DATA, ERROR)      (mc_ptr){.data = (DATA), .error = (ERROR)}
+#define mc_ptr(DATA, ERROR)      ((mc_ptr){.data = (DATA), .error = (ERROR)})
 
 #define mc_is_ok(RESULT)         (MC_SUCCESS == (RESULT).error)
 

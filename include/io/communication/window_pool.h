@@ -24,7 +24,7 @@ typedef struct __attribute__((packed))
   wnd_t      windows[0];
 }wndpool_t;
 
-typedef void (*wndpool_on_done_fn)(mc_buffer buffer, void* arg);
+typedef void (*wndpool_cb_done)(mc_buffer buffer, void* arg);
 
 #define WNDPOOL_GET_WINDOWS_SIZE(WINDOW_SIZE, CAPACITY)\
   ((CAPACITY) * wnd_get_size(WINDOW_SIZE))
@@ -39,7 +39,7 @@ uint8_t  wndpool_get_capacity(const wndpool_t* this);
 bool     wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id);
 bool     wndpool_ack(wndpool_t* this, mc_pkt_id id);
 uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer);
-uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_on_done_fn on_done, void* arg);
+uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_done, void* arg);
 bool     wndpool_is_empty(const wndpool_t* this);
 void     wndpool_update_header(wndpool_t* this);
 

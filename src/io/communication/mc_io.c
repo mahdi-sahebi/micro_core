@@ -8,7 +8,7 @@ void io_init(mc_io* this, mc_io io)
   *this = io;
 }
 
-void io_recv(mc_comm* this, io_data_ready_cb data_ready, void* arg)
+void io_recv(mc_comm* this, io_cb_data_ready data_ready, void* arg)
 {
   const uint32_t required_size = this->rcv->pool.window_size - this->rcv->temp_stored;
   void* const temp_buffer = (char*)(this->rcv->temp_window) + this->rcv->temp_stored;

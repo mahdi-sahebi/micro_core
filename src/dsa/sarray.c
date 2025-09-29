@@ -12,7 +12,7 @@
 
 struct _mc_sarray
 {
-  mc_distance_fn distance;
+  mc_fn_distance distance;
   uint32_t       capacity;
   uint32_t       count;
   uint16_t       data_size;
@@ -32,7 +32,7 @@ mc_u32 mc_sarray_required_size(uint32_t data_size, uint32_t capacity)// TODO(MN)
   return mc_u32(sizeof(struct _mc_sarray) + (capacity * data_size), MC_SUCCESS);
 }
 
-mc_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_distance_fn distance)
+mc_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, mc_fn_distance distance)
 {
   if (mc_buffer_is_null(buffer) || (0 == capacity) || (0 == data_size) || (NULL == distance)) {
     return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
