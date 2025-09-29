@@ -34,13 +34,14 @@ void     wndpool_init(wndpool_t* this, uint16_t window_size, uint8_t capacity);
 void     wndpool_clear(wndpool_t* this);
 bool     wndpool_contains(const wndpool_t* this, mc_pkt_id id);
 wnd_t*   wndpool_get(wndpool_t* this, mc_pkt_id id);
-uint8_t  wndpool_get_count(const wndpool_t* this);
-uint8_t  wndpool_get_capacity(const wndpool_t* this);
+wnd_t*   wndpool_get_last(wndpool_t* this);
+uint8_t  wndpool_get_count(wndpool_t* this);
+uint8_t  wndpool_get_capacity(wndpool_t* this);
 bool     wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id);
 bool     wndpool_ack(wndpool_t* this, mc_pkt_id id);
 uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer);
 uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_done, void* arg);
-bool     wndpool_is_empty(const wndpool_t* this);
+bool     wndpool_is_empty(wndpool_t* this);
 void     wndpool_update_header(wndpool_t* this);
 
 
