@@ -4,7 +4,10 @@
 #include "mc_protocol.h"
 
 
-#define AUTO_FLUSH_TIMEOUT_MS     250
+enum
+{
+  FLUSH_TIMEOUT_MS = 250,
+};
 
 static void send_ack(mc_comm* this, uint32_t id)
 {
@@ -81,9 +84,9 @@ void protocol_send_unacked(mc_comm* const this)
 
   // TODO(MN): wndpool_is_empty is wrong condition. has_incomplete_frame(). then we must clear the window
   if (!wndpool_is_empty(&this->snd->pool)) {
-    wnd_t* const window = wndpool_get(&this->snd->pool, this->snd->pool.end_id);// TODO(MN): [PR2]: Pass window, instead of get window
+    wnd_t* const window = wndpool_get_last(&this->snd->pool);// TODO(MN): [PR2]: Pass window, instead of get window
     if ((0 < window->packet.size) && (window->packet.size != wnd_get_payload_size(this->snd->pool.window_size))) {
-      if (mc_now_m() > (this->snd->pool.update_time + 250)) {// TODO(MN): Update time is extra?
+      if (mc_now_m() > (this->snd->pool.update_time + FLUSH_TIMEOUT_MS)) {// TODO(MN): Update time is extra?
         if (!window->is_sent) {
           wndpool_update_header(&this->snd->pool);
         }

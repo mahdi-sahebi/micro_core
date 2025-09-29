@@ -28,6 +28,27 @@ static bool is_first_acked(const wndpool_t* this)
   return wnd_is_valid(window) && wnd_is_acked(window);
 }
 
+static void remove_first(wndpool_t* this)
+{
+  wnd_clear(get_window(this, this->bgn_index));
+
+  this->bgn_id++;
+  this->bgn_index = (this->bgn_index + 1) % this->capacity;
+
+  if (this->end_id < this->bgn_id) {
+    this->end_id = this->bgn_id;
+  }
+}
+
+static void remove_acked(wndpool_t* this)
+{
+  while (is_first_acked(this)) {
+    wnd_t* const window = get_window(this, this->bgn_index);
+    wnd_clear(window);
+    remove_first(this);
+  }
+}
+
 void wndpool_init(wndpool_t* this, uint16_t window_size, uint8_t capacity)
 {
   this->window_size = window_size;
@@ -58,25 +79,9 @@ wnd_t* wndpool_get(wndpool_t* this, mc_pkt_id id)
   return get_window(this, get_index(this, id));
 }
 
-static void remove_first(wndpool_t* this)
+wnd_t* wndpool_get_last(wndpool_t* this)
 {
-  wnd_clear(get_window(this, this->bgn_index));
-
-  this->bgn_id++;
-  this->bgn_index = (this->bgn_index + 1) % this->capacity;
-
-  if (this->end_id < this->bgn_id) {
-    this->end_id = this->bgn_id;
-  }
-}
-
-static void remove_acked(wndpool_t* this)
-{
-  while (is_first_acked(this)) {
-    wnd_t* const window = get_window(this, this->bgn_index);
-    wnd_clear(window);
-    remove_first(this);
-  }
+  return wndpool_get(this, this->end_id);
 }
 
 bool wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
@@ -94,31 +99,31 @@ bool wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
   return true;
 }
 
-uint8_t wndpool_get_count(const wndpool_t* this)
+uint8_t wndpool_get_count(wndpool_t* this)
 {
-  wnd_t* const window = wndpool_get((wndpool_t*)this, this->end_id);
+  wnd_t* const window = wndpool_get_last(this);
   const uint8_t incomplete = 0 != window->packet.size;
   return (this->end_id - this->bgn_id) + incomplete;
 }
 
-bool wndpool_is_empty(const wndpool_t* this)
+bool wndpool_is_empty(wndpool_t* this)
 {
   if (this->end_id == this->bgn_id) {
-    wnd_t* window = wndpool_get((wndpool_t*)this, this->end_id);
+    wnd_t* window = wndpool_get_last(this);
     return (0 == window->packet.size);
   }
 
   return false;
 }
 
-uint8_t wndpool_get_capacity(const wndpool_t* this)
+uint8_t wndpool_get_capacity(wndpool_t* this)
 {
   return this->capacity;
 }
 
 void wndpool_update_header(wndpool_t* this)
 {
-  wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): [PR2]: Pass window, instead of get window
+  wnd_t* const window = wndpool_get_last(this);// TODO(MN): [PR2]: Pass window, instead of get window
 
   window->packet.header = HEADER;
   window->packet.type   = PKT_DATA;
@@ -178,7 +183,7 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
   }
 
   {// TODO(MN): Bad design
-    wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
+    wnd_t* const window = wndpool_get_last(this);// TODO(MN): Use index
     if (window->is_sent) {
       return 0;
     }
@@ -188,7 +193,7 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
   uint32_t sent_size = 0;
 
   while (data_size) {
-    wnd_t* const window = wndpool_get(this, this->end_id);// TODO(MN): Use index
+    wnd_t* const window = wndpool_get_last(this);// TODO(MN): Use index
     if (window->is_sent) {
       return 0;
     }  
@@ -209,7 +214,7 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
       if (wndpool_get_count(this) < this->capacity) {
         wndpool_update_header(this);// TODO(MN): Get window - opt
         this->end_id++;// TODO(MN): Handle overflow. Add tests for long-term
-        wnd_clear(wndpool_get(this, this->end_id));
+        wnd_clear(wndpool_get_last(this));
       }
 
       if (NULL != on_done) {
