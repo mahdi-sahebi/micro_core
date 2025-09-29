@@ -175,8 +175,8 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
 
 uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_done, void* arg)
 {
-  if ((wndpool_get_count(this) == this->capacity) &&
-      (0 == buffer.capacity) &&
+  if ((wndpool_get_count(this) == this->capacity) ||
+      (0 == buffer.capacity) ||
       wndpool_get_last(this)->is_sent){
     return 0;// TODO(MN): Requires always one window be free. solve it
   }
