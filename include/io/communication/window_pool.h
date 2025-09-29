@@ -43,6 +43,7 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer);
 uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_done, void* arg);
 bool     wndpool_is_empty(wndpool_t* this);
 void     wndpool_update_header(wndpool_t* this);
+bool     wndpool_has_incomplete(wndpool_t* this);
 
 
 #endif /* MC_MESSAGE_WINDOW_POOL_H_ */

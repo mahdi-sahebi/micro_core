@@ -226,5 +226,17 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
   return sent_size;
 }
 
+bool wndpool_has_incomplete(wndpool_t* this)
+{
+  if (!wndpool_is_empty(this)) {
+    const wnd_t* const window = wndpool_get_last(this);// TODO(MN): [PR2]: Pass window, instead of get window
+    if ((0 < window->packet.size) && (window->packet.size != wnd_get_payload_size(this->window_size))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 
 #undef MIN
