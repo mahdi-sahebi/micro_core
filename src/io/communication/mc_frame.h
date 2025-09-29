@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include "alg/mc_buffer.h"
 #include "io/io.h"
-#include "io/communication/window.h"
-#include "io/communication/window_pool.h"
+#include "mc_window.h"
+#include "mc_window_pool.h"
 
 
  

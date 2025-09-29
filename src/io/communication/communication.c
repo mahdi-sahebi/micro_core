@@ -33,13 +33,12 @@
 #include <unistd.h>
 #include "core/error.h"
 #include "core/time.h"
-#include "io/communication/window.h"// TODO(MN): Make it private
-#include "io/communication/window_pool.h"
+#include "mc_window.h"
+#include "mc_window_pool.h"
 #include "mc_base.h"
 #include "mc_io.h"
 #include "mc_frame.h"
 #include "mc_protocol.h"
-
 
 
 
@@ -119,7 +118,7 @@ mc_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeo
     cuint32_t seg_size = wndpool_read(&this->rcv->pool, mc_buffer((char*)dst_data + read_size, size));
 
     if (seg_size) {
-      size -= seg_size;
+      size      -= seg_size;
       read_size += seg_size;
     } else {
       mc_comm_update(this);
