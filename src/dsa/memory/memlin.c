@@ -257,7 +257,7 @@ mc_ptr mc_memlin_alloc(mc_memlin* this, uint32_t size)
         return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
     }
 
-    const uint32_t cur_size = get_size(this);
+    cuint32_t cur_size = get_size(this);
     if ((cur_size + size) > get_capacity(this)) {
         return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
     }

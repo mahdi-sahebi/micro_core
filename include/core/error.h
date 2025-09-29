@@ -1,4 +1,4 @@
-/* TODO(MN): typedef const uint32_t cuint32_t;
+/* TODO(MN): typedef cuint32_t cuint32_t;
  * Reduce text size of this module.
  * TODO(MN): Rename 'value' to have unique name for all result types
  */
@@ -26,7 +26,7 @@ typedef enum __attribute__((packed))
 typedef struct
 {
   uint32_t value;
-  mc_err error;
+  mc_err   error;
 }mc_u32;
 
 #define mc_u32(VALUE, ERROR)     ((mc_u32){.value = (VALUE), .error = (ERROR)})
@@ -34,7 +34,7 @@ typedef struct
 
 typedef struct
 {
-  bool     value;
+  bool   value;
   mc_err error;
 }mc_bool;
 
@@ -43,7 +43,7 @@ typedef struct
 
 typedef struct
 {
-  void*    data;
+  void*  data;
   mc_err error;
 }mc_ptr;
 
@@ -53,9 +53,9 @@ typedef struct
 
 
 // TOOD(MN): Move to types.h
-typedef const void cvoid;
-typedef const char cchar;
-typedef const uint8_t cuint8_t;
+typedef const void     cvoid;
+typedef const char     cchar;
+typedef const uint8_t  cuint8_t;
 typedef const uint16_t cuint16_t;
 typedef const uint32_t cuint32_t;
 typedef const uint64_t cuint64_t;

@@ -163,7 +163,7 @@ static int lower_bound_prepresent_with_duplicate()
 static int lower_bound_large_array()
 {
   int16_t array[10000] = {0};
-  const uint32_t count = sizeof(array) / sizeof(*array);
+  cuint32_t count = sizeof(array) / sizeof(*array);
 
   for (uint32_t index = 0; index < count; index++) {
     array[index] = index;
@@ -373,7 +373,7 @@ static int nearest_prepresent_with_duplicate()
 static int nearest_large_array()
 {
   int16_t array[10000] = {0};
-  const uint32_t count = sizeof(array) / sizeof(*array);
+  cuint32_t count = sizeof(array) / sizeof(*array);
 
   for (uint32_t index = 0; index < count; index++) {
     array[index] = index * 10;

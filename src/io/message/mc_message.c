@@ -61,10 +61,10 @@ static uint32_t remaining_header_size(const mc_msg* const this)
 static mc_err drop_message(mc_msg* const this)
 {
   const pkt_hdr* const pkt = (pkt_hdr*)this->recv_pool.data;
-  const uint32_t expected_size = pkt->size + sizeof(pkt_hdr);
+  cuint32_t expected_size = pkt->size + sizeof(pkt_hdr);
 
   if (mc_buffer_get_size(this->recv_pool) < expected_size) {// Droping message until the end because receive pool is smaller than message size
-    const uint32_t seg_size = MIN(mc_buffer_get_size(this->recv_pool) - sizeof(pkt_hdr), expected_size - this->recv_pool_stored);// TODO(MN): Check minimum of sizeof(pkt_hdr)
+    cuint32_t seg_size = MIN(mc_buffer_get_size(this->recv_pool) - sizeof(pkt_hdr), expected_size - this->recv_pool_stored);// TODO(MN): Check minimum of sizeof(pkt_hdr)
     mc_u32 res = mc_comm_recv(this->comm, this->recv_pool.data + sizeof(pkt_hdr), seg_size, 1000);
     this->recv_pool_stored += res.value;
     if (this->recv_pool_stored == expected_size) {
@@ -80,10 +80,10 @@ static mc_err drop_message(mc_msg* const this)
 static bool is_message_stored(mc_msg* const this)
 {
   const pkt_hdr* const pkt = (pkt_hdr*)this->recv_pool.data;
-  const uint32_t expected_size = pkt->size + sizeof(pkt_hdr);
+  cuint32_t expected_size = pkt->size + sizeof(pkt_hdr);
 
   if (this->recv_pool_stored != expected_size) {
-    const uint32_t size = remaining_message_size(this, pkt);
+    cuint32_t size = remaining_message_size(this, pkt);
 
     const mc_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
     this->recv_pool_stored += result.value; 
@@ -99,7 +99,7 @@ static bool is_message_stored(mc_msg* const this)
 
 static bool read_message_header(mc_msg* this)
 {
-  const uint32_t size = remaining_header_size(this);
+  cuint32_t size = remaining_header_size(this);
   const mc_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000);
   
   this->recv_pool_stored += result.value;
@@ -129,7 +129,7 @@ mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
   if (MC_SUCCESS != result.error) {
     return result;
   }
-  const uint32_t comm_size = result.value;
+  cuint32_t comm_size = result.value;
 
   uint32_t ids_size = 0;
   if (0 != config.ids_capacity) {
@@ -140,7 +140,7 @@ mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
     ids_size = result.value;
   }
 
-  const uint32_t size = sizeof(mc_msg) + comm_size + config.pool_size;
+  cuint32_t size = sizeof(mc_msg) + comm_size + config.pool_size;
   return mc_u32(size, MC_SUCCESS);
 }
 
@@ -239,7 +239,7 @@ mc_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeou
     return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  const uint32_t size = mc_buffer_get_size(buffer);
+  cuint32_t size = mc_buffer_get_size(buffer);
 
   pkt_hdr pkt = {
     .size = size,

@@ -60,10 +60,10 @@ mc_u32 mc_comm_get_alloc_size(mc_comm_cfg config)
     return mc_u32(0, MC_ERR_BAD_ALLOC);
   }
 
-  const uint32_t recv_frame_size = FRAME_GET_SIZE(config.recv.size, config.recv.capacity);
-  const uint32_t send_frame_size = FRAME_GET_SIZE(config.send.size, config.send.capacity);
-  const uint32_t frames_size = recv_frame_size + send_frame_size;
-  const uint32_t size = sizeof(mc_comm) + frames_size;
+  cuint32_t recv_frame_size = FRAME_GET_SIZE(config.recv.size, config.recv.capacity);
+  cuint32_t send_frame_size = FRAME_GET_SIZE(config.send.size, config.send.capacity);
+  cuint32_t frames_size = recv_frame_size + send_frame_size;
+  cuint32_t size = sizeof(mc_comm) + frames_size;
   return mc_u32(size, MC_SUCCESS);
 }
 
@@ -116,7 +116,7 @@ mc_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeo
       break;
     }
 
-    const uint32_t seg_size = wndpool_read(&this->rcv->pool, mc_buffer((char*)dst_data + read_size, size));
+    cuint32_t seg_size = wndpool_read(&this->rcv->pool, mc_buffer((char*)dst_data + read_size, size));
 
     if (seg_size) {
       size -= seg_size;
@@ -142,7 +142,7 @@ mc_u32 mc_comm_send(mc_comm* this, cvoid* src_data, uint32_t size, uint32_t time
 
   // TODO(MN): This loop is repetitive in the wndpool_write
   while (size) {
-    const uint32_t seg_size = MIN(size, this->snd->pool.window_size - sizeof(mc_pkt));
+    cuint32_t seg_size = MIN(size, this->snd->pool.window_size - sizeof(mc_pkt));
     mc_buffer buffer = mc_buffer((char*)src_data + sent_size, seg_size);
     buffer = protocol_send(this, buffer);
     
@@ -154,7 +154,7 @@ mc_u32 mc_comm_send(mc_comm* this, cvoid* src_data, uint32_t size, uint32_t time
       usleep(MIN_SEND_TIME_US);
     } 
 
-    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
+    if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {// TODO(MN): Separate branch checkings for optimize
       error = MC_ERR_TIMEOUT;
       break;
     }

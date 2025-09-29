@@ -38,7 +38,7 @@ mc_ptr mc_sarray_init(mc_buffer buffer, uint32_t data_size, uint32_t capacity, m
     return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
-  const uint32_t required_size = sizeof(struct _mc_sarray) + (capacity * data_size);
+  cuint32_t required_size = sizeof(struct _mc_sarray) + (capacity * data_size);
   if (mc_buffer_get_size(buffer) < required_size) {
     return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
@@ -131,7 +131,7 @@ mc_err mc_sarray_insert(mc_sarray this, cvoid* data)
     return MC_ERR_OUT_OF_RANGE;
   }
 
-  const uint32_t index = mc_alg_lower_bound(mc_buffer_raw(this->data, this->data_size * this->count, this->data_size), data, this->distance).value;
+  cuint32_t index = mc_alg_lower_bound(mc_buffer_raw(this->data, this->data_size * this->count, this->data_size), data, this->distance).value;
   if (index < this->count) {
     memmove(GET_DATA(this, index + 1), GET_DATA(this, index), this->data_size * (this->count - index));
   }
@@ -171,7 +171,7 @@ mc_err mc_sarray_remove(mc_sarray this, cvoid* data)
     return result.error;
   }
 
-  const uint32_t data_index = ((char*)result.data - this->data) / this->data_size;
+  cuint32_t data_index = ((char*)result.data - this->data) / this->data_size;
   memmove(this->data + (data_index * this->data_size),
           this->data + (data_index + 1) * this->data_size,
           (this->count - (data_index + 1)) * this->data_size);

@@ -137,7 +137,7 @@ void wndpool_update_header(wndpool_t* this)
 
 bool wndpool_ack(wndpool_t* this, mc_pkt_id id)
 {
-  const uint32_t window_index = get_index(this, id);
+  cuint32_t window_index = get_index(this, id);
   wnd_t* const window = get_window(this, window_index);
   if (!wnd_is_acked(window)) {
     wnd_ack(window);
@@ -160,7 +160,7 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
   // Store the last read bytes. requires the continuous data pools
   // Separate the wnd(s) meta data and data buffers
   wnd_t* const window = wndpool_get(this, this->bgn_id);
-  const uint32_t read_size = MIN(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
+  cuint32_t read_size = MIN(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
   memcpy(buffer.data, wnd_get_data(window) + this->stored_size, read_size);
 
   this->stored_size += read_size;
@@ -175,18 +175,10 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
 
 uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_done, void* arg)
 {
-  if (wndpool_get_count(this) == this->capacity) {
+  if ((wndpool_get_count(this) == this->capacity) &&
+      (0 == buffer.capacity) &&
+      wndpool_get_last(this)->is_sent){
     return 0;// TODO(MN): Requires always one window be free. solve it
-  }
-  if (0 == buffer.capacity) {
-    return 0;
-  }
-
-  {// TODO(MN): Bad design
-    wnd_t* const window = wndpool_get_last(this);// TODO(MN): Use index
-    if (window->is_sent) {
-      return 0;
-    }
   }
 
   uint32_t data_size = buffer.capacity;
@@ -198,8 +190,8 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
       return 0;
     }  
 
-    const uint32_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
-    const uint32_t seg_size = MIN(data_size, available_size);
+    cuint32_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
+    cuint32_t seg_size = MIN(data_size, available_size);
     memcpy(window->packet.data + window->packet.size, buffer.data + sent_size, seg_size);
     
     window->packet.size += seg_size;

@@ -77,7 +77,7 @@ static int valid_creation()
 {
   char memory[1024];
   mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
-  const uint32_t capcity = 3;
+  cuint32_t capcity = 3;
   
   mc_comm_cfg config = mc_comm_cfg(
     mc_io(read_api, write_api), 
@@ -152,7 +152,7 @@ static int singly_high_lossy()
 
 static int full_duplex()
 {
-  return MC_ERR_RUNTIME;
+  return MC_ERR_RUNTIME;// TODO(MN): Implement
 }
 
 int main()

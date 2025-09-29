@@ -33,7 +33,7 @@ static uint32_t client_read(void* data, uint32_t size)
 {
   char src_ip[INET_ADDRSTRLEN] = {0};
   uint16_t src_port = 0;
-  const uint32_t read_size = socket_read(ClientSocket, data, size, src_ip, &src_port);
+  cuint32_t read_size = socket_read(ClientSocket, data, size, src_ip, &src_port);
 
   if ((SERVER_PORT != src_port) || (0 != strcmp(src_ip, "127.0.0.1"))) {
     return 0;
@@ -108,7 +108,7 @@ static bool send_data(mc_buffer buffer, mc_msg_id id)
 static bool send_string(uint32_t seed)
 {
   char data[9] = {0};
-  const uint32_t size = sizeof(data);
+  cuint32_t size = sizeof(data);
   sprintf(data, "!p%03u.?I", seed % 1000);
 
   return send_data(mc_buffer(data, size), 77);
@@ -117,7 +117,7 @@ static bool send_string(uint32_t seed)
 static bool send_large_1(uint32_t seed)
 {
   uint32_t data[32] = {0};
-  const uint32_t count = sizeof(data) / sizeof(*data);
+  cuint32_t count = sizeof(data) / sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
     data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
@@ -135,7 +135,7 @@ static bool send_large_2(uint32_t seed)
 static bool send_tiny(uint32_t seed)
 {
   bool data = (seed & 1);
-  const uint32_t size = sizeof(data);
+  cuint32_t size = sizeof(data);
 
   return send_data(mc_buffer(&data, size), 19);
 }

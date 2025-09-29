@@ -18,7 +18,7 @@ mc_u32 mc_alg_lower_bound(mc_buffer buffer, cvoid* data, mc_fn_distance fn_dista
   uint32_t end = buffer.capacity - 1;
 
   while (bgn <= end) {
-    const uint32_t mid = (bgn + end) >> 1;
+    cuint32_t mid = (bgn + end) >> 1;
     const float distance = fn_distance(data, (char*)buffer.data + (mid * buffer.data_size));
 
     if        (distance > 0.0F) {
