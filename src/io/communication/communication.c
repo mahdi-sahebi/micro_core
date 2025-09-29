@@ -25,6 +25,7 @@
  * Doc: Concat the data like TCP.
  * In message: UDP reading small size from a big segment, causes lost of whole of segment. 
  * update reading size as big as possible. Like reading header size then data
+ * Make mc_comm_flush private, and return true/false for mc_comm_update to give controll of flushing to user.
  */
 
 #include <stdlib.h>
@@ -45,7 +46,7 @@
 #define FRAME_GET_SIZE(WINDOW_SIZE, CAPACITY)\
   (sizeof(mc_frame) + (WINDOW_SIZE) + WNDPOOL_GET_WINDOWS_SIZE(WINDOW_SIZE, CAPACITY))
 
-mc_u32 mc_comm_get_alloc_size(mc_comm_cfg config)
+mc_u32 mc_comm_req_size(mc_comm_cfg config)
 {
   if ((NULL == config.io.recv) || (NULL == config.io.send)) {
     return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
@@ -68,7 +69,7 @@ mc_u32 mc_comm_get_alloc_size(mc_comm_cfg config)
 
 mc_ptr mc_comm_init(mc_buffer alloc_buffer, mc_comm_cfg config)
 {
-  const mc_u32 result_u32 = mc_comm_get_alloc_size(config);
+  const mc_u32 result_u32 = mc_comm_req_size(config);
   if ((MC_SUCCESS != result_u32.error) || (mc_buffer_get_size(alloc_buffer) < result_u32.value)) {
     return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
   }

@@ -100,7 +100,7 @@ static bool init(void* data)
   const mc_comm_cfg config = mc_comm_cfg(mc_io(server_read, server_write),
     mc_comm_wnd(1157, 3), mc_comm_wnd(59, 1));
     
-  const mc_u32 result_u32 = mc_comm_get_alloc_size(config);
+  const mc_u32 result_u32 = mc_comm_req_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Result = result_u32.error;
     return false;
