@@ -42,11 +42,11 @@ typedef struct
 
 typedef struct
 {
-  void*    data;// TODO(MN): Use uintptr_t and have only one mc_result struct?
+  void*    data;
   mc_error error;
-}mc_result_ptr;
+}mc_ptr;
 
-#define mc_result_ptr(DATA, ERROR)      (mc_result_ptr){.data = (DATA), .error = (ERROR)}
+#define mc_ptr(DATA, ERROR)      (mc_ptr){.data = (DATA), .error = (ERROR)}
 
 #define mc_result_is_ok(RESULT)         (MC_SUCCESS == (RESULT).error)
 

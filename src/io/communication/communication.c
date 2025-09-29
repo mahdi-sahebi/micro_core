@@ -66,11 +66,11 @@ mc_u32 mc_comm_get_alloc_size(mc_comm_cfg config)
   return mc_u32(size, MC_SUCCESS);
 }
 
-mc_result_ptr mc_comm_init(mc_buffer alloc_buffer, mc_comm_cfg config)
+mc_ptr mc_comm_init(mc_buffer alloc_buffer, mc_comm_cfg config)
 {
   const mc_u32 result_u32 = mc_comm_get_alloc_size(config);
   if ((MC_SUCCESS != result_u32.error) || (mc_buffer_get_size(alloc_buffer) < result_u32.value)) {
-    return mc_result_ptr(NULL, MC_ERR_BAD_ALLOC);
+    return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
   
   mc_comm* const this = (mc_comm*)alloc_buffer.data;
@@ -84,7 +84,7 @@ mc_result_ptr mc_comm_init(mc_buffer alloc_buffer, mc_comm_cfg config)
   
   protocol_init(this);
 
-  return mc_result_ptr(this, MC_SUCCESS);
+  return mc_ptr(this, MC_SUCCESS);
 }
 
 mc_error mc_comm_update(mc_comm* this)

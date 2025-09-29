@@ -21,7 +21,7 @@ static int create_8()
 {
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_08_BIT);
 
-  const mc_result_ptr result_1 = mc_memlin_create(buffer);
+  const mc_ptr result_1 = mc_memlin_create(buffer);
   if ((MC_SUCCESS != result_1.error) || (NULL == result_1.data)) {
     return result_1.error;
   }
@@ -38,7 +38,7 @@ static int create_16()
 {
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_16_BIT);
 
-  const mc_result_ptr result_1 = mc_memlin_create(buffer);
+  const mc_ptr result_1 = mc_memlin_create(buffer);
   if ((MC_SUCCESS != result_1.error) || (NULL == result_1.data)) {
     return result_1.error;
   }
@@ -55,7 +55,7 @@ static int create_32()
 {
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_32_BIT);
 
-  const mc_result_ptr result_1 = mc_memlin_create(buffer);
+  const mc_ptr result_1 = mc_memlin_create(buffer);
   if ((MC_SUCCESS != result_1.error) || (NULL == result_1.data)) {
     return result_1.error;
   }
@@ -72,7 +72,7 @@ static int create_invalid()
 {
   const mc_buffer buffer = mc_buffer(NULL, SIZE_08_BIT);
 
-  const mc_result_ptr result = mc_memlin_create(buffer);
+  const mc_ptr result = mc_memlin_create(buffer);
   if ((MC_ERR_BAD_ALLOC != result.error) || (NULL != result.data)) {
     return result.error;
   }
@@ -173,7 +173,7 @@ static int get_size_32()
 static int destroy()
 {
   const mc_buffer buffer = mc_buffer(Buffer, SIZE_08_BIT);
-  mc_result_ptr result;
+  mc_ptr result;
 
   result = mc_memlin_create(buffer);
   if ((MC_SUCCESS != result.error) || (NULL == result.data)) {

@@ -22,7 +22,7 @@ static uint32_t io_send(const void* const data, uint32_t size)
 
 static int invalid_creation()
 {
-  mc_result_ptr result;
+  mc_ptr result;
   char memory[100];
   mc_msg_cfg config = {0};
   
@@ -90,7 +90,7 @@ static int invalid_creation()
 
 static int valid_creation()
 {
-  mc_result_ptr result;
+  mc_ptr result;
   char memory[2048];
 
   mc_msg_cfg config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 3), mc_comm_wnd(50, 2), 200, 15);
