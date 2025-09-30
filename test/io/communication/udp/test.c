@@ -2,34 +2,6 @@
  * like UDP, so we just implement a simple send and receive socket.
  * creation, invalid parameters, diff snd/rcv window sizes, ...
  * 
- * [Test Log]
- * 
-[MICRO CORE 1.0.0 - IO - COMMUNICATION]
-[invalid_creation]
-PASSED - 1(us)
-
-[valid_creation]
-PASSED - 1(us)
-
-[singly_direction]
-████████████████████ 100.0%
-[IO] Completed{Recv: 2471, Send: 2007} - Failed{Recv: 0(0.0%), Send: 0(0.0%)}
-PASSED - 3720546(us)
-
-[singly_repetitive]
-████████████████████ 100.0%
-[IO] Completed{Recv: 2471, Send: 2010} - Failed{Recv: 0(0.0%), Send: 0(0.0%)}
-PASSED - 3694864(us)
-
-[singly_low_lossy]
-████████████████████ 100.0%
-[IO] Completed{Recv: 4495, Send: 4103} - Failed{Recv: 904(20.1%), Send: 836(20.4%)}
-PASSED - 3991008(us)
-
-[singly_high_lossy]
-████████████████████ 100.0%
-[IO] Completed{Recv: 356648, Send: 373906} - Failed{Recv: 339129(95.1%), Send: 355027(95.0%)}
-PASSED - 90864987(us)
  */
 
 #include <stdio.h>

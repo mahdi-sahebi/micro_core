@@ -149,8 +149,9 @@ static int singly_low_lossy()
 
 static int singly_high_lossy()
 {
-  cfg_set_loss_rate(65);
+  cfg_set_loss_rate(98);
   cfg_set_iterations(50);
+  cfg_set_periodic_duration(5000);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
@@ -161,38 +162,38 @@ int main()
   printf("[MICRO CORE %u.%u.%u - IO - MESSAGE]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
   mc_error result = MC_SUCCESS;
 
-  // printf("[invalid_creation]\n");
-  // {
-  //   const mc_time_t bgn_time_us = mc_now_u();
-  //   result = invalid_creation();
-  //   if (MC_SUCCESS != result) {
-  //     printf("FAILED: %u\n\n", result);
-  //   } else {
-  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
-  //   }
-  // }
+  printf("[invalid_creation]\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = invalid_creation();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
 
-  // printf("[valid_creation]\n");
-  // {
-  //   const mc_time_t bgn_time_us = mc_now_u();
-  //   result = valid_creation();
-  //   if (MC_SUCCESS != result) {
-  //     printf("FAILED: %u\n\n", result);
-  //   } else {
-  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
-  //   }
-  // }
+  printf("[valid_creation]\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = valid_creation();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
 
-  // printf("[singly_direction]\n");
-  // {
-  //   const mc_time_t bgn_time_us = mc_now_u();
-  //   result = singly_direction();
-  //   if (MC_SUCCESS != result) {
-  //     printf("FAILED: %u\n\n", result);
-  //   } else {
-  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
-  //   }
-  // }
+  printf("[singly_direction]\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = singly_direction();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
 
   printf("[singly_repetitive]\n");
   {
