@@ -1,5 +1,5 @@
-#ifndef MC_TEST_MESSAGE_UDP_COMMON_H_
-#define MC_TEST_MESSAGE_UDP_COMMON_H_
+#ifndef MC_TEST_COMMUNICATION_UDP_COMMON_H_
+#define MC_TEST_COMMUNICATION_UDP_COMMON_H_
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -29,4 +29,4 @@ uint32_t cfg_get_recv_failed_counter();
 uint32_t cfg_get_send_failed_counter();
 
 
-#endif /* MC_TEST_MESSAGE_UDP_COMMON_H_ */
+#endif /* MC_TEST_COMMUNICATION_UDP_COMMON_H_ */

@@ -3,12 +3,21 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include "core/time.h"
 #include "test_common.h"
 
+
+typedef struct
+{
+  mc_time_t last_time;
+  uint32_t  duration_ms;
+  bool      is_connected;
+}periodic_connection_t;
 
 static uint32_t TestIterations = COMPLETE_COUNT;
 static char SendBuffer[1 * 1024];
 static bool RepetitiveSendEnable = false;
+static periodic_connection_t Periodic = {.is_connected = true, .duration_ms = 0, .last_time = 0};
 static uint8_t LossRate = 0;
 static uint32_t RecvCounter = 0;
 static uint32_t SendCounter = 0;
@@ -68,11 +77,15 @@ static uint32_t base_socket_read(int socket_fd, void* data, uint32_t size, char 
 
 uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* const dst_ip, uint16_t dst_port)
 {
+  if (!Periodic.is_connected) {
+    return 0;
+  }
+
   uint8_t count = RepetitiveSendEnable ? 2 : 1;
   const void* data_buffer = data;
 
   if (simulate_loss()) {
-    static bool packetDrop = false;
+    static bool packetDrop = false;// TODO(MN): static variables are being used for both client and server
     packetDrop = !packetDrop;
     SendFailedCounter++;
 
@@ -98,20 +111,40 @@ uint32_t socket_write(int socket_fd, const void* data, uint32_t size, char* cons
 
 uint32_t socket_read(int socket_fd, void* data, uint32_t size, char src_ip[INET_ADDRSTRLEN], uint16_t* src_port)
 {
-  uint32_t read_size = base_socket_read(socket_fd, data, size, src_ip, src_port);
+  // TODO(MN): Tests of droping a small part of receiving packet
+  const uint32_t read_size = base_socket_read(socket_fd, data, size, src_ip, src_port);
+
+  if (0 != Periodic.duration_ms) {
+    if ((mc_now_m() - Periodic.last_time) > Periodic.duration_ms) {
+      Periodic.last_time = mc_now_m();
+      Periodic.is_connected = !Periodic.is_connected;
+    }
+    
+    if (!Periodic.is_connected) {
+      return 0;
+    }
+  }
+
+// TOOD(MN): Complete log: # CRC failed, # packet dropped, #memory dropped, # max disconnection duratin 
+// #Recv FIFO clear
+
+  RecvCounter++;
+  static bool bit_corruption = false;
+  bool packetDrop = false;
+
+  if (simulate_loss()) {
+    packetDrop = true;
+    bit_corruption = !bit_corruption;
+    RecvFailedCounter++;
+    
+    if (!bit_corruption) {
+      return 0;
+    }
+  }
   
-  if (read_size) {
-    RecvCounter++;
-  
-    if (simulate_loss()) {
-      BitCorruption = !BitCorruption;
-      RecvFailedCounter++;
-      
-      if (!BitCorruption) {
-        read_size = 0;
-      } else {
-        ((uint8_t*)data)[read_size / 2] ^= 1;// TODO(MN): Sometimes CRC16 doesn't detect
-      }
+  if (0 != read_size) {
+    if (packetDrop && bit_corruption) {
+      ((uint8_t*)data)[29] ^= 1;
     }
   }
   
@@ -140,6 +173,11 @@ void cfg_set_iterations(uint32_t iterations)
   SendCounter = 0;
   RecvFailedCounter = 0;
   SendFailedCounter = 0;
+}
+
+void cfg_set_periodic_duration(uint32_t duration_ms)
+{
+  Periodic.duration_ms = duration_ms;
 }
 
 uint32_t cfg_get_iterations()
