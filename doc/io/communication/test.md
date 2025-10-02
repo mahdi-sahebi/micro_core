@@ -18,20 +18,6 @@
 
 ## Table of Contents
 
-- Test environment & tools
-- Static analysis (TBD)
-- Run-time analyzer (Valgrind results)
-- Test scenarios
-- Execution results (tables + ASCII charts)
-- Detailed walkthroughs
-- Network congestion handling & improvement suggestions
-- Bad situations considered
-- ASIL-B mapping & references
-- Code coverage (how-to)
-- Performance benchmarks (TBD)
-- Conclusions & next steps
-- Appendix
-
 <br>
 
 
