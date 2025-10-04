@@ -9,7 +9,7 @@
 
 typedef struct _mc_msg mc_msg;
 typedef uint16_t mc_msg_id;
-typedef void (*mc_msg_receive_cb)(mc_msg_id, mc_buffer);
+typedef void (*mc_msg_cb_receive)(mc_msg_id, mc_buffer);
 
 typedef struct
 {
@@ -24,14 +24,14 @@ typedef struct
   (mc_msg_cfg){.io = (IO), .recv = (RECV_WND), .send = (SEND_WND), .pool_size = (POOL_SIZE), . ids_capacity = (IDS_CAPACITY)}
 
 
-mc_result_u32  mc_msg_get_alloc_size(mc_msg_cfg config);
-mc_result_ptr  mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config);
-mc_error       mc_msg_update(mc_msg* this);// TODO(MN): receive
-mc_error       mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_receive_cb on_receive);
-mc_error       mc_msg_unsubscribe(mc_msg* this, mc_msg_id id);
-mc_result_u32  mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeout_us);
-mc_result_u32  mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us);
-mc_result_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us);
+mc_u32  mc_msg_get_alloc_size(mc_msg_cfg config);
+mc_ptr  mc_msg_init       (mc_buffer alloc_buffer, mc_msg_cfg config);
+mc_err  mc_msg_update     (mc_msg* this);// TODO(MN): receive. no public
+mc_err  mc_msg_subscribe  (mc_msg* this, mc_msg_id id, mc_msg_cb_receive on_receive);
+mc_err  mc_msg_unsubscribe(mc_msg* this, mc_msg_id id);
+mc_u32  mc_msg_send       (mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeout_us);
+mc_u32  mc_msg_signal     (mc_msg* this, mc_msg_id id, uint32_t timeout_us);
+mc_bool mc_msg_flush      (mc_msg* this, uint32_t timeout_us);
 
 
 #endif /* MC_IO_MESSAGE_H_ */

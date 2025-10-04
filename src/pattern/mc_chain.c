@@ -2,29 +2,29 @@
 #include <pattern/mc_chain.h>
 
 
-mc_result_u32 mc_chain_get_alloc_size(uint8_t capacity)
+mc_u32 mc_chain_get_alloc_size(uint8_t capacity)
 {
   if (0 == capacity) {
-    return mc_result_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
   }
 
-  const uint32_t size = sizeof(mc_chain) + (sizeof(mc_chain_node) * capacity);
-  return mc_result_u32(size, MC_SUCCESS);
+  cuint32_t size = sizeof(mc_chain) + (sizeof(mc_chain_node) * capacity);
+  return mc_u32(size, MC_SUCCESS);
 }
 
-mc_result_ptr mc_chain_init(mc_buffer alloc_buffer, uint8_t capacity)
+mc_ptr mc_chain_init(mc_buffer alloc_buffer, uint8_t capacity)
 {
   if (mc_buffer_is_null(alloc_buffer) || mc_buffer_is_empty(alloc_buffer) || (0 == capacity)) {
-    return mc_result_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
+    return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
   mc_chain* this = (mc_chain*)alloc_buffer.data;
   this->capacity = capacity;
   this->count = 0;
-  return mc_result_ptr(this, MC_SUCCESS);
+  return mc_ptr(this, MC_SUCCESS);
 }
 
-mc_error mc_chain_clear(mc_chain* this)
+mc_err mc_chain_clear(mc_chain* this)
 {
   if (NULL == this) {
     return MC_ERR_INVALID_ARGUMENT;
@@ -34,7 +34,7 @@ mc_error mc_chain_clear(mc_chain* this)
   return MC_SUCCESS;
 }
 
-mc_error mc_chain_push(mc_chain* this, mc_chain_cb api, void* arg)
+mc_err mc_chain_push(mc_chain* this, mc_cb_chain api, void* arg)
 {
   if ((NULL == this) || (NULL == api)) {
     return MC_ERR_INVALID_ARGUMENT;
