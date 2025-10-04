@@ -259,10 +259,10 @@ Lines executed:100.00% of 19
 ```bash
 gcov build/src/io/communication/CMakeFiles/mcore_comm.dir/communication.c.
 File '/media/mahdi/common/repositories/micro_core/src/io/communication/communication.c'
-Lines executed:89.61% of 77
+Lines executed:94.81% of 77
 Creating 'communication.c.gcov'
 
-Lines executed:89.61% of 77
+Lines executed:94.81% of 77
 ```
 
 **`window_pool.c`**:

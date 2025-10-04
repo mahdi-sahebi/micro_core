@@ -16,14 +16,14 @@
 #include "test_sender.h"
 
 
-static uint32_t read_api(void* const data, uint32_t size)
+static uint32_t io_recv(void* const data, uint32_t size)
 {
-  return size;
+  return 0;
 }
 
-static uint32_t write_api(cvoid* const data, uint32_t size)
+static uint32_t io_send(cvoid* const data, uint32_t size)
 {
-  return size;
+  return 0;
 }
 
 static int invalid_creation()
@@ -34,37 +34,37 @@ static int invalid_creation()
   mc_comm* message = NULL;
   mc_comm_cfg config = {0};
   
-  config = mc_comm_cfg(mc_io(NULL, write_api), mc_comm_wnd(1024, 3), mc_comm_wnd(1024, 3));
+  config = mc_comm_cfg(mc_io(NULL, io_send), mc_comm_wnd(1024, 3), mc_comm_wnd(1024, 3));
   result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_comm_cfg(mc_io(read_api, NULL), mc_comm_wnd(1024, 3), mc_comm_wnd(1024, 3));
+  config = mc_comm_cfg(mc_io(io_recv, NULL), mc_comm_wnd(1024, 3), mc_comm_wnd(1024, 3));
   result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_comm_cfg(mc_io(read_api, write_api), mc_comm_wnd(1024, 3), mc_comm_wnd(0, 3));
+  config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(1024, 3), mc_comm_wnd(0, 3));
   result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_comm_cfg(mc_io(read_api, write_api), mc_comm_wnd(0, 3), mc_comm_wnd(1024, 3));
+  config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(0, 3), mc_comm_wnd(1024, 3));
   result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_comm_cfg(mc_io(read_api, write_api), mc_comm_wnd(1024, 3), mc_comm_wnd(1024, 3));
+  config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(1024, 3), mc_comm_wnd(1024, 3));
   result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
   }
 
-  config = mc_comm_cfg(mc_io(read_api, write_api), mc_comm_wnd(1, 3), mc_comm_wnd(1, 3));
+  config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(1, 3), mc_comm_wnd(1, 3));
   result_ptr = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS == result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_BAD_ALLOC;
@@ -80,7 +80,7 @@ static int valid_creation()
   cuint32_t capcity = 3;
   
   mc_comm_cfg config = mc_comm_cfg(
-    mc_io(read_api, write_api), 
+    mc_io(io_recv, io_send), 
     mc_comm_wnd(5 * sizeof(uint32_t), capcity), 
     mc_comm_wnd(5 * sizeof(uint32_t), capcity));
   const mc_ptr result = mc_comm_init(alloc_buffer, config);
@@ -150,9 +150,41 @@ static int singly_high_lossy()
   return result;
 }
 
-static int full_duplex()
+static int singly_timed_out()
 {
-  return MC_ERR_RUNTIME;// TODO(MN): Implement
+  cfg_set_loss_rate(98);
+  cfg_set_periodic_duration(5000);
+  cfg_set_timeout_us(50);
+
+  char alloc_buffer[200];
+
+  const mc_comm_cfg config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1));
+  mc_u32 result_u32 = mc_comm_req_size(config);
+  const mc_ptr result = mc_comm_init(mc_buffer(alloc_buffer, result_u32.value), config);
+  if (MC_SUCCESS != result.error) {
+    return result.error;
+  }
+  mc_comm* const com = result.data;
+
+
+  char temp[100];
+  result_u32 = mc_comm_send(com, temp, sizeof(temp), 10);
+  if ((MC_ERR_TIMEOUT != result_u32.error) || (result_u32.value == sizeof(temp))) {
+    return MC_ERR_RUNTIME;
+  }
+
+  result_u32 = mc_comm_recv(com, temp, sizeof(temp), 10);
+  if ((MC_ERR_TIMEOUT != result_u32.error) || (result_u32.value == sizeof(temp))) {
+    return MC_ERR_RUNTIME;
+  }
+
+  const mc_bool result_bool = mc_comm_flush(com, 1);
+  if ((MC_ERR_TIMEOUT != result_bool.error) || (true == result_bool.value)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  cfg_set_loss_rate(0);
+  return MC_SUCCESS;
 }
 
 int main()
@@ -230,18 +262,16 @@ int main()
     }
   }
 
-  /*
-  printf("[full_duplex]\n");
+  printf("[singly_timed_out]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    result = full_duplex();
+    result = singly_timed_out();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
-      printf("PASSED - %u(us) - Recv: %u - Send: %u\n\n", 
-        (uint32_t)(mc_now_u() - bgn_time_us), cfg_get_recv_counter(), cfg_get_send_counter());
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
-*/
-  return MC_SUCCESS;// TODO(MN): Do && for all results
+
+  return MC_SUCCESS;
 }

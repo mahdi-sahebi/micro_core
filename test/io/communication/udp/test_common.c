@@ -16,6 +16,7 @@ typedef struct
 }periodic_connection_t;
 
 static uint32_t TestIterations = COMPLETE_COUNT;
+static uint32_t TimeOutUS = TEST_TIMEOUT_US;
 static char SendBuffer[8 * 1024];
 static bool RepetitiveSendEnable = false;
 static periodic_connection_t Periodic = {.is_connected = true, .duration_ms = 0, .last_time = 0};
@@ -209,4 +210,14 @@ uint32_t cfg_get_recv_failed_counter()
 uint32_t cfg_get_send_failed_counter()
 {
   return SendFailedCounter;
+}
+
+void cfg_set_timeout_us(uint32_t timeout_us)
+{
+  TimeOutUS = timeout_us;
+}
+
+uint32_t cfg_get_timeout_us()
+{
+  return TimeOutUS;
 }
