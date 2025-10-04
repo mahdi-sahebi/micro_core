@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 #include "dsa/sarray.h"
-#include "io/communication/communication.h"
+#include "io/communication/mc_communication.h"
 #include "io/message/mc_message.h"
 
 
