@@ -162,7 +162,7 @@ static void wait_for_sender()
 
 static bool recv_data(void* data, uint32_t size)
 {
-  const mc_u32 result = mc_comm_recv(message, data, size, TEST_TIMEOUT_US);
+  const mc_u32 result = mc_comm_recv(message, data, size, cfg_get_timeout_us());
 
   if((MC_SUCCESS != result.error) || (result.value != size)) {
     *Result = MC_ERR_TIMEOUT;
@@ -265,7 +265,7 @@ void* rcv_start(void* data)
   }
 
   if (MC_SUCCESS == *Result) {
-    const mc_bool result = mc_comm_flush(message, TEST_TIMEOUT_US);
+    const mc_bool result = mc_comm_flush(message, cfg_get_timeout_us());
     if ((MC_SUCCESS != result.error) || !result.value) {
       printf("mc_comm_flush failed\n");
       *Result = MC_ERR_TIMEOUT;
