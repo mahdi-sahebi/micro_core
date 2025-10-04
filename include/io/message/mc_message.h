@@ -5,7 +5,7 @@
 #include "core/error.h"
 #include "alg/mc_buffer.h"
 #include "io/io.h"
-#include "io/communication/communication.h"
+#include "io/communication/mc_communication.h"
 
 typedef struct _mc_msg mc_msg;
 typedef uint16_t mc_msg_id;

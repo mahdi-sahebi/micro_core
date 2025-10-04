@@ -7,7 +7,7 @@
 #include "core/error.h"
 #include "core/version.h"
 #include "core/time.h"
-#include "io/communication/communication.h"
+#include "io/communication/mc_communication.h"
 #include "test_common.h"
 #include "test_receiver.h"
 

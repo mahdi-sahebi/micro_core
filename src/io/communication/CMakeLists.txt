@@ -5,7 +5,7 @@
 set(LIB ${PROJECT_NAME}_comm)
 set(PUBLIC_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(HEADERS 
-    ${PUBLIC_INCLUDE_DIRS}/io/communication/communication.h
+    ${PUBLIC_INCLUDE_DIRS}/io/communication/mc_communication.h
     mc_base.h
     mc_window.h
     mc_window_pool.h
@@ -14,11 +14,11 @@ set(HEADERS
     mc_protocol.h
 )
 set(SOURCES 
-    window_pool.c
+    mc_window_pool.c
     mc_io.c
     mc_frame.c
     mc_protocol.c
-    communication.c
+    mc_communication.c
 )
 
 
