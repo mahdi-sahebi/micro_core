@@ -139,14 +139,26 @@ uint32_t socket_read(int socket_fd, void* data, uint32_t size)
     bit_corruption = !bit_corruption;
     RecvFailedCounter++;
     
+    /* Header Corruption */
+    static uint8_t hdr_corruption = 0;
+    hdr_corruption++;
+    if (hdr_corruption > 30) {
+      hdr_corruption = 0;
+      ((uint8_t*)data)[1] ^= 1;
+      
+      /* Incomplete Frame */
+      read_size *= 0.74F;
+    }
+
     if (!bit_corruption) {
       return 0;
     }
   }
   
   if (0 != read_size) {
+    /* Data corruption */
     if (packetDrop && bit_corruption) {
-      ((uint8_t*)data)[29] ^= 1;
+        ((uint8_t*)data)[29] ^= 1;
     }
   }
   
