@@ -52,25 +52,33 @@
 - **What:** Initialize with NULL callbacks / invalid window sizes
 - **Expected:** Fail safely (return error, no partial init)
 
-#### 2. valid_creation
+#### 2. invalid_argument
+- **What:** Pass invalid andnot-allowed arguments in the APIs
+- **Expected:** No crash and entering in bad state, return the MC_ERR_INVALID_ARGUMENT error
+
+#### 3. valid_creation
 - **What:** Proper config with static buffer
 - **Expected:** Success, valid handle created
 
-#### 3. singly_direction
+#### 4. singly_direction
 - **Condition:** No loss, no duplication, no disconnects, sending frame != receieving frame
 - **Expected:** 100% success, in-order delivery, 0% failure
 
-#### 4. singly_repetitive
+#### 5. singly_repetitive
 - **Condition:** Duplicates frames enabled, sending frame != receieving frame
 - **Expected:** No double delivery, duplicates suppressed
 
-#### 5. singly_low_lossy
+#### 6. singly_low_lossy
 - **Condition:** ~20% packet loss(send/receive), periodic short disconnects, sending frame != receieving frame
 - **Expected:** Retransmit + recovery, bounded timeouts
 
-#### 6. singly_high_lossy
+#### 7. singly_high_lossy
 - **Condition:** ~98% packet loss(send/receive), periodic long disconnects, sending frame != receieving frame
 - **Expected:** Graceful degradation, bounded timeouts, no crash/leak
+
+#### 8. singly_timed_out
+- **Condition:** Short time-out to perform incomplete for operations **send**, **receive**, and **flush**.
+- **Expected:** no crash and stop operation in that state.
 
 
 <br>
@@ -82,30 +90,36 @@
 /test/io/communication/test_comm_udp 
 [MICRO CORE 1.0.0 - IO - COMMUNICATION]
 [invalid_creation]
-PASSED - 1(us)
+PASSED - 3(us)
+
+[invalid_argument]
+PASSED - 3(us)
 
 [valid_creation]
-PASSED - 1(us)
+PASSED - 0(us)
 
 [singly_direction]
 ████████████████████ 100.0%			
-[IO] Completed{Recv: 816, Send: 748} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 1173.18 KBps
-PASSED - 794540(us)
+[IO] Completed{Recv: 847, Send: 783} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 981.27 KBps
+PASSED - 927196(us)
 
 [singly_repetitive]
 ████████████████████ 100.0%			
-[IO] Completed{Recv: 818, Send: 750} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 1151.51 KBps
-PASSED - 805863(us)
+[IO] Completed{Recv: 846, Send: 784} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 994.46 KBps
+PASSED - 915875(us)
 
 [singly_low_lossy]
 ████████████████████ 100.0%			
-[IO] Completed{Recv: 1735, Send: 1709} - Failed{Recv: 347(20.00%), Send: 361(21.12%)} - Throughput: 199.49 KBps
-PASSED - 6227414(us)
+[IO] Completed{Recv: 1721, Send: 1681} - Failed{Recv: 345(20.05%), Send: 351(20.88%)} - Throughput: 193.41 KBps
+PASSED - 6359812(us)
 
 [singly_high_lossy]
 ████████████████████ 100.0%			
-[IO] Completed{Recv: 49758, Send: 85092} - Failed{Recv: 48948(98.37%), Send: 83353(97.96%)} - Throughput: 3.02 KBps
-PASSED - 147478058(us)
+[IO] Completed{Recv: 49380, Send: 77338} - Failed{Recv: 48531(98.28%), Send: 75768(97.97%)} - Throughput: 2.35 KBps
+PASSED - 184952978(us)
+
+[singly_timed_out]
+PASSED - 832(us)
 ```
 
 #### Results (Debug)
@@ -118,6 +132,7 @@ PASSED - 147478058(us)
 | singly_repetitive	| 200        | 936    | 883   | 0 (0.00%)      | 0 (0.00%)	    | 442.9                | ✓      |
 | singly_low_lossy	| 200        | 1771   | 1702  | 372 (21.0%)    | 321 (18.9%)  	| 117.5                | ✓      |
 | singly_high_lossy	| 100        | 16770  | 26322 | 16438 (98%)    | 25769 (98%)  	| 6.1                  | ✓      |
+| singly_timed_out	| 1          | 0      | 0     | 0              | 0             	| 0                    | ✓      |
 
 #### Failure rate
 
@@ -196,6 +211,8 @@ ERROR SUMMARY: 0 errors from 0 contexts
 | Re-ordering             | UDP + `usleep()` jitter              | Delay the ack to retransmit                | Send/Receive |
 | Full Frame              | UDP + `usleep()` jitter              | Delayed acked to fill the pools            | Send/Receive |
 | Periodic Disconnect     | `cfg_set_periodic_duration(ms)`      | Disable sending/receive + clear UDP buffer | Send/Receive |
+| Header Corruption       | `cfg_set_loss_rate()`                | Packet unlock                              | Receive      |
+| Drop part of packet     | `cfg_set_loss_rate()`                | Incomplete frame                           | Receive      |
 
 
 <br>
@@ -255,27 +272,27 @@ Creating 'mc_io.c.gcov'
 Lines executed:100.00% of 19
 ```
 
-**`window_pool.c`**:
-```bash
-gcov build/src/io/communication/CMakeFiles/mcore_comm.dir/mc_window_pool.c.
-File '/media/mahdi/common/repositories/micro_core/src/io/communication/mc_window_pool.c'
-Lines executed:96.80% of 125
-Creating 'mc_window_pool.c.gcov'
-
-Lines executed:96.80% of 125
-```
-
 **`mc_frame.c`**:
 ```bash
 gcov build/src/io/communication/CMakeFiles/mcore_comm.dir/mc_frame.c.
 File '/media/mahdi/common/repositories/micro_core/src/io/communication/mc_frame.c'
+Lines executed:100.00% of 32
+Creating 'mc_frame.c.gcov'
+
+Lines executed:100.00% of 32
+```
+
+**`window_pool.c`**:
+```bash
+gcov build/src/io/communication/CMakeFiles/mcore_comm.dir/mc_window_pool.c.
+File '/media/mahdi/common/repositories/micro_core/src/io/communication/mc_window_pool.c'
 Lines executed:98.37% of 123
 Creating 'mc_window_pool.c.gcov'
 
 Lines executed:98.37% of 123
 ```
 
-
+Totaly: **99.674%** code coverage achieved.
 <br>
 <br>
 

@@ -195,6 +195,7 @@ static int singly_high_lossy()
   cfg_set_loss_rate(98);
   cfg_set_iterations(100);
   cfg_set_periodic_duration(5000);
+  cfg_set_timeout_us(60000000);
   const int result = singly_direction();
   cfg_set_loss_rate(0);
   return result;
