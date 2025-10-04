@@ -33,7 +33,7 @@ void frame_init(mc_frame* this, uint16_t window_size, uint8_t capacity)
   this->temp_window = (mc_pkt*)((char*)this->pool.windows + WNDPOOL_GET_WINDOWS_SIZE(window_size, capacity));
 }
 
-void frame_recv(mc_frame* this, mc_data_ready_cb data_ready, void* arg)
+void frame_recv(mc_frame* this, mc_cb_data_ready data_ready, void* arg)
 {
   if (!frame_is_completed(this)) {
     return;
@@ -56,9 +56,9 @@ void frame_recv(mc_frame* this, mc_data_ready_cb data_ready, void* arg)
   }
 }
 
-mc_buffer frame_send(mc_frame* this, mc_buffer buffer, mc_data_ready_cb data_ready, void* arg)
+mc_buffer frame_send(mc_frame* this, mc_buffer buffer, mc_cb_data_ready data_ready, void* arg)
 {
-  const uint32_t size = wndpool_write(&this->pool, buffer, data_ready, arg);
+  cuint32_t size = wndpool_write(&this->pool, buffer, data_ready, arg);
   return mc_buffer(buffer.data, size);
 }
 

@@ -12,7 +12,7 @@
 
 static int ClientSocket = -1;
 static mc_msg* message = NULL;
-static mc_error* Error = NULL;
+static mc_err* Error = NULL;
 static char AllocBuffer[600];
 
 
@@ -24,7 +24,7 @@ static void client_create()
   setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 }
 
-static uint32_t client_write(const void* const data, uint32_t size)
+static uint32_t client_write(cvoid* const data, uint32_t size)
 {
   return socket_write(ClientSocket, data, size, "127.0.0.1", SERVER_PORT);
 }
@@ -33,7 +33,7 @@ static uint32_t client_read(void* data, uint32_t size)
 {
   char src_ip[INET_ADDRSTRLEN] = {0};
   uint16_t src_port = 0;
-  const uint32_t read_size = socket_read(ClientSocket, data, size, src_ip, &src_port);
+  cuint32_t read_size = socket_read(ClientSocket, data, size, src_ip, &src_port);
 
   if ((SERVER_PORT != src_port) || (0 != strcmp(src_ip, "127.0.0.1"))) {
     return 0;
@@ -55,7 +55,7 @@ static void let_server_start()
 
 static bool init(void* data)
 {
-  Error = (mc_error*)data;
+  Error = (mc_err*)data;
   *Error = MC_SUCCESS;
   
   client_create();
@@ -69,7 +69,7 @@ static bool init(void* data)
     .pool_size = 120,
     .ids_capacity = 0
   };
-  const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
+  const mc_u32 result_u32 = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Error = result_u32.error;
     return false;
@@ -80,7 +80,7 @@ static bool init(void* data)
     return false;
   }
   
-  const mc_result_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
+  const mc_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
     *Error = result.error;
     return false;
@@ -97,7 +97,7 @@ static void deinit()
 
 static bool send_data(mc_buffer buffer, mc_msg_id id)
 {
-  const mc_result_u32 result = mc_msg_send(message, buffer, id, TEST_TIMEOUT_US);
+  const mc_u32 result = mc_msg_send(message, buffer, id, TEST_TIMEOUT_US);
   if ((MC_SUCCESS != result.error) || (result.value != mc_buffer_get_size(buffer))) {
     *Error = MC_ERR_TIMEOUT;
     return false;
@@ -108,7 +108,7 @@ static bool send_data(mc_buffer buffer, mc_msg_id id)
 static bool send_string(uint32_t seed)
 {
   char data[9] = {0};
-  const uint32_t size = sizeof(data);
+  cuint32_t size = sizeof(data);
   sprintf(data, "!p%03u.?I", seed % 1000);
 
   return send_data(mc_buffer(data, size), 77);
@@ -117,7 +117,7 @@ static bool send_string(uint32_t seed)
 static bool send_large_1(uint32_t seed)
 {
   uint32_t data[32] = {0};
-  const uint32_t count = sizeof(data) / sizeof(*data);
+  cuint32_t count = sizeof(data) / sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
     data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
@@ -135,7 +135,7 @@ static bool send_large_2(uint32_t seed)
 static bool send_tiny(uint32_t seed)
 {
   bool data = (seed & 1);
-  const uint32_t size = sizeof(data);
+  cuint32_t size = sizeof(data);
 
   return send_data(mc_buffer(&data, size), 19);
 }
@@ -172,7 +172,7 @@ void* snd_start(void* data)
   }
   
   if (MC_SUCCESS == *Error) {
-    const mc_result_bool result = mc_msg_flush(message, TEST_TIMEOUT_US);
+    const mc_bool result = mc_msg_flush(message, TEST_TIMEOUT_US);
     if ((MC_SUCCESS != result.error) || !result.value) {
       printf("mc_comm_flush failed\n");
       *Error = MC_ERR_TIMEOUT;

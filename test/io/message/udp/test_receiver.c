@@ -15,7 +15,7 @@
 static int ServerSocket = -1;
 static char ClientIP[INET_ADDRSTRLEN];
 static uint16_t ClientPort = 0;
-static mc_error* Error = NULL;
+static mc_err* Error = NULL;
 static mc_msg* message = NULL;
 static char AllocBuffer[600];
 static uint32_t TestCounter = 0;
@@ -46,14 +46,14 @@ static void server_create()
   setsockopt(ServerSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 }
 
-static uint32_t server_write(const void* const data, uint32_t size)
+static uint32_t server_write(cvoid* const data, uint32_t size)
 {
   return socket_write(ServerSocket, data, size, ClientIP, ClientPort);
 }
 
 static uint32_t server_read(void* const data, uint32_t size)
 {
-  const uint32_t read_size = socket_read(ServerSocket, data, size, ClientIP, &ClientPort);
+  cuint32_t read_size = socket_read(ServerSocket, data, size, ClientIP, &ClientPort);
   if (strcmp(ClientIP, "127.0.0.1") || (0 == ClientPort)) {
     return 0;
   }
@@ -75,8 +75,8 @@ static void flush_receive_buffer()
 
 static void print_progress(float progress)
 {
-  const uint32_t BAR_LENGTH = 20;
-  const uint32_t num_bars = progress * BAR_LENGTH;
+  cuint32_t BAR_LENGTH = 20;
+  cuint32_t num_bars = progress * BAR_LENGTH;
 
   printf("\r\t\t\t\t\t\t\r");
 
@@ -131,11 +131,11 @@ static void on_large_received(mc_msg_id id, mc_buffer buffer)
     return;
   }
 
-  const uint32_t* const data = (const uint32_t* const)buffer.data;
-  const uint32_t count = mc_buffer_get_size(buffer) / sizeof(*data);
+  cuint32_t* const data = (cuint32_t* const)buffer.data;
+  cuint32_t count = mc_buffer_get_size(buffer) / sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
-    const uint32_t expected = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (TestCounter + 1) + index;
+    cuint32_t expected = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (TestCounter + 1) + index;
     if (data[index] != expected) {
       printf("[ERR Data Large] Received: %u, Expected: %u\n", data[index], expected);
       *Error = MC_ERR_RUNTIME;
@@ -178,7 +178,7 @@ static bool init(void* data)
 {
   /* TODO(MN): invalid header, incomplete packet, miss packet pointer, use zero copy
    */
-  Error = (mc_error*)data;
+  Error = (mc_err*)data;
   *Error = MC_SUCCESS;
 
   server_create();
@@ -192,7 +192,7 @@ static bool init(void* data)
     .pool_size = 150,
     .ids_capacity = 10
   };
-  const mc_result_u32 result_u32 = mc_msg_get_alloc_size(config);
+  const mc_u32 result_u32 = mc_msg_get_alloc_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Error = result_u32.error;
     return false;
@@ -203,14 +203,14 @@ static bool init(void* data)
     return false;
   }
 
-  const mc_result_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
+  const mc_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
     *Error = result.error;
     return false;
   }
   message = result.data;
 
-  mc_error error = MC_SUCCESS;
+  mc_err error = MC_SUCCESS;
   error = mc_msg_subscribe(message, 77, on_string_received);
   if (MC_SUCCESS != error) {
     *Error = error;
@@ -240,17 +240,17 @@ static bool init(void* data)
 static void print_log()
 {
   const float duration_s = (EndTime - BeginTime) / 1000000000.0F;
-  const uint32_t size_1 = 9 * sizeof(char);
-  const uint32_t size_2 = 32 * sizeof(uint32_t);
-  const uint32_t size_3 = 1 * sizeof(bool);
-  const uint32_t size_4 = 0;
-  const uint32_t size_k_byte_ps = (size_1 + size_2 + size_3 + size_4) * cfg_get_iterations() / 1024;
+  cuint32_t size_1 = 9 * sizeof(char);
+  cuint32_t size_2 = 32 * sizeof(uint32_t);
+  cuint32_t size_3 = 1 * sizeof(bool);
+  cuint32_t size_4 = 0;
+  cuint32_t size_k_byte_ps = (size_1 + size_2 + size_3 + size_4) * cfg_get_iterations() / 1024;
   const float throughput = size_k_byte_ps / duration_s;
 
-  const uint32_t recv_cnt = cfg_get_recv_counter();
-  const uint32_t send_cnt = cfg_get_send_counter();
-  const uint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
-  const uint32_t send_failed_cnt = cfg_get_send_failed_counter();
+  cuint32_t recv_cnt = cfg_get_recv_counter();
+  cuint32_t send_cnt = cfg_get_send_counter();
+  cuint32_t recv_failed_cnt = cfg_get_recv_failed_counter();
+  cuint32_t send_failed_cnt = cfg_get_send_failed_counter();
   printf("[IO] Completed{Recv: %u, Send: %u} - Failed{Recv: %u(%.2f%%), Send: %u(%.2f%%)} - Throughput: %.2f KBps\n",
       recv_cnt, send_cnt, 
       recv_failed_cnt, 100 * (recv_failed_cnt / (float)recv_cnt),
@@ -291,7 +291,7 @@ static void reset_flags()
 static bool recv_messages()
 {
   do {
-    const mc_error error = mc_msg_update(message);
+    const mc_err error = mc_msg_update(message);
     if ((MC_SUCCESS != error) && (MC_ERR_NO_SPACE != error)) {
       *Error = MC_ERR_TIMEOUT;
       break;
@@ -317,7 +317,7 @@ void* rcv_start(void* data)
   }
 
   if (MC_SUCCESS == *Error) {
-    const mc_result_bool result = mc_msg_flush(message, TEST_TIMEOUT_US);
+    const mc_bool result = mc_msg_flush(message, TEST_TIMEOUT_US);
     if ((MC_SUCCESS != result.error) || !result.value) {
       printf("mc_comm_flush failed\n");
       *Error = MC_ERR_TIMEOUT;

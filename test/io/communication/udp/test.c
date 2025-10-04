@@ -2,34 +2,6 @@
  * like UDP, so we just implement a simple send and receive socket.
  * creation, invalid parameters, diff snd/rcv window sizes, ...
  * 
- * [Test Log]
- * 
-[MICRO CORE 1.0.0 - IO - COMMUNICATION]
-[invalid_creation]
-PASSED - 1(us)
-
-[valid_creation]
-PASSED - 1(us)
-
-[singly_direction]
-████████████████████ 100.0%
-[IO] Completed{Recv: 2471, Send: 2007} - Failed{Recv: 0(0.0%), Send: 0(0.0%)}
-PASSED - 3720546(us)
-
-[singly_repetitive]
-████████████████████ 100.0%
-[IO] Completed{Recv: 2471, Send: 2010} - Failed{Recv: 0(0.0%), Send: 0(0.0%)}
-PASSED - 3694864(us)
-
-[singly_low_lossy]
-████████████████████ 100.0%
-[IO] Completed{Recv: 4495, Send: 4103} - Failed{Recv: 904(20.1%), Send: 836(20.4%)}
-PASSED - 3991008(us)
-
-[singly_high_lossy]
-████████████████████ 100.0%
-[IO] Completed{Recv: 356648, Send: 373906} - Failed{Recv: 339129(95.1%), Send: 355027(95.0%)}
-PASSED - 90864987(us)
  */
 
 #include <stdio.h>
@@ -49,7 +21,7 @@ static uint32_t read_api(void* const data, uint32_t size)
   return size;
 }
 
-static uint32_t write_api(const void* const data, uint32_t size)
+static uint32_t write_api(cvoid* const data, uint32_t size)
 {
   return size;
 }
@@ -58,7 +30,7 @@ static int invalid_creation()
 {
   char memory[1024];
   mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
-  mc_result_ptr result_ptr = {0};
+  mc_ptr result_ptr = {0};
   mc_comm* message = NULL;
   mc_comm_cfg config = {0};
   
@@ -105,13 +77,13 @@ static int valid_creation()
 {
   char memory[1024];
   mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
-  const uint32_t capcity = 3;
+  cuint32_t capcity = 3;
   
   mc_comm_cfg config = mc_comm_cfg(
     mc_io(read_api, write_api), 
     mc_comm_wnd(5 * sizeof(uint32_t), capcity), 
     mc_comm_wnd(5 * sizeof(uint32_t), capcity));
-  const mc_result_ptr result = mc_comm_init(alloc_buffer, config);
+  const mc_ptr result = mc_comm_init(alloc_buffer, config);
   if ((MC_SUCCESS != result.error) || (NULL == result.data)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -180,13 +152,13 @@ static int singly_high_lossy()
 
 static int full_duplex()
 {
-  return MC_ERR_RUNTIME;
+  return MC_ERR_RUNTIME;// TODO(MN): Implement
 }
 
 int main()
 {
   printf("[MICRO CORE %u.%u.%u - IO - COMMUNICATION]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
-  mc_error result = MC_SUCCESS;
+  mc_err result = MC_SUCCESS;
 
   printf("[invalid_creation]\n");
   {
