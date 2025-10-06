@@ -192,7 +192,7 @@ static bool init(void* data)
     .pool_size = 150,
     .ids_capacity = 10
   };
-  const mc_u32 result_u32 = mc_msg_get_alloc_size(config);
+  const mc_u32 result_u32 = mc_msg_req_size(config);
   if (MC_SUCCESS != result_u32.error) {
     *Error = result_u32.error;
     return false;

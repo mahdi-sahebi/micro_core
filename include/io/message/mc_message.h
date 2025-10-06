@@ -24,7 +24,7 @@ typedef struct
   (mc_msg_cfg){.io = (IO), .recv = (RECV_WND), .send = (SEND_WND), .pool_size = (POOL_SIZE), . ids_capacity = (IDS_CAPACITY)}
 
 
-mc_u32  mc_msg_get_alloc_size(mc_msg_cfg config);
+mc_u32  mc_msg_req_size(mc_msg_cfg config);
 mc_ptr  mc_msg_init       (mc_buffer alloc_buffer, mc_msg_cfg config);
 mc_err  mc_msg_update     (mc_msg* this);// TODO(MN): receive. no public
 mc_err  mc_msg_subscribe  (mc_msg* this, mc_msg_id id, mc_msg_cb_receive on_receive);
