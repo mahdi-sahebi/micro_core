@@ -60,7 +60,7 @@ All public APIs are heap-free, timeout-aware and must return deterministic error
 - **Expected:** mc_msg_init() must return MC_ERR_INVALID_ARGUMENT or MC_ERR_BAD_ALLOC. No crash, no partial initialization.
 
 #### 2. valid_creation
-- **Condition:** Initialize mc_msg with a valid mc_msg_cfg and static buffer, after querying mc_msg_get_alloc_size().
+- **Condition:** Initialize mc_msg with a valid mc_msg_cfg and static buffer, after querying mc_msg_req_size().
 - **Expected:** mc_msg_init() returns MC_SUCCESS with a non-null handle. All sub-objects (including embedded mc_comm) are placed correctly in the buffer.
 
 #### 3. singly_direction (clean link)

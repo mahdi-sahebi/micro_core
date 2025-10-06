@@ -119,7 +119,7 @@ static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
   }
 }
 
-mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
+mc_u32 mc_msg_req_size(mc_msg_cfg config)
 { 
   if (0 == config.pool_size) {
     return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
@@ -147,7 +147,7 @@ mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
 mc_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 {
   // handle if pkt->size or even pkt_hdr are larger than pool_size
-  const mc_u32 result = mc_msg_get_alloc_size(config);
+  const mc_u32 result = mc_msg_req_size(config);
   if (MC_SUCCESS != result.error) {
     return mc_ptr(NULL, result.error);
   }

@@ -88,6 +88,59 @@ static int invalid_creation()
   return MC_SUCCESS;
 }
 
+static int invalid_argument()
+{
+  char temp[10];
+  mc_ptr result_ptr = {0};
+  mc_u32 result_u32;
+  mc_bool result_bool;
+  mc_err error;
+
+  char temp[200];
+  mc_buffer alloc_buffer = mc_buffer(temp, result_u32.value);
+
+  const mc_comm_cfg config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1));
+  result_u32 = mc_msg_req_size(config);
+  const mc_ptr result = mc_msg_init(alloc_buffer, config);
+  if (MC_SUCCESS != result.error) {
+    return result.error;
+  }
+  mc_comm* const com = result.data;
+
+  result_u32 = mc_comm_recv(NULL, temp, sizeof(temp), 100);
+  if ((MC_ERR_INVALID_ARGUMENT != result_u32.error) || (0 != result_u32.value)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  result_u32 = mc_comm_recv(com, NULL, sizeof(temp), 100);
+  if ((MC_ERR_INVALID_ARGUMENT != result_u32.error) || (0 != result_u32.value)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  result_u32 = mc_comm_send(NULL, temp, sizeof(temp), 100);
+  if ((MC_ERR_INVALID_ARGUMENT != result_u32.error) || (0 != result_u32.value)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  result_u32 = mc_comm_send(com, NULL, sizeof(temp), 100);
+  if ((MC_ERR_INVALID_ARGUMENT != result_u32.error) || (0 != result_u32.value)) {
+    return MC_ERR_RUNTIME;
+  }
+  
+  error = mc_comm_update(NULL);
+  if (MC_ERR_INVALID_ARGUMENT != error) {
+    return MC_ERR_RUNTIME;
+  }
+
+  result_bool = mc_comm_flush(NULL, 100);
+  if ((MC_ERR_INVALID_ARGUMENT != result_bool.error) || (false != result_bool.value)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  return MC_SUCCESS;
+}
+
+
 static int valid_creation()
 {
   mc_ptr result;
@@ -172,6 +225,19 @@ int main()
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
+
+
+  printf("[invalid_argument]\n");
+  {
+    const mc_time_t bgn_time_us = mc_now_u();
+    result = invalid_argument();
+    if (MC_SUCCESS != result) {
+      printf("FAILED: %u\n\n", result);
+    } else {
+      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+    }
+  }
+
 
   printf("[valid_creation]\n");
   {
