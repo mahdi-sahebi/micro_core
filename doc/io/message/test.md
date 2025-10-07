@@ -60,7 +60,7 @@ All public APIs are heap-free, timeout-aware and must return deterministic error
 - **Expected:** mc_msg_init() must return MC_ERR_INVALID_ARGUMENT or MC_ERR_BAD_ALLOC. No crash, no partial initialization.
 
 #### 2. valid_creation
-- **Condition:** Initialize mc_msg with a valid mc_msg_cfg and static buffer, after querying mc_msg_get_alloc_size().
+- **Condition:** Initialize mc_msg with a valid mc_msg_cfg and static buffer, after querying mc_msg_req_size().
 - **Expected:** mc_msg_init() returns MC_SUCCESS with a non-null handle. All sub-objects (including embedded mc_comm) are placed correctly in the buffer.
 
 #### 3. singly_direction (clean link)
@@ -88,30 +88,36 @@ All public APIs are heap-free, timeout-aware and must return deterministic error
 ```bash
 [MICRO CORE 1.0.0 - IO - MESSAGE]
 [invalid_creation]
-PASSED - 5(us)
+PASSED - 2(us)
+
+[invalid_argument]
+PASSED - 3(us)
 
 [valid_creation]
-PASSED - 4(us)
+PASSED - 1(us)
 
 [singly_direction]
-████████████████████ 100.0%
-[IO] Completed{Recv: 3606, Send: 3080} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 3.44 KBps
-PASSED - 4408970(us)
+████████████████████ 100.0%			
+[IO] Completed{Recv: 3586, Send: 3088} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 3.55 KBps
+PASSED - 4291056(us)
 
 [singly_repetitive]
-████████████████████ 100.0%
-[IO] Completed{Recv: 289859, Send: 447219} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 0.22 KBps
-PASSED - 60249809(us)
+████████████████████ 100.0%			
+[IO] Completed{Recv: 287882, Send: 444439} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 0.23 KBps
+PASSED - 57142997(us)
 
 [singly_low_lossy]
-████████████████████ 100.0%
-[IO] Completed{Recv: 231436, Send: 304902} - Failed{Recv: 46431(20.06%), Send: 32257(10.58%)} - Throughput: 0.29 KBps
-PASSED - 47092283(us)
+████████████████████ 100.0%			
+[IO] Completed{Recv: 221551, Send: 294946} - Failed{Recv: 44800(20.22%), Send: 30994(10.51%)} - Throughput: 0.31 KBps
+PASSED - 43488994(us)
 
 [singly_high_lossy]
-████████████████████ 100.0%
-[IO] Completed{Recv: 22551, Send: 32919} - Failed{Recv: 22116(98.07%), Send: 21361(64.89%)} - Throughput: 0.37 KBps
-PASSED - 21296544(us)
+████████████████████ 100.0%			
+[IO] Completed{Recv: 19296, Send: 28550} - Failed{Recv: 18889(97.89%), Send: 18528(64.90%)} - Throughput: 0.63 KBps
+PASSED - 14664013(us)
+
+[singly_timed_out]
+PASSED - 628(us)
 ```
 
 #### Results (Debug)
@@ -124,6 +130,7 @@ PASSED - 21296544(us)
 | singly_repetitive | 355,950	| 596,980	| 0 (0.00%)       | 0 (0.00%)	      | 0.09	               | PASSED |
 | singly_low_lossy  | 241,812	| 350,618	| 48,270 (19.96%) | 37,051 (10.57%) |	0.13                 | PASSED |
 | singly_high_lossy | 25,918	| 37,771  | 25,390 (97.96%) | 24,495 (64.85%) |	0.23                 | PASSED |
+| singly_timed_out  | 0       | 0       | 0 (0.00%)       | 0 (0.00%)       | 0                    | PASSED |
 
 #### Notes:
 Under extreme loss the system degrades gracefully (expected). The pass condition is stable behavior + no crashes + deterministic error returns — which is met.
@@ -165,12 +172,14 @@ When header is present and pool can hold the message, is_message_stored() calls 
 
 #### 4. Subscription & dispatch
 
-mc_msg_subscribe() usage is validated in valid_creation() and receiver init; on_receive() call path is exercised in all positive scenarios. Tests assert that id_node lookup and callback invocation are correct and occur only when the full message is available.
+`mc_msg_subscribe()` usage is validated in valid_creation() and receiver init; on_receive() call path is exercised in all positive scenarios. Tests assert that id_node lookup and callback invocation are correct and occur only when the full message is available.
 
 #### 5. Signal messages
 
-mc_msg_signal() sends header-only messages (size=0) and on_signal_received checks that mc_buffer_is_empty() is true. This path is covered in all passing tests.
+`mc_msg_signal()` sends header-only messages (size=0) and on_signal_received checks that mc_buffer_is_empty() is true. This path is covered in all passing tests.
 
+#### 6. Timed-out
+Receive and sending operations have been set to take long to time-out occur deliberately to validate stopping operations when running.
 
 
 <br>
@@ -183,50 +192,56 @@ mc_msg_signal() sends header-only messages (size=0) and on_signal_received check
 Command:
 
 ```bash
-valgrind --tool=memcheck --track-origins=yes ./build/test/io/message/test_message_udp 
-==6527== Memcheck, a memory error detector
-==6527== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
-==6527== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
-==6527== Command: ./build/test/io/message/test_message_udp
-==6527== 
+valgrind --tool=memcheck --track-origins=yes ./test/io/message/test_message_udp 
+==15557== Memcheck, a memory error detector
+==15557== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==15557== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==15557== Command: ./test/io/message/test_message_udp
+==15557== 
 [MICRO CORE 1.0.0 - IO - MESSAGE]
 [invalid_creation]
-PASSED - 12716(us)
+PASSED - 12431(us)
+
+[invalid_argument]
+PASSED - 19435(us)
 
 [valid_creation]
-PASSED - 10722(us)
+PASSED - 2837(us)
 
 [singly_direction]
 ████████████████████ 100.0%			
-[IO] Completed{Recv: 3642, Send: 3124} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 2.59 KBps
-PASSED - 5811899(us)
+[IO] Completed{Recv: 3637, Send: 3098} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 2.89 KBps
+PASSED - 5317498(us)
 
 [singly_repetitive]
 ████████████████████ 100.0%			
-[IO] Completed{Recv: 355950, Send: 596980} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 0.09 KBps
-PASSED - 149303345(us)
+[IO] Completed{Recv: 347051, Send: 593616} - Failed{Recv: 0(0.00%), Send: 0(0.00%)} - Throughput: 0.10 KBps
+PASSED - 134104964(us)
 
 [singly_low_lossy]
 ████████████████████ 100.0%			
-[IO] Completed{Recv: 241812, Send: 350618} - Failed{Recv: 48270(19.96%), Send: 37051(10.57%)} - Throughput: 0.13 KBps
-PASSED - 98161683(us)
+[IO] Completed{Recv: 255624, Send: 367000} - Failed{Recv: 51021(19.96%), Send: 38772(10.56%)} - Throughput: 0.14 KBps
+PASSED - 92542326(us)
 
 [singly_high_lossy]
 ████████████████████ 100.0%			
-[IO] Completed{Recv: 25918, Send: 37771} - Failed{Recv: 25390(97.96%), Send: 24495(64.85%)} - Throughput: 0.23 KBps
-PASSED - 31710959(us)
+[IO] Completed{Recv: 22348, Send: 32649} - Failed{Recv: 21908(98.03%), Send: 21182(64.88%)} - Throughput: 0.32 KBps
+PASSED - 23751494(us)
 
-==6527== 
-==6527== HEAP SUMMARY:
-==6527==     in use at exit: 0 bytes in 0 blocks
-==6527==   total heap usage: 3 allocs, 3 frees, 1,568 bytes allocated
-==6527== 
-==6527== All heap blocks were freed -- no leaks are possible
-==6527== 
-==6527== For lists of detected and suppressed errors, rerun with: -s
-==6527== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+[singly_timed_out]
+PASSED - 4913(us)
 
+==15557== 
+==15557== HEAP SUMMARY:
+==15557==     in use at exit: 0 bytes in 0 blocks
+==15557==   total heap usage: 29 allocs, 29 frees, 9,326 bytes allocated
+==15557== 
+==15557== All heap blocks were freed -- no leaks are possible
+==15557== 
+==15557== For lists of detected and suppressed errors, rerun with: -s
+==15557== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
+
 - No memory leaks
 - No invalid reads/writes
 - Heap-free operation as designed
@@ -253,6 +268,7 @@ PASSED - 31710959(us)
 | Re-ordering             | UDP + `usleep()` jitter              | Delay the ack to retransmit                | Send/Receive |
 | Full Frame              | UDP + `usleep()` jitter              | Delayed acked to fill the pools            | Send/Receive |
 | Periodic Disconnect     | `cfg_set_periodic_duration(ms)`      | Disable sending/receive + clear UDP buffer | Send/Receive |
+| Timed-out               | `cfg_set_timeout_us(us)`             | Stop operations in the middle of execution | Send/Receive |
 
 
 <br>
@@ -286,10 +302,10 @@ cmake --build ./test/io/message/
 ```bash
 gcov ./build/src/io/message/CMakeFiles/mcore_msg.dir/mc_message.c.
 File '/media/mahdi/common/repositories/micro_core/src/io/message/mc_message.c'
-Lines executed:86.82% of 129
+Lines executed:95.42% of 131
 Creating 'mc_message.c.gcov'
 
-Lines executed:86.82% of 129
+Lines executed:95.42% of 131
 ```
 
 
