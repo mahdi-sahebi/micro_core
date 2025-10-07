@@ -139,7 +139,7 @@ static int invalid_argument()
   if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
     return MC_ERR_RUNTIME;
   }
-  mc_comm* const msg = result_ptr.data;
+  mc_msg* const msg = result_ptr.data;
 
   result_u32 = mc_comm_recv(NULL, temp, sizeof(temp), 100);
   if ((MC_ERR_INVALID_ARGUMENT != result_u32.error) || (0 != result_u32.value)) {
@@ -274,83 +274,126 @@ static int singly_high_lossy()
   return result;
 }
 
+static int singly_timed_out()
+{
+  cfg_set_loss_rate(98);
+  cfg_set_periodic_duration(5000);
+  cfg_set_timeout_us(50);
+
+  char alloc_buffer[250];
+  mc_msg_cfg config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1), 10, 0);
+  mc_u32 result_u32 = mc_msg_req_size(config);
+  const mc_ptr result = mc_msg_init(mc_buffer(alloc_buffer, result_u32.value), config);
+  if (MC_SUCCESS != result.error) {
+    return result.error;
+  }
+  mc_msg* const msg = result.data;
+
+
+  char temp[100];
+  const mc_buffer temp_buffer = mc_buffer(temp, sizeof(temp));
+  result_u32 = mc_msg_send(msg, temp_buffer, 400, 10);
+  if ((MC_ERR_TIMEOUT != result_u32.error) || (result_u32.value == sizeof(temp))) {
+    return MC_ERR_RUNTIME;
+  }
+
+  const mc_bool result_bool = mc_msg_flush(msg, 1);
+  if ((MC_ERR_TIMEOUT != result_bool.error) || (true == result_bool.value)) {
+    return MC_ERR_RUNTIME;
+  }
+
+  cfg_set_loss_rate(0);
+  return MC_SUCCESS;
+}
+
 int main()
 {
   printf("[MICRO CORE %u.%u.%u - IO - MESSAGE]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
   mc_err result = MC_SUCCESS;
 
-  printf("[invalid_creation]\n");
+  // printf("[invalid_creation]\n");
+  // {
+  //   const mc_time_t bgn_time_us = mc_now_u();
+  //   result = invalid_creation();
+  //   if (MC_SUCCESS != result) {
+  //     printf("FAILED: %u\n\n", result);
+  //   } else {
+  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+  //   }
+  // }
+
+
+  // printf("[invalid_argument]\n");
+  // {
+  //   const mc_time_t bgn_time_us = mc_now_u();
+  //   result = invalid_argument();
+  //   if (MC_SUCCESS != result) {
+  //     printf("FAILED: %u\n\n", result);
+  //   } else {
+  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+  //   }
+  // }
+
+
+  // printf("[valid_creation]\n");
+  // {
+  //   const mc_time_t bgn_time_us = mc_now_u();
+  //   result = valid_creation();
+  //   if (MC_SUCCESS != result) {
+  //     printf("FAILED: %u\n\n", result);
+  //   } else {
+  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+  //   }
+  // }
+
+  // printf("[singly_direction]\n");
+  // {
+  //   const mc_time_t bgn_time_us = mc_now_u();
+  //   result = singly_direction();
+  //   if (MC_SUCCESS != result) {
+  //     printf("FAILED: %u\n\n", result);
+  //   } else {
+  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+  //   }
+  // }
+
+  // printf("[singly_repetitive]\n");
+  // {
+  //   const mc_time_t bgn_time_us = mc_now_u();
+  //   result = singly_repetitive();
+  //   if (MC_SUCCESS != result) {
+  //     printf("FAILED: %u\n\n", result);
+  //   } else {
+  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+  //   }
+  // }
+
+  // printf("[singly_low_lossy]\n");
+  // {
+  //   const mc_time_t bgn_time_us = mc_now_u();
+  //   result = singly_low_lossy();
+  //   if (MC_SUCCESS != result) {
+  //     printf("FAILED: %u\n\n", result);
+  //   } else {
+  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+  //   }
+  // }
+
+  // printf("[singly_high_lossy]\n");
+  // {
+  //   const mc_time_t bgn_time_us = mc_now_u();
+  //   result = singly_high_lossy();
+  //   if (MC_SUCCESS != result) {
+  //     printf("FAILED: %u\n\n", result);
+  //   } else {
+  //     printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
+  //   }
+  // }
+
+  printf("[singly_timed_out]\n");
   {
     const mc_time_t bgn_time_us = mc_now_u();
-    result = invalid_creation();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
-    }
-  }
-
-
-  printf("[invalid_argument]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = invalid_argument();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
-    }
-  }
-
-
-  printf("[valid_creation]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = valid_creation();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
-    }
-  }
-
-  printf("[singly_direction]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = singly_direction();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
-    }
-  }
-
-  printf("[singly_repetitive]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = singly_repetitive();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
-    }
-  }
-
-  printf("[singly_low_lossy]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = singly_low_lossy();
-    if (MC_SUCCESS != result) {
-      printf("FAILED: %u\n\n", result);
-    } else {
-      printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
-    }
-  }
-
-  printf("[singly_high_lossy]\n");
-  {
-    const mc_time_t bgn_time_us = mc_now_u();
-    result = singly_high_lossy();
+    result = singly_timed_out();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
     } else {
