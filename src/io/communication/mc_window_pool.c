@@ -116,11 +116,6 @@ bool wndpool_is_empty(wndpool_t* this)
   return false;
 }
 
-uint8_t wndpool_get_capacity(wndpool_t* this)
-{
-  return this->capacity;
-}
-
 void wndpool_update_header(wndpool_t* this)
 {
   wnd_t* const window = wndpool_get_last(this);// TODO(MN): [PR2]: Pass window, instead of get window

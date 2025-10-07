@@ -2,7 +2,7 @@
 #define MC_IO_COMMUNICATION_BASE_H_
 
 #include <stdint.h>
-#include "io/communication/communication.h"
+#include "io/communication/mc_communication.h"
 // #include "mc_io.h"
 #include "mc_frame.h"
 
