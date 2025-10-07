@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 #include "dsa/sarray.h"
-#include "io/communication/communication.h"
+#include "io/communication/mc_communication.h"
 #include "io/message/mc_message.h"
 
 
@@ -119,7 +119,7 @@ static void on_receive(const mc_msg* this, const pkt_hdr* const pkt)
   }
 }
 
-mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
+mc_u32 mc_msg_req_size(mc_msg_cfg config)
 { 
   if (0 == config.pool_size) {
     return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
@@ -147,11 +147,11 @@ mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)
 mc_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 {
   // handle if pkt->size or even pkt_hdr are larger than pool_size
-  const mc_u32 result = mc_msg_get_alloc_size(config);
+  const mc_u32 result = mc_msg_req_size(config);
   if (MC_SUCCESS != result.error) {
     return mc_ptr(NULL, result.error);
   }
-  if (mc_buffer_get_size(alloc_buffer) < result.value) {
+  if ((NULL == alloc_buffer.data) || mc_buffer_get_size(alloc_buffer) < result.value) {
     return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
   }
 
@@ -210,7 +210,6 @@ mc_err mc_msg_subscribe(mc_msg* this, mc_msg_id id, mc_msg_cb_receive on_receive
   if ((NULL == this) || (NULL == on_receive)) {
     return MC_ERR_INVALID_ARGUMENT;
   }
-
   if (NULL == this->ids) {
     return MC_ERR_OUT_OF_RANGE;
   }
@@ -259,27 +258,31 @@ mc_u32 mc_msg_send(mc_msg* this, mc_buffer buffer, mc_msg_id id, uint32_t timeou
   return mc_u32(size, MC_SUCCESS);
 }
 
-mc_u32 mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
+mc_bool mc_msg_signal(mc_msg* this, mc_msg_id id, uint32_t timeout_us)
 {// TODO(MN): Handle total timeout_us
   if (NULL == this) {
-    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
   }
 
   pkt_hdr pkt = {
-    .size = 0,
+    .size   = 0,
     .msg_id = id
   };
   
-  mc_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
+  const mc_u32 result = mc_comm_send(this->comm, &pkt, sizeof(pkt), timeout_us);
   if (!mc_is_ok(result)) {
-    return result;
+    return mc_bool(false, result.error);
   }
 
-  return mc_u32(0, MC_SUCCESS);
+  return mc_bool(true, MC_SUCCESS);
 }
 
 mc_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us)
 {
+  if (NULL == this) {
+    return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
+  }
+
   return mc_comm_flush(this->comm, timeout_us);
 }
 

@@ -36,7 +36,6 @@ bool     wndpool_contains(const wndpool_t* this, mc_pkt_id id);
 wnd_t*   wndpool_get(wndpool_t* this, mc_pkt_id id);
 wnd_t*   wndpool_get_last(wndpool_t* this);
 uint8_t  wndpool_get_count(wndpool_t* this);
-uint8_t  wndpool_get_capacity(wndpool_t* this);
 bool     wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id);
 bool     wndpool_ack(wndpool_t* this, mc_pkt_id id);
 uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer);

@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include "core/error.h"
 #include "core/time.h"
-#include "io/communication/communication.h"
+#include "io/communication/mc_communication.h"
 #include "test_common.h"
 #include "test_sender.h"
 
@@ -83,7 +83,7 @@ static bool init(void* data)
     return false;
   }
 
-  message = result.data;;
+  message = result.data;
   return true;
 }
 
@@ -94,7 +94,7 @@ static void deinit()
 
 static bool send_data(cvoid* data, uint32_t size)
 {
-  const mc_u32 result = mc_comm_send(message, data, size, TEST_TIMEOUT_US);
+  const mc_u32 result = mc_comm_send(message, data, size, cfg_get_timeout_us());
   if ((MC_SUCCESS != result.error) || (result.value != size)) {
     *Result = MC_ERR_TIMEOUT;
     return false;
@@ -154,7 +154,7 @@ void* snd_start(void* data)
   }
   
   if (MC_SUCCESS == *Result) {
-    const mc_bool result = mc_comm_flush(message, TEST_TIMEOUT_US);
+    const mc_bool result = mc_comm_flush(message, cfg_get_timeout_us());
     if ((MC_SUCCESS != result.error) || !result.value) {
       printf("mc_comm_flush failed\n");
       *Result = MC_ERR_TIMEOUT;
