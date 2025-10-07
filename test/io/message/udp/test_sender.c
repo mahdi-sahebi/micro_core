@@ -97,7 +97,7 @@ static void deinit()
 
 static bool send_data(mc_buffer buffer, mc_msg_id id)
 {
-  const mc_u32 result = mc_msg_send(message, buffer, id, TEST_TIMEOUT_US);
+  const mc_u32 result = mc_msg_send(message, buffer, id, cfg_get_timeout_us());
   if ((MC_SUCCESS != result.error) || (result.value != mc_buffer_get_size(buffer))) {
     *Error = MC_ERR_TIMEOUT;
     return false;
@@ -142,7 +142,7 @@ static bool send_tiny(uint32_t seed)
 
 static bool send_signal()
 {
-  return (MC_SUCCESS == mc_msg_signal(message, 9910, TEST_TIMEOUT_US).error);
+  return (MC_SUCCESS == mc_msg_signal(message, 9910, cfg_get_timeout_us()).error);
 }
 
 static bool send_messages(uint32_t seed)
@@ -172,7 +172,7 @@ void* snd_start(void* data)
   }
   
   if (MC_SUCCESS == *Error) {
-    const mc_bool result = mc_msg_flush(message, TEST_TIMEOUT_US);
+    const mc_bool result = mc_msg_flush(message, cfg_get_timeout_us());
     if ((MC_SUCCESS != result.error) || !result.value) {
       printf("mc_comm_flush failed\n");
       *Error = MC_ERR_TIMEOUT;
