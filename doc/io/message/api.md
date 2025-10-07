@@ -33,7 +33,7 @@ typedef struct {
 
 # API Functions
 
-### `mc_u32 mc_msg_get_alloc_size(mc_msg_cfg config)`
+### `mc_u32 mc_msg_req_size(mc_msg_cfg config)`
 
 #### Description:
 Calculates the required buffer size (in bytes) to hold a message instance with the given configuration.
