@@ -33,7 +33,7 @@ typedef struct __attribute__((packed))// TODO(MN): Pads
   uint16_t    crc;
   mc_pkt_type type;// TODO(MN) : 1;
   mc_pkt_id   id;
-  uint32_t    size;// TODO(MN): Reduce size
+  uint16_t    size;// TODO(MN): Reduce size
   char        data[0];
 }mc_pkt;// TODO(MN): Must be As size as window_size
 
