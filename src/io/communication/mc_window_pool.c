@@ -6,7 +6,7 @@
 #define MIN(A, B)           ((A) <= (B) ? (A) : (B))
 
 
-static mc_wnd_idx get_index(const wndpool_t* this, const mc_pkt_id id)
+static inline mc_wnd_idx get_index(const wndpool_t* this, const mc_pkt_id id)
 {
   int16_t dif = id - this->bgn_id;
   if (id < this->bgn_id) {
@@ -16,15 +16,14 @@ static mc_wnd_idx get_index(const wndpool_t* this, const mc_pkt_id id)
   return (this->bgn_id + dif) % this->capacity;
 }
 
-static wnd_t* get_window(const wndpool_t* this, const mc_wnd_idx index)// TODO(MN): inline
+static inline wnd_t* get_window(const wndpool_t* this, const mc_wnd_idx index)
 {
-  // TODO(MN): Optimize
   return (wnd_t*)((char*)(this->windows) + (index * wnd_get_size(this->window_size)));// TODO(MN): Rcv/snd
 }
 
-static bool is_first_acked(const wndpool_t* this)
+static inline bool is_first_acked(const wndpool_t* this)
 {
-  const wnd_t* window = get_window(this, this->bgn_index);
+  const wnd_t* const window = get_window(this, this->bgn_index);
   return wnd_is_valid(window) && wnd_is_acked(window);
 }
 
@@ -109,8 +108,7 @@ uint8_t wndpool_get_count(wndpool_t* this)
 bool wndpool_is_empty(wndpool_t* this)
 {
   if (this->end_id == this->bgn_id) {
-    wnd_t* window = wndpool_get_last(this);
-    return (0 == window->packet.size);
+    return (0 == wndpool_get_last(this)->packet.size);
   }
 
   return false;

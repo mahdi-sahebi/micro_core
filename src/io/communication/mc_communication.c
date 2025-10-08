@@ -143,8 +143,7 @@ mc_u32 mc_comm_send(mc_comm* this, cvoid* src_data, uint32_t size, uint32_t time
   // TODO(MN): This loop is repetitive in the wndpool_write
   while (size) {
     cuint32_t seg_size = MIN(size, this->snd->pool.window_size - sizeof(mc_pkt));
-    mc_buffer buffer = mc_buffer((char*)src_data + sent_size, seg_size);
-    buffer = protocol_send(this, buffer);
+    mc_buffer buffer = protocol_send(this, mc_buffer((char*)src_data + sent_size, seg_size));
     
     if (0 != buffer.capacity) {
       size -= seg_size;
