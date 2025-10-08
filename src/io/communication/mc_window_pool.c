@@ -3,8 +3,10 @@
 #include "mc_window_pool.h"
 
 
-#define MIN(A, B)           ((A) <= (B) ? (A) : (B))
-
+static inline  uint32_t min_u32(cuint32_t a, cuint32_t b)
+{
+  return (a <= b ? a : b);
+}
 
 static inline mc_wnd_idx get_index(const wndpool_t* this, const mc_pkt_id id)
 {
@@ -153,7 +155,7 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
   // Store the last read bytes. requires the continuous data pools
   // Separate the wnd(s) meta data and data buffers
   wnd_t* const window = wndpool_get(this, this->bgn_id);
-  cuint32_t read_size = MIN(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
+  cuint16_t read_size = min_u32(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
   memcpy(buffer.data, wnd_get_data(window) + this->stored_size, read_size);
 
   this->stored_size += read_size;
@@ -183,12 +185,12 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
       return 0;
     }  
 
-    cuint32_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
-    cuint32_t seg_size = MIN(data_size, available_size);
+    cuint16_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
+    cuint16_t seg_size = min_u32(data_size, available_size);
     memcpy(window->packet.data + window->packet.size, buffer.data + sent_size, seg_size);
     
     window->packet.size += seg_size;
-    this->update_time = mc_now_m();
+    this->update_time_ms = mc_now_m();
     data_size -= seg_size;
     sent_size += seg_size;
 
@@ -223,5 +225,3 @@ bool wndpool_has_incomplete(wndpool_t* this)
   return false;
 }
 
-
-#undef MIN

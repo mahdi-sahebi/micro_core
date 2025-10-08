@@ -40,11 +40,11 @@ typedef struct __attribute__((packed))// TODO(MN): Pads
 typedef struct __attribute__((packed))// TODO(MN): Pads
 {
   mc_time_t sent_time_us;
-  bool      is_acked;// TODO(MN): 1 bit
-bool is_sent;// TODO(MN): Rename
+  bool      is_acked : 1;
+  bool      is_sent  : 1;
+  uint8_t   __pad    : 6;
   mc_pkt    packet;
 }wnd_t;
-
 
 
 // TODO(MN): Rename to wnd_node_size
