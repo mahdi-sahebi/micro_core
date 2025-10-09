@@ -85,19 +85,13 @@ wnd_t* wndpool_get_last(wndpool_t* this)
   return wndpool_get(this, this->end_id);
 }
 
-bool wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
+void wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
 {
-  if (!wndpool_contains(this, id)) {
-    return false;
-  }
-  
   const mc_wnd_idx index = get_index(this, id);
   wnd_t* const window = get_window(this, index);
   window->packet.size = mc_buffer_get_size(buffer) - sizeof(window->packet);
   memcpy(&window->packet, buffer.data, mc_buffer_get_size(buffer));
   window->is_acked = true;
-
-  return true;
 }
 
 uint8_t wndpool_get_count(wndpool_t* this)
