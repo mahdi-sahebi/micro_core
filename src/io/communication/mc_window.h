@@ -27,7 +27,7 @@ typedef enum __attribute__((packed))
   PKT_ACK 
 }mc_pkt_type;
 
-typedef struct __attribute__((packed))// TODO(MN): Pads
+typedef struct
 {
   mc_pkt_hdr  header;// TODO(NM): Rename to hdr
   uint16_t    size;// TODO(MN): Reduce size
@@ -37,7 +37,7 @@ typedef struct __attribute__((packed))// TODO(MN): Pads
   char        data[0];
 }mc_pkt;// TODO(MN): Must be As size as window_size
 
-typedef struct __attribute__((packed))// TODO(MN): Pads
+typedef struct __attribute__((packed))
 {
   mc_time_t sent_time_us;
   bool      is_acked : 1;

@@ -170,18 +170,18 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
     return 0;// TODO(MN): Requires always one window be free. solve it
   }
 
+  wnd_t* window = wndpool_get_last(this);// TODO(MN): Use index
+  if (window->is_sent) {
+    return 0;
+  }  
+
   uint32_t data_size = buffer.capacity;
   uint32_t sent_size = 0;
 
   while (data_size) {
-    wnd_t* const window = wndpool_get_last(this);// TODO(MN): Use index
-    if (window->is_sent) {
-      return 0;
-    }  
-
     cuint16_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
     cuint16_t seg_size = min_u32(data_size, available_size);
-    memcpy(window->packet.data + window->packet.size, buffer.data + sent_size, seg_size);
+    memcpy(&window->packet.data[window->packet.size], &buffer.data[sent_size], seg_size);
     
     window->packet.size += seg_size;
     this->update_time_ms = mc_now_m();
@@ -195,7 +195,8 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
       if (wndpool_get_count(this) < this->capacity) {
         wndpool_update_header(this);// TODO(MN): Get window - opt
         this->end_id++;// TODO(MN): Handle overflow. Add tests for long-term
-        wnd_clear(wndpool_get_last(this));
+        window = wndpool_get_last(this);// TODO(MN): Use index
+        wnd_clear(window);
       }
 
       if (NULL != on_done) {
