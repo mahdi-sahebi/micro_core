@@ -177,10 +177,10 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
 
   uint32_t data_size = buffer.capacity;
   uint32_t sent_size = 0;
+  cuint32_t payload_size = wnd_get_payload_size(this->window_size);
 
   while (data_size) {
-    cuint16_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
-    cuint16_t seg_size = min_u32(data_size, available_size);
+    cuint16_t seg_size = min_u32(data_size, payload_size - window->packet.size);
     memcpy(&window->packet.data[window->packet.size], &buffer.data[sent_size], seg_size);
     
     window->packet.size += seg_size;
