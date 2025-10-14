@@ -32,7 +32,7 @@ static void send_stale_incomplete(mc_comm* const this)
 {
 #define WNDPOOL    this->snd->pool
   if (wndpool_has_incomplete(&WNDPOOL)) {
-    if (mc_now_m() > (WNDPOOL.update_time + FLUSH_TIMEOUT_MS)) {// TODO(MN): Update time is extra?
+    if (mc_now_m() > (WNDPOOL.update_time_ms + FLUSH_TIMEOUT_MS)) {// TODO(MN): Update time is extra?
       wnd_t* const window = wndpool_get_last(&WNDPOOL);// TODO(MN): [PR2]: Pass window, instead of get window. Called twice
       if (!window->is_sent) {
         wndpool_update_header(&WNDPOOL);
@@ -71,7 +71,8 @@ void protocol_recv(const mc_buffer buffer, void* arg)
     return;// done
   }
 
-  if (wndpool_update(&this->rcv->pool, buffer, pkt->id)) {
+  if (wndpool_contains(&this->rcv->pool, pkt->id)) {
+    wndpool_update(&this->rcv->pool, buffer, pkt->id);
     send_ack(this, pkt->id);
   }
 }

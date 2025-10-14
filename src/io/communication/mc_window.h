@@ -27,24 +27,24 @@ typedef enum __attribute__((packed))
   PKT_ACK 
 }mc_pkt_type;
 
-typedef struct __attribute__((packed))// TODO(MN): Pads
+typedef struct
 {
   mc_pkt_hdr  header;// TODO(NM): Rename to hdr
+  uint16_t    size;// TODO(MN): Reduce size
+  mc_pkt_id   id;
   uint16_t    crc;
   mc_pkt_type type;// TODO(MN) : 1;
-  mc_pkt_id   id;
-  uint32_t    size;// TODO(MN): Reduce size
   char        data[0];
 }mc_pkt;// TODO(MN): Must be As size as window_size
 
-typedef struct __attribute__((packed))// TODO(MN): Pads
+typedef struct __attribute__((packed))
 {
   mc_time_t sent_time_us;
-  bool      is_acked;// TODO(MN): 1 bit
-bool is_sent;// TODO(MN): Rename
+  bool      is_acked : 1;
+  bool      is_sent  : 1;
+  uint8_t   __pad    : 6;
   mc_pkt    packet;
 }wnd_t;
-
 
 
 // TODO(MN): Rename to wnd_node_size

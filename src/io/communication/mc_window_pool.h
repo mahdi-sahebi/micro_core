@@ -14,11 +14,11 @@ typedef uint8_t mc_wnd_idx;
 
 typedef struct __attribute__((packed))
 {
-  mc_time_t  update_time;// TODO(MN): Rename to _ms
+  mc_time_t  update_time_ms;
   mc_pkt_id  bgn_id;// TODO(MN): Handle overflow
-  mc_pkt_id  end_id;// TODO(MN): Remove
+  mc_pkt_id  end_id;
   uint16_t   window_size;
-  uint16_t   stored_size;// TODO(MN): Use for sender. Remove it. use packet.size. rename to last_window_stored
+  uint16_t   stored_size;
   mc_wnd_idx bgn_index;
   mc_wnd_idx capacity;
   wnd_t      windows[0];
@@ -30,18 +30,18 @@ typedef void (*wndpool_cb_done)(mc_buffer buffer, void* arg);
   ((CAPACITY) * wnd_get_size(WINDOW_SIZE))
 
 
-void     wndpool_init(wndpool_t* this, uint16_t window_size, uint8_t capacity);
-void     wndpool_clear(wndpool_t* this);
-bool     wndpool_contains(const wndpool_t* this, mc_pkt_id id);
-wnd_t*   wndpool_get(wndpool_t* this, mc_pkt_id id);
-wnd_t*   wndpool_get_last(wndpool_t* this);
-uint8_t  wndpool_get_count(wndpool_t* this);
-bool     wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id);
-bool     wndpool_ack(wndpool_t* this, mc_pkt_id id);
-uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer);
-uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_done, void* arg);
-bool     wndpool_is_empty(wndpool_t* this);
-void     wndpool_update_header(wndpool_t* this);
+void     wndpool_init          (wndpool_t* this, uint16_t window_size, uint8_t capacity);
+void     wndpool_clear         (wndpool_t* this);
+bool     wndpool_contains      (const wndpool_t* this, mc_pkt_id id);
+wnd_t*   wndpool_get           (wndpool_t* this, mc_pkt_id id);
+wnd_t*   wndpool_get_last      (wndpool_t* this);
+uint8_t  wndpool_get_count     (wndpool_t* this);
+void     wndpool_update        (wndpool_t* this, mc_buffer buffer, mc_pkt_id id);
+bool     wndpool_ack           (wndpool_t* this, mc_pkt_id id);
+uint32_t wndpool_read          (wndpool_t* this, mc_buffer buffer);
+uint32_t wndpool_write         (wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_done, void* arg);
+bool     wndpool_is_empty      (wndpool_t* this);
+void     wndpool_update_header (wndpool_t* this);
 bool     wndpool_has_incomplete(wndpool_t* this);
 
 
