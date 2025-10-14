@@ -3,10 +3,12 @@
 #include "mc_window_pool.h"
 
 
-#define MIN(A, B)           ((A) <= (B) ? (A) : (B))
+static inline  uint32_t min_u32(cuint32_t a, cuint32_t b)
+{
+  return (a <= b ? a : b);
+}
 
-
-static mc_wnd_idx get_index(const wndpool_t* this, const mc_pkt_id id)
+static inline mc_wnd_idx get_index(const wndpool_t* this, const mc_pkt_id id)
 {
   int16_t dif = id - this->bgn_id;
   if (id < this->bgn_id) {
@@ -16,15 +18,14 @@ static mc_wnd_idx get_index(const wndpool_t* this, const mc_pkt_id id)
   return (this->bgn_id + dif) % this->capacity;
 }
 
-static wnd_t* get_window(const wndpool_t* this, const mc_wnd_idx index)// TODO(MN): inline
+static inline wnd_t* get_window(const wndpool_t* this, const mc_wnd_idx index)
 {
-  // TODO(MN): Optimize
   return (wnd_t*)((char*)(this->windows) + (index * wnd_get_size(this->window_size)));// TODO(MN): Rcv/snd
 }
 
-static bool is_first_acked(const wndpool_t* this)
+static inline bool is_first_acked(const wndpool_t* this)
 {
-  const wnd_t* window = get_window(this, this->bgn_index);
+  const wnd_t* const window = get_window(this, this->bgn_index);
   return wnd_is_valid(window) && wnd_is_acked(window);
 }
 
@@ -84,19 +85,13 @@ wnd_t* wndpool_get_last(wndpool_t* this)
   return wndpool_get(this, this->end_id);
 }
 
-bool wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
+void wndpool_update(wndpool_t* this, mc_buffer buffer, mc_pkt_id id)
 {
-  if (!wndpool_contains(this, id)) {
-    return false;
-  }
-  
   const mc_wnd_idx index = get_index(this, id);
   wnd_t* const window = get_window(this, index);
   window->packet.size = mc_buffer_get_size(buffer) - sizeof(window->packet);
   memcpy(&window->packet, buffer.data, mc_buffer_get_size(buffer));
   window->is_acked = true;
-
-  return true;
 }
 
 uint8_t wndpool_get_count(wndpool_t* this)
@@ -109,8 +104,7 @@ uint8_t wndpool_get_count(wndpool_t* this)
 bool wndpool_is_empty(wndpool_t* this)
 {
   if (this->end_id == this->bgn_id) {
-    wnd_t* window = wndpool_get_last(this);
-    return (0 == window->packet.size);
+    return (0 == wndpool_get_last(this)->packet.size);
   }
 
   return false;
@@ -155,7 +149,7 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
   // Store the last read bytes. requires the continuous data pools
   // Separate the wnd(s) meta data and data buffers
   wnd_t* const window = wndpool_get(this, this->bgn_id);
-  cuint32_t read_size = MIN(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
+  cuint16_t read_size = min_u32(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
   memcpy(buffer.data, wnd_get_data(window) + this->stored_size, read_size);
 
   this->stored_size += read_size;
@@ -176,22 +170,22 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
     return 0;// TODO(MN): Requires always one window be free. solve it
   }
 
-  uint32_t data_size = buffer.capacity;
+  wnd_t* window = wndpool_get_last(this);// TODO(MN): Use index
+  if (window->is_sent) {
+    return 0;
+  }  
+
+  // uint32_t data_size = ;
   uint32_t sent_size = 0;
+  cuint32_t payload_size = wnd_get_payload_size(this->window_size);
 
-  while (data_size) {
-    wnd_t* const window = wndpool_get_last(this);// TODO(MN): Use index
-    if (window->is_sent) {
-      return 0;
-    }  
-
-    cuint32_t available_size = wnd_get_payload_size(this->window_size) - window->packet.size;
-    cuint32_t seg_size = MIN(data_size, available_size);
-    memcpy(window->packet.data + window->packet.size, buffer.data + sent_size, seg_size);
+  while (sent_size < buffer.capacity) {
+    cuint16_t seg_size = min_u32(buffer.capacity - sent_size, payload_size - window->packet.size);
+    memcpy(&window->packet.data[window->packet.size], &buffer.data[sent_size], seg_size);
     
     window->packet.size += seg_size;
-    this->update_time = mc_now_m();
-    data_size -= seg_size;
+    this->update_time_ms = mc_now_m();
+    // data_size -= seg_size;
     sent_size += seg_size;
 
     if (window->packet.size == wnd_get_payload_size(this->window_size)) {
@@ -201,7 +195,8 @@ uint32_t wndpool_write(wndpool_t* this, mc_buffer buffer, wndpool_cb_done on_don
       if (wndpool_get_count(this) < this->capacity) {
         wndpool_update_header(this);// TODO(MN): Get window - opt
         this->end_id++;// TODO(MN): Handle overflow. Add tests for long-term
-        wnd_clear(wndpool_get_last(this));
+        window = wndpool_get_last(this);// TODO(MN): Use index
+        wnd_clear(window);
       }
 
       if (NULL != on_done) {
@@ -225,5 +220,3 @@ bool wndpool_has_incomplete(wndpool_t* this)
   return false;
 }
 
-
-#undef MIN
