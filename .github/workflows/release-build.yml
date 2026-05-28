@@ -27,7 +27,11 @@ jobs:
           sudo apt-get install -y cmake build-essential
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPROJECT_VERSION=${{ github.ref_name }} \
+            -DPROJECT_VERSION_SUFFIX=""
 
       - name: Build
         run: cmake --build build --parallel
@@ -48,3 +52,54 @@ jobs:
             "./$t"
             echo "::endgroup::"
           done
+
+      - name: Stage release artifacts
+        run: |
+          set -e
+          TAG="${{ github.ref_name }}"
+          OUT="staging"
+          mkdir -p "$OUT"
+
+          # CMake's mc_versioned_copy() already produced files named
+          # lib<name>-<arch>-<tag>.a and test_<name>-<arch>-<tag>.
+          find build/src  -type f -name "lib*-*-${TAG}.a"  -exec cp {} "$OUT/" \;
+          find build/test -type f -name "test_*-*-${TAG}" -exec cp {} "$OUT/" \;
+
+          echo "Staged files:"
+          ls -la "$OUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcore-${{ matrix.arch }}-${{ github.ref_name }}
+          path: staging/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: mcore-*
+          merge-multiple: true
+
+      - name: List release files
+        run: ls -la artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
