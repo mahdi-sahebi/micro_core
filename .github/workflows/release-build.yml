@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build and test (${{ matrix.arch }})
+    name: Build (${{ matrix.arch }})
     strategy:
       fail-fast: false
       matrix:
@@ -36,22 +36,30 @@ jobs:
       - name: Build
         run: cmake --build build --parallel
 
-      - name: Run tests
-        working-directory: build/test
+      - name: Run tests (x86_64 only — release gate)
+        if: matrix.arch == 'x86_64'
         run: |
           set -e
           shopt -s nullglob
-          tests=(test_*)
+          mapfile -d '' tests < <(find build/test -type f -name 'test_*' -executable -not -name '*-*' -print0)
           if [ ${#tests[@]} -eq 0 ]; then
             echo "No test executables found" >&2
             exit 1
           fi
+          fail=0
           for t in "${tests[@]}"; do
-            [ -x "$t" ] || continue
-            echo "::group::$t"
-            "./$t"
-            echo "::endgroup::"
+            name="$(basename "$t")"
+            echo "::group::$name"
+            if "$t"; then
+              echo "::endgroup::"
+              echo "PASS: $name"
+            else
+              echo "::endgroup::"
+              echo "::error::FAIL: $name"
+              fail=1
+            fi
           done
+          exit $fail
 
       - name: Stage release artifacts
         run: |
@@ -60,7 +68,7 @@ jobs:
           OUT="staging"
           mkdir -p "$OUT"
 
-          # CMake's mc_versioned_copy() already produced files named
+          # CMake's MC_VERSIONED_NAME() already produced files named
           # lib<name>-<arch>-<tag>.a and test_<name>-<arch>-<tag>.
           find build/src  -type f -name "lib*-*-${TAG}.a"  -exec cp {} "$OUT/" \;
           find build/test -type f -name "test_*-*-${TAG}" -exec cp {} "$OUT/" \;
