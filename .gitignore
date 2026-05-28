@@ -1,9 +1,12 @@
 /*
+!.git/
+!.github/
 !doc/
 !include/
 !src/
 !test/
 !.gitignore
+!.clang-format
 !CMakeLists.txt
 !README.md
 

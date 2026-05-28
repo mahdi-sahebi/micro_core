@@ -30,11 +30,15 @@ micro_core addresses these problems directly by focusing on clarity, safety, and
 This makes it an excellent foundation for communication stacks, message-based systems, and other embedded infrastructure in domains where quality matters more than speed of hacking.
 
 
+<br>
+
 ## Changelog
 1.0.0 (Initial Release)
 - **mc_comm:** Raw data communication over selective sliding window flow
 - **mc_msg:** Message ID-based protocol over mc_comm
 
+
+<br>
 
 ## Structure
 - [Documentation](./doc/doc.md)
@@ -47,6 +51,13 @@ This makes it an excellent foundation for communication stacks, message-based sy
     - [API](./doc/io/message/api.md)
     - [Test](./doc/io/message/test.md)
 
+
+<br>
+
+## Development Convention
+Please consider [this documentation](./doc/development_conventions.md) for contributing.
+
+<br>
 
 ## Contributors
 - [Mahdi Nejad Sahebi](mailto:m.nejadsahebi@live.co.uk): Maintainer and designer  

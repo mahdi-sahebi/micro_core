@@ -1,0 +1,50 @@
+name: Release build
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Build and test (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        working-directory: build/test
+        run: |
+          set -e
+          shopt -s nullglob
+          tests=(test_*)
+          if [ ${#tests[@]} -eq 0 ]; then
+            echo "No test executables found" >&2
+            exit 1
+          fi
+          for t in "${tests[@]}"; do
+            [ -x "$t" ] || continue
+            echo "::group::$t"
+            "./$t"
+            echo "::endgroup::"
+          done
