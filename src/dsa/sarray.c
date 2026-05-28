@@ -2,6 +2,7 @@
  * Not tested. Implement test cases. How to find out the meta data size?
  * Remove capacity from mc_sarray_init. calculate according to the span?
  * Doc: memory safe for detaching pointer, destructor, free
+ * Optimize mc_fn_distance
  */
 
 #include <stdlib.h>

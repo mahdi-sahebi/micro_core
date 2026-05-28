@@ -8,20 +8,15 @@
 #include "dsa/sarray.h"
 
 
-static mc_cmp comparator_i16(cvoid* data_1, cvoid* data_2) 
+static float comparator_i16(cvoid* data_1, cvoid* data_2) 
 {
   const int16_t a = *(int16_t*)data_1;
   const int16_t b = *(int16_t*)data_2;
   
-  if (a < b) {
-    return MC_ALG_LT;
-  } else if (a > b) {
-    return MC_ALG_GT;
-  }
-  return MC_ALG_EQ;
+  return (a - b);
 }
 
-static mc_cmp comparator_str(cvoid* a, cvoid* b) 
+static float comparator_str(cvoid* a, cvoid* b) 
 {
   return strcmp(a, b);
 }
