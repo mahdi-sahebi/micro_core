@@ -5,6 +5,7 @@
 !include/
 !src/
 !test/
+!tools/
 !.gitignore
 !.clang-format
 !CMakeLists.txt

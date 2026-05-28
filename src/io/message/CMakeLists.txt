@@ -27,3 +27,7 @@ target_include_directories(${LIB}
 target_link_libraries(${LIB}
   PRIVATE ${PROJECT_NAME}_dsa ${PROJECT_NAME}_comm
 )
+
+
+# Versioning
+MC_VERSIONED_NAME(${LIB})

@@ -26,3 +26,7 @@ target_link_libraries(${TEST}
   PRIVATE ${PROJECT_NAME}_time ${PROJECT_NAME}_dsa
 )
 
+
+# Versioning
+MC_VERSIONED_NAME(${TEST})
+
