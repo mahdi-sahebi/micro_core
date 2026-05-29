@@ -242,6 +242,7 @@ int main()
 {
   printf("[MICRO CORE %u.%u.%u - IO - COMMUNICATION]\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
   mc_err result = MC_SUCCESS;
+  mc_err overall = MC_SUCCESS;
 
   printf("[invalid_creation]\n");
   {
@@ -249,6 +250,7 @@ int main()
     result = invalid_creation();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      overall = result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -261,6 +263,7 @@ int main()
     result = invalid_argument();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      overall = result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -273,6 +276,7 @@ int main()
     result = valid_creation();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      overall = result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -285,6 +289,7 @@ int main()
     result = singly_direction();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      overall = result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -297,6 +302,7 @@ int main()
     result = singly_repetitive();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      overall = result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -309,6 +315,7 @@ int main()
     result = singly_low_lossy();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      overall = result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -320,6 +327,7 @@ int main()
     result = singly_high_lossy();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      overall = result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -331,10 +339,11 @@ int main()
     result = singly_timed_out();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      overall = result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
   }
 
-  return MC_SUCCESS;
+  return overall;
 }

@@ -640,6 +640,7 @@ int main()
 
   if (0 != total_failed) {
     printf("#%d Tests failed\n", total_failed);
+    return (int)total_failed;
   }
 
   printf("passed\n");
