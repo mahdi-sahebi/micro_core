@@ -26,6 +26,7 @@ static uint32_t RecvCounter = 0;
 static uint32_t SendCounter = 0;
 static uint32_t RecvFailedCounter = 0;
 static uint32_t SendFailedCounter = 0;
+static bool TimeoutAllowed = false;
 
 
 static bool simulate_loss() 
@@ -232,4 +233,14 @@ void cfg_set_timeout_us(uint32_t timeout_us)
 uint32_t cfg_get_timeout_us()
 {
   return TimeOutUS;
+}
+
+void cfg_set_timeout_allowed(bool allowed)
+{
+  TimeoutAllowed = allowed;
+}
+
+bool cfg_get_timeout_allowed()
+{
+  return TimeoutAllowed;
 }
