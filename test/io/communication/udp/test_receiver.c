@@ -272,7 +272,9 @@ void* rcv_start(void* data)
     }
   }
 
-  wait_for_sender();
+  if (MC_SUCCESS == *Result) {
+    wait_for_sender();
+  }
   deinit();
   return NULL;
 }
