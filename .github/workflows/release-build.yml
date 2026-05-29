@@ -69,18 +69,21 @@ jobs:
           mkdir -p "$OUT"
 
           # CMake's MC_VERSIONED_NAME() already produced files named
-          # lib<name>-<arch>-<tag>.a and test_<name>-<arch>-<tag>.
-          find build/src  -type f -name "lib*-*-${TAG}.a"  -exec cp {} "$OUT/" \;
-          find build/test -type f -name "test_*-*-${TAG}" -exec cp {} "$OUT/" \;
+          # lib<name>-<arch>-<tag>.a and test_<name>-<arch>-<tag> under
+          # build/src/<module>/ and build/test/<module>/. Preserve that
+          # tree under staging/ so all arches of one module land together
+          # when the release job merges artifacts.
+          (cd build && find src  -type f -name "lib*-*-${TAG}.a"  -exec cp --parents {} "../$OUT/" \;)
+          (cd build && find test -type f -name "test_*-*-${TAG}"  -exec cp --parents {} "../$OUT/" \;)
 
-          echo "Staged files:"
-          ls -la "$OUT"
+          echo "Staged tree:"
+          find "$OUT" -type f | sort
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: mcore-${{ matrix.arch }}-${{ github.ref_name }}
-          path: staging/*
+          path: staging
           if-no-files-found: error
 
   release:
@@ -98,13 +101,22 @@ jobs:
           pattern: mcore-*
           merge-multiple: true
 
-      - name: List release files
-        run: ls -la artifacts
+      - name: Package release tree
+        run: |
+          set -e
+          TAG="${{ github.ref_name }}"
+          ROOT="mcore-${TAG}"
+          mv artifacts "$ROOT"
+          echo "Final tree:"
+          find "$ROOT" -type f | sort
+          tar -czf "${ROOT}.tar.gz" "$ROOT"
+          echo "Archive:"
+          ls -la "${ROOT}.tar.gz"
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*
+          files: mcore-${{ github.ref_name }}.tar.gz
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
