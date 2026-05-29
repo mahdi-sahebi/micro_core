@@ -120,7 +120,7 @@ static bool send_large_1(uint32_t seed)
   cuint32_t count = sizeof(data) / sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
-    data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
+    data[index] = (uint32_t)(int64_t)(((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index);
   }
 
   return send_data(mc_buffer(data, sizeof(data)), 101);
