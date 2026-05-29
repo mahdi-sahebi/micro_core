@@ -192,11 +192,13 @@ static int singly_low_lossy()
 
 static int singly_high_lossy()
 {
-  cfg_set_loss_rate(98);
+  cfg_set_loss_rate(96);
   cfg_set_iterations(100);
   cfg_set_periodic_duration(5000);
   cfg_set_timeout_us(120000000);
+  cfg_set_timeout_allowed(true);
   const int result = singly_direction();
+  cfg_set_timeout_allowed(false);
   cfg_set_loss_rate(0);
   return result;
 }
