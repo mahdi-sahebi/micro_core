@@ -41,6 +41,8 @@ jobs:
         run: |
           set -e
           shopt -s nullglob
+          # Find every test_* executable anywhere under build/test, excluding
+          # the versioned copies (which contain '-' from name-arch-tag).
           mapfile -d '' tests < <(find build/test -type f -name 'test_*' -executable -not -name '*-*' -print0)
           if [ ${#tests[@]} -eq 0 ]; then
             echo "No test executables found" >&2
@@ -68,7 +70,7 @@ jobs:
           OUT="staging"
           mkdir -p "$OUT"
 
-          # CMake's MC_VERSIONED_NAME() already produced files named
+          # CMake's MC_VERSIONED_NAME() produced files named
           # lib<name>-<arch>-<tag>.a and test_<name>-<arch>-<tag> under
           # build/src/<module>/ and build/test/<module>/. Preserve that
           # tree under staging/ so all arches of one module land together
