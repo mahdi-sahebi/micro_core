@@ -217,9 +217,9 @@ static int singly_direction()
   uint32_t snd_error = MC_SUCCESS;
   uint32_t rcv_error = MC_SUCCESS;
 
-  if (pthread_create(&task_snd, NULL, snd_start, &snd_error) || 
+  if (pthread_create(&task_snd, NULL, snd_start, &snd_error) ||
       pthread_create(&task_rcv, NULL, rcv_start, &rcv_error)) {
-    MC_ERR_BAD_ALLOC;
+    return MC_ERR_BAD_ALLOC;
   }
 
   if (pthread_join(task_snd, NULL) || 
