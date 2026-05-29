@@ -36,3 +36,7 @@ target_include_directories(${LIB}
 target_link_libraries(${LIB}
     PRIVATE ${PROJECT_NAME}_time ${PROJECT_NAME}_alg
 )
+
+
+# Versioning
+MC_VERSIONED_NAME(${LIB})

@@ -26,3 +26,8 @@ target_include_directories(test_dsa_memlin PRIVATE ${INCLUDE_DIRS})
 target_link_libraries(test_dsa_span PRIVATE ${PROJECT_NAME}_alg)
 target_link_libraries(test_dsa_memlin PRIVATE ${PROJECT_NAME}_dsa)
 
+
+# Versioning
+MC_VERSIONED_NAME(test_dsa_span)
+MC_VERSIONED_NAME(test_dsa_memlin)
+

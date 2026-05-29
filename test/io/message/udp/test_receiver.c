@@ -324,7 +324,9 @@ void* rcv_start(void* data)
     }
   }
 
-  wait_for_sender();
+  if (MC_SUCCESS == *Error) {
+    wait_for_sender();
+  }
   deinit();
   return NULL;
 }
