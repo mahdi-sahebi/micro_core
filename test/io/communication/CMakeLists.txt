@@ -29,3 +29,7 @@ target_include_directories(${TEST} PRIVATE ${INCLUDE_DIRS})
 # Linking
 target_link_libraries(${TEST} PRIVATE ${PROJECT_NAME}_comm)
 
+
+# Versioning
+MC_VERSIONED_NAME(${TEST})
+

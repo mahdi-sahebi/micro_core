@@ -1,6 +1,7 @@
 /* TODO(MN): typedef cuint32_t cuint32_t;
  * Reduce text size of this module.
  * TODO(MN): Rename 'value' to have unique name for all result types
+ * Add compile-time flag for ultra low foot-print size
  */
 #ifndef MC_ERROR_H_
 #define MC_ERROR_H_

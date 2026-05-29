@@ -29,3 +29,7 @@ target_link_libraries(${LIB}
     PUBLIC ${PROJECT_NAME}_alg
 )
 
+
+# Versioning
+MC_VERSIONED_NAME(${LIB})
+
