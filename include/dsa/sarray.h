@@ -9,7 +9,7 @@
 #include "alg/algorithm.h"
 
 
-typedef struct _mc_sarray* mc_sarray;
+typedef struct mc_sarray_impl* mc_sarray;
 
 // TODO(MN): Rename to get_alloc_size
 mc_u32  mc_sarray_required_size(uint32_t data_size, uint32_t capacity);
