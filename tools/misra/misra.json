@@ -1,0 +1,8 @@
+{
+    "//": "cppcheck MISRA addon configuration for micro_core (ISO 26262-6 ASIL-C).",
+    "//rule-texts": "Path to the MISRA rule headline texts. The official rule text is copyrighted and is NOT redistributed here; supply your licensed copy as tools/misra/misra-rule-texts.txt to get full rule descriptions in the report. Without it, cppcheck reports rule numbers only, which is sufficient to gate.",
+    "script": "misra.py",
+    "args": [
+        "--rule-texts=tools/misra/misra-rule-texts.txt"
+    ]
+}
