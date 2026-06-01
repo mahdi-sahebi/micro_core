@@ -21,7 +21,7 @@ typedef struct __attribute__((packed))
   uint16_t   stored_size;
   mc_wnd_idx bgn_index;
   mc_wnd_idx capacity;
-  wnd_t      windows[0];
+  wnd_t      windows[];
 }wndpool_t;
 
 typedef void (*wndpool_cb_done)(mc_buffer buffer, void* arg);

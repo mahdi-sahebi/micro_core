@@ -28,11 +28,13 @@
  * Make mc_comm_flush private, and return true/false for mc_comm_update to give controll of flushing to user.
  */
 
-#include <stdlib.h>
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE
+#endif
 #include <stdbool.h>
-#include <string.h>
 #include <unistd.h>
 #include "core/error.h"
+#include "mc_posix.h"
 #include "core/time.h"
 #include "mc_window.h"
 #include "mc_window_pool.h"
@@ -49,21 +51,21 @@
 mc_u32 mc_comm_req_size(mc_comm_cfg config)
 {
   if ((NULL == config.io.recv) || (NULL == config.io.send)) {
-    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0U, MC_ERR_INVALID_ARGUMENT);
   }
 
-  if ((0 == config.recv.capacity) || (0 == config.recv.size) ||
-      (0 == config.send.capacity) || (0 == config.send.size)) {
-    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
+  if ((0U == config.recv.capacity) || (0U == config.recv.size) ||
+      (0U == config.send.capacity) || (0U == config.send.size)) {
+    return mc_u32(0U, MC_ERR_INVALID_ARGUMENT);
   }
-  if ((config.recv.size < (sizeof(mc_pkt) + 1)) || (config.send.size < (sizeof(mc_pkt) + 1))) {
-    return mc_u32(0, MC_ERR_BAD_ALLOC);
+  if ((config.recv.size < (sizeof(mc_pkt) + 1U)) || (config.send.size < (sizeof(mc_pkt) + 1U))) {
+    return mc_u32(0U, MC_ERR_BAD_ALLOC);
   }
 
-  cuint32_t recv_frame_size = FRAME_GET_SIZE(config.recv.size, config.recv.capacity);
-  cuint32_t send_frame_size = FRAME_GET_SIZE(config.send.size, config.send.capacity);
+  cuint32_t recv_frame_size = (uint32_t)FRAME_GET_SIZE(config.recv.size, config.recv.capacity);
+  cuint32_t send_frame_size = (uint32_t)FRAME_GET_SIZE(config.send.size, config.send.capacity);
   cuint32_t frames_size = recv_frame_size + send_frame_size;
-  cuint32_t size = sizeof(mc_comm) + frames_size;
+  cuint32_t size = (uint32_t)(sizeof(mc_comm) + frames_size);
   return mc_u32(size, MC_SUCCESS);
 }
 
@@ -103,27 +105,27 @@ mc_err mc_comm_update(mc_comm* this)
 mc_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeout_us)
 {
   if ((NULL == this) || (NULL == dst_data)) {
-    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0U, MC_ERR_INVALID_ARGUMENT);
   }
 
-  uint32_t read_size = 0;
+  uint32_t read_size = 0U;
   mc_err error = MC_SUCCESS;
-  const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
+  const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0U;
 
-  while (size) {
+  while (0U != size) {
     if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
       error = MC_ERR_TIMEOUT;
       break;
     }
 
-    cuint32_t seg_size = wndpool_read(&this->rcv->pool, mc_buffer((char*)dst_data + read_size, size));
+    cuint32_t seg_size = wndpool_read(&this->rcv->pool, mc_buffer_char((char*)dst_data + read_size, size));
 
-    if (seg_size) {
+    if (0U != seg_size) {
       size      -= seg_size;
       read_size += seg_size;
     } else {
-      mc_comm_update(this);
-      usleep(MIN_SEND_TIME_US);
+      (void)mc_comm_update(this);
+      (void)usleep(MIN_SEND_TIME_US);
     }
   }
 
@@ -133,24 +135,27 @@ mc_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeo
 mc_u32 mc_comm_send(mc_comm* this, cvoid* src_data, uint32_t size, uint32_t timeout_us)
 {
   if ((NULL == this) || (NULL == src_data)) {
-    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
+    return mc_u32(0U, MC_ERR_INVALID_ARGUMENT);
   }
 
-  uint32_t sent_size = 0;
+  uint32_t sent_size = 0U;
   mc_err error = MC_SUCCESS;
-  const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0;
+  const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0U;
 
   // TODO(MN): This loop is repetitive in the wndpool_write
-  while (size) {
-    cuint32_t seg_size = MIN(size, this->snd->pool.window_size - sizeof(mc_pkt));
-    const mc_buffer buffer = protocol_send(this, mc_buffer((char*)src_data + sent_size, seg_size));
-    
-    if (0 != buffer.capacity) {
+  while (0U != size) {
+    cuint32_t seg_size = (uint32_t)MIN(size, this->snd->pool.window_size - sizeof(mc_pkt));
+    /* DEV-004: mc_buffer carries a non-const char*; the source data here is
+     * only read by protocol_send, so dropping const is safe. */
+    /* cppcheck-suppress misra-c2012-11.8 */
+    const mc_buffer buffer = protocol_send(this, mc_buffer_char((char*)src_data + sent_size, seg_size));
+
+    if (0U != buffer.capacity) {
       size -= seg_size;
       sent_size += seg_size;
     } else {
-      mc_comm_update(this);
-      usleep(MIN_SEND_TIME_US);
+      (void)mc_comm_update(this);
+      (void)usleep(MIN_SEND_TIME_US);
     } 
 
     if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {// TODO(MN): Separate branch checkings for optimize
@@ -171,13 +176,13 @@ mc_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
   const mc_time_t end_time_us = mc_now_u() + timeout_us;
 
   while (!wndpool_is_empty(&this->snd->pool) || !wndpool_is_empty(&this->rcv->pool)) {
-    mc_comm_update(this);
+    (void)mc_comm_update(this);
 
     if (mc_now_u() > end_time_us) {
       return mc_bool(false, MC_ERR_TIMEOUT);
     }
 
-    usleep(MIN_SEND_TIME_US);
+    (void)usleep(MIN_SEND_TIME_US);
   }
   
   return mc_bool(true, MC_SUCCESS);
