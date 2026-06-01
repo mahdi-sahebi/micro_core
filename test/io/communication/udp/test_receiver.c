@@ -16,7 +16,7 @@ static int ServerSocket = -1;
 static uint32_t* Result = NULL;
 static mc_comm* message = NULL;
 static char TempBuffer[5 * 1024] = {0};
-static mc_buffer AllocBuffer = mc_buffer(TempBuffer, sizeof(TempBuffer));
+static mc_buffer AllocBuffer = {0};
 static mc_time_t BeginTime = 0;
 static mc_time_t EndTime = 0;
 
@@ -95,7 +95,9 @@ static bool init(void* data)
 
   server_create();
   flush_receive_buffer();
+  
   memset(TempBuffer, 0x00, sizeof(TempBuffer));
+  AllocBuffer = mc_buffer_char(TempBuffer, sizeof(TempBuffer));
 
   const mc_comm_cfg config = mc_comm_cfg(mc_io(server_read, server_write),
     mc_comm_wnd(1157, 3), mc_comm_wnd(59, 1));
