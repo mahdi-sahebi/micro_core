@@ -67,25 +67,30 @@ jobs:
         run: |
           set -e
           TAG="${{ github.ref_name }}"
-          OUT="staging"
-          mkdir -p "$OUT"
+          ARCH="${{ matrix.arch }}"
+          ROOT="mcore-${ARCH}-${TAG}"
+          mkdir -p "$ROOT"
 
           # CMake's MC_VERSIONED_NAME() produced files named
           # lib<name>-<arch>-<tag>.a and test_<name>-<arch>-<tag> under
           # build/src/<module>/ and build/test/<module>/. Preserve that
-          # tree under staging/ so all arches of one module land together
-          # when the release job merges artifacts.
-          (cd build && find src  -type f -name "lib*-*-${TAG}.a"  -exec cp --parents {} "../$OUT/" \;)
-          (cd build && find test -type f -name "test_*-*-${TAG}"  -exec cp --parents {} "../$OUT/" \;)
+          # tree under the per-arch root so each architecture ships as its
+          # own self-contained tarball.
+          (cd build && find src  -type f -name "lib*-*-${TAG}.a"  -exec cp --parents {} "../$ROOT/" \;)
+          (cd build && find test -type f -name "test_*-*-${TAG}"  -exec cp --parents {} "../$ROOT/" \;)
 
           echo "Staged tree:"
-          find "$OUT" -type f | sort
+          find "$ROOT" -type f | sort
+
+          tar -czf "${ROOT}.tar.gz" "$ROOT"
+          echo "Archive:"
+          ls -la "${ROOT}.tar.gz"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: mcore-${{ matrix.arch }}-${{ github.ref_name }}
-          path: staging
+          path: mcore-${{ matrix.arch }}-${{ github.ref_name }}.tar.gz
           if-no-files-found: error
 
   release:
@@ -103,22 +108,15 @@ jobs:
           pattern: mcore-*
           merge-multiple: true
 
-      - name: Package release tree
+      - name: List release assets
         run: |
-          set -e
-          TAG="${{ github.ref_name }}"
-          ROOT="mcore-${TAG}"
-          mv artifacts "$ROOT"
-          echo "Final tree:"
-          find "$ROOT" -type f | sort
-          tar -czf "${ROOT}.tar.gz" "$ROOT"
-          echo "Archive:"
-          ls -la "${ROOT}.tar.gz"
+          echo "Release assets:"
+          find artifacts -type f | sort
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: mcore-${{ github.ref_name }}.tar.gz
+          files: artifacts/*.tar.gz
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
