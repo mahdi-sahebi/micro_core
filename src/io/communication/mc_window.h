@@ -12,18 +12,18 @@
 #include "core/time.h"
 
 
-enum definitions
-{
-  INVALID_ID = -1,
-  HEADER     = 0xC7E9
-};
-
 typedef uint16_t mc_pkt_hdr;
 typedef uint32_t mc_pkt_id;// TODO(MN): Reduce size. Handle overflow and decrese the size
 
+/* Defined as object-like macros, not enumeration constants: the INVALID_ID
+   sentinel is 0xFFFFFFFF, which exceeds INT_MAX and so cannot be a valid
+   enumeration constant (C99 6.7.2.2). */
+#define INVALID_ID  ((mc_pkt_id)0xFFFFFFFFU)
+#define HEADER      ((mc_pkt_hdr)0xC7E9U)
+
 typedef enum __attribute__((packed))
 {
-  PKT_DATA = 0,
+  PKT_DATA = 0U,
   PKT_ACK 
 }mc_pkt_type;
 
@@ -34,7 +34,7 @@ typedef struct
   mc_pkt_id   id;
   uint16_t    crc;
   mc_pkt_type type;// TODO(MN) : 1;
-  char        data[0];
+  char        data[];
 }mc_pkt;// TODO(MN): Must be As size as window_size
 
 typedef struct __attribute__((packed))
@@ -42,7 +42,7 @@ typedef struct __attribute__((packed))
   mc_time_t sent_time_us;
   bool      is_acked : 1;
   bool      is_sent  : 1;
-  uint8_t   __pad    : 6;
+  uint8_t   pad      : 6;
   mc_pkt    packet;
 }wnd_t;
 
@@ -59,7 +59,7 @@ do {\
   (WND)->packet.id = INVALID_ID;\
   (WND)->is_acked  = true;\
   (WND)->is_sent   = false;\
-  (WND)->packet.size = 0;\
+  (WND)->packet.size = 0U;\
 } while (0)
 
 #define wnd_get_data(WND)\

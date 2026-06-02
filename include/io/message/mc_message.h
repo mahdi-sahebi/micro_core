@@ -7,7 +7,7 @@
 #include "io/io.h"
 #include "io/communication/mc_communication.h"
 
-typedef struct _mc_msg mc_msg;
+typedef struct mc_msg_impl mc_msg;
 typedef uint16_t mc_msg_id;
 typedef void (*mc_msg_cb_receive)(mc_msg_id, mc_buffer);
 
@@ -21,7 +21,7 @@ typedef struct
 }mc_msg_cfg;
 
 #define mc_msg_cfg(IO, RECV_WND, SEND_WND, POOL_SIZE, IDS_CAPACITY)\
-  (mc_msg_cfg){.io = (IO), .recv = (RECV_WND), .send = (SEND_WND), .pool_size = (POOL_SIZE), . ids_capacity = (IDS_CAPACITY)}
+  (mc_msg_cfg){.io = (IO), .recv = (RECV_WND), .send = (SEND_WND), .pool_size = (POOL_SIZE), .ids_capacity = (IDS_CAPACITY)}
 
 
 mc_u32  mc_msg_req_size   (mc_msg_cfg config);
