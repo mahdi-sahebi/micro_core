@@ -28,10 +28,23 @@ jobs:
 
       - name: Configure
         run: |
+          set -e
+          # The tag IS the full version string, e.g. "0.0.0-dev" or "1.0.5".
+          # Split into the <version> core and the optional <suffix> on the
+          # first '-' so MC_VERSIONED_NAME() reproduces the tag verbatim:
+          #   tag 0.0.0-dev -> version 0.0.0, suffix -dev
+          #   tag 1.0.5     -> version 1.0.5, suffix (empty)
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG%%-*}"
+          case "$TAG" in
+            *-*) SUFFIX="-${TAG#*-}" ;;
+            *)   SUFFIX="" ;;
+          esac
+          echo "Version=$VERSION Suffix=$SUFFIX"
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DPROJECT_VERSION=${{ github.ref_name }} \
-            -DPROJECT_VERSION_SUFFIX=""
+            -DPROJECT_VERSION="$VERSION" \
+            -DPROJECT_VERSION_SUFFIX="$SUFFIX"
 
       - name: Build
         run: cmake --build build --parallel
@@ -67,30 +80,28 @@ jobs:
         run: |
           set -e
           TAG="${{ github.ref_name }}"
-          ARCH="${{ matrix.arch }}"
-          ROOT="mcore-${ARCH}-${TAG}"
-          mkdir -p "$ROOT"
+          OUT="staging"
+          mkdir -p "$OUT"
 
           # CMake's MC_VERSIONED_NAME() produced files named
-          # lib<name>-<arch>-<tag>.a and test_<name>-<arch>-<tag> under
-          # build/src/<module>/ and build/test/<module>/. Preserve that
-          # tree under the per-arch root so each architecture ships as its
-          # own self-contained tarball.
-          (cd build && find src  -type f -name "lib*-*-${TAG}.a"  -exec cp --parents {} "../$ROOT/" \;)
-          (cd build && find test -type f -name "test_*-*-${TAG}"  -exec cp --parents {} "../$ROOT/" \;)
+          # lib<name>-<arch>-<tag>.a under build/src/<module>/, where <tag> is
+          # the full version string (e.g. 0.0.0-dev). Collect each library as
+          # an individual file so it lands as its own release asset; the arch
+          # is already embedded in the name, so the flat layout never collides.
+          (cd build && find src -type f -name "lib*-*-${TAG}.a" -exec cp {} "../$OUT/" \;)
 
-          echo "Staged tree:"
-          find "$ROOT" -type f | sort
-
-          tar -czf "${ROOT}.tar.gz" "$ROOT"
-          echo "Archive:"
-          ls -la "${ROOT}.tar.gz"
+          echo "Staged files:"
+          ls -la "$OUT"
+          if [ -z "$(ls -A "$OUT")" ]; then
+            echo "::error::No versioned library files found for tag ${TAG}" >&2
+            exit 1
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: mcore-${{ matrix.arch }}-${{ github.ref_name }}
-          path: mcore-${{ matrix.arch }}-${{ github.ref_name }}.tar.gz
+          path: staging/*.a
           if-no-files-found: error
 
   release:
@@ -116,7 +127,7 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*.tar.gz
+          files: artifacts/*.a
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
