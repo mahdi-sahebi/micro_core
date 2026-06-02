@@ -26,61 +26,61 @@ static int invalid_creation()
   char memory[100];
   mc_msg_cfg config = {0};
   
-  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 0), mc_comm_wnd(100, 100), 50, 5);
-  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(0, 100), mc_comm_wnd(100, 100), 50, 5);
-  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(0, 100), 50, 5);
-  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 0), 50, 5);
-  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(NULL, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
-  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, NULL), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
-  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(memory, sizeof(memory)), config);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
-  result = mc_msg_init(mc_buffer(memory, 0), config);
+  result = mc_msg_init(mc_buffer_char(memory, 0), config);
   if (MC_ERR_BAD_ALLOC != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
-  result = mc_msg_init(mc_buffer(NULL, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(NULL, sizeof(memory)), config);
   if (MC_ERR_BAD_ALLOC != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 100), mc_comm_wnd(100, 100), 50, 5);
-  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(memory, sizeof(memory)), config);
   if (MC_ERR_BAD_ALLOC != result.error) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -101,7 +101,7 @@ static int invalid_argument()
   mc_err error;
   char temp[10];
   char alloc_temp[250];
-  mc_buffer alloc_buffer = mc_buffer(alloc_temp, result_u32.value);
+  mc_buffer alloc_buffer = mc_buffer_char(alloc_temp, result_u32.value);
   
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1), 0, 1);
   result_u32 = mc_msg_req_size(config);
@@ -124,28 +124,28 @@ static int invalid_argument()
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1), 7, 1);
-  result_ptr = mc_msg_init(mc_buffer(alloc_temp, 0), config);
+  result_ptr = mc_msg_init(mc_buffer_char(alloc_temp, 0), config);
   if ((MC_ERR_BAD_ALLOC != result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_RUNTIME;
   }
-  result_ptr = mc_msg_init(mc_buffer(NULL, sizeof(alloc_temp)), config);
+  result_ptr = mc_msg_init(mc_buffer_char(NULL, sizeof(alloc_temp)), config);
   if ((MC_ERR_BAD_ALLOC != result_ptr.error) || (NULL != result_ptr.data)) {
     return MC_ERR_RUNTIME;
   }
 
   config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1), 10, 0);
   result_u32 = mc_msg_req_size(config);
-  result_ptr = mc_msg_init(mc_buffer(alloc_temp, result_u32.value), config);
+  result_ptr = mc_msg_init(mc_buffer_char(alloc_temp, result_u32.value), config);
   if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data)) {
     return MC_ERR_RUNTIME;
   }
   mc_msg* const msg = result_ptr.data;
 
-  result_u32 = mc_msg_send(NULL, mc_buffer(temp, sizeof(temp)), 400, 100);
+  result_u32 = mc_msg_send(NULL, mc_buffer_char(temp, sizeof(temp)), 400, 100);
   if ((MC_ERR_INVALID_ARGUMENT != result_u32.error) || (0 != result_u32.value)) {
     return MC_ERR_RUNTIME;
   }
-  result_u32 = mc_msg_send(msg, mc_buffer(NULL, sizeof(temp)), 400, 100);
+  result_u32 = mc_msg_send(msg, mc_buffer_char(NULL, sizeof(temp)), 400, 100);
   if ((MC_SUCCESS == result_u32.error) || (0 != result_u32.value)) {
     return MC_ERR_RUNTIME;
   }
@@ -202,7 +202,7 @@ static int valid_creation()
   char memory[2048];
 
   mc_msg_cfg config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(100, 3), mc_comm_wnd(50, 2), 200, 15);
-  result = mc_msg_init(mc_buffer(memory, sizeof(memory)), config);
+  result = mc_msg_init(mc_buffer_char(memory, sizeof(memory)), config);
   if ((MC_SUCCESS != result.error) || (NULL == result.data)) {
     return MC_ERR_BAD_ALLOC;
   }
@@ -217,9 +217,9 @@ static int singly_direction()
   uint32_t snd_error = MC_SUCCESS;
   uint32_t rcv_error = MC_SUCCESS;
 
-  if (pthread_create(&task_snd, NULL, snd_start, &snd_error) || 
+  if (pthread_create(&task_snd, NULL, snd_start, &snd_error) ||
       pthread_create(&task_rcv, NULL, rcv_start, &rcv_error)) {
-    MC_ERR_BAD_ALLOC;
+    return MC_ERR_BAD_ALLOC;
   }
 
   if (pthread_join(task_snd, NULL) || 
@@ -274,7 +274,7 @@ static int singly_timed_out()
   char alloc_buffer[250];
   mc_msg_cfg config = mc_msg_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1), 10, 0);
   mc_u32 result_u32 = mc_msg_req_size(config);
-  const mc_ptr result = mc_msg_init(mc_buffer(alloc_buffer, result_u32.value), config);
+  const mc_ptr result = mc_msg_init(mc_buffer_char(alloc_buffer, result_u32.value), config);
   if (MC_SUCCESS != result.error) {
     return result.error;
   }
@@ -282,7 +282,7 @@ static int singly_timed_out()
 
 
   char temp[100];
-  const mc_buffer temp_buffer = mc_buffer(temp, sizeof(temp));
+  const mc_buffer temp_buffer = mc_buffer_char(temp, sizeof(temp));
   result_u32 = mc_msg_send(msg, temp_buffer, 400, 10);
   if ((MC_ERR_TIMEOUT != result_u32.error) || (result_u32.value == sizeof(temp))) {
     return MC_ERR_RUNTIME;
@@ -308,6 +308,7 @@ int main()
     result = invalid_creation();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -320,6 +321,7 @@ int main()
     result = invalid_argument();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -332,6 +334,7 @@ int main()
     result = valid_creation();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -343,6 +346,7 @@ int main()
     result = singly_direction();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -354,6 +358,7 @@ int main()
     result = singly_repetitive();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -365,6 +370,7 @@ int main()
     result = singly_low_lossy();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -376,6 +382,7 @@ int main()
     result = singly_high_lossy();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -387,6 +394,7 @@ int main()
     result = singly_timed_out();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }

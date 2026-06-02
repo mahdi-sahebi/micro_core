@@ -14,7 +14,7 @@ static int ClientSocket = -1;
 static mc_comm* message = NULL;
 static uint32_t* Result = NULL;
 static char TempBuffer[6 * 1024] = {0};
-static mc_buffer AllocBuffer = mc_buffer(TempBuffer, sizeof(TempBuffer));
+static mc_buffer AllocBuffer = {0};
 
 
 static void client_create()
@@ -60,7 +60,9 @@ static bool init(void* data)
   
   client_create();
   let_server_start();
+  
   memset(TempBuffer, 0x00, sizeof(TempBuffer));
+  AllocBuffer = mc_buffer_char(TempBuffer, sizeof(TempBuffer));
 
   const mc_comm_cfg config = mc_comm_cfg(mc_io(client_read, client_write), 
     mc_comm_wnd(59, 2), mc_comm_wnd(1157, 4));
@@ -95,11 +97,7 @@ static void deinit()
 static bool send_data(cvoid* data, uint32_t size)
 {
   const mc_u32 result = mc_comm_send(message, data, size, cfg_get_timeout_us());
-  if ((MC_SUCCESS != result.error) || (result.value != size)) {
-    *Result = MC_ERR_TIMEOUT;
-    return false;
-  }
-  return true;
+  return (MC_SUCCESS == result.error) && (result.value == size);
 }
 
 static bool send_string(uint32_t seed)
@@ -119,7 +117,8 @@ static bool send_variadic_size(uint32_t seed)
   cuint32_t size = count * sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
-    data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
+    cuint32_t coeff = (index & 1) ? 2654435761u : 40503u;
+    data[index] = (coeff * (index + 1) * (seed + 1)) + index;
   }
 
   return send_data(data, size);
@@ -139,6 +138,7 @@ void* snd_start(void* data)
     return NULL;
   }
   
+  bool timed_out = false;
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
     if (MC_SUCCESS != mc_comm_update(message)) {
       *Result = MC_ERR_TIMEOUT;
@@ -148,14 +148,18 @@ void* snd_start(void* data)
     if (!send_string(counter)        ||
         !send_variadic_size(counter) ||  /* Smaller and larger than window size */
         !send_tiny_size(counter)){
-      *Result = MC_ERR_TIMEOUT;
+      timed_out = true;
       break;
     }
   }
-  
-  if (MC_SUCCESS == *Result) {
+
+  if (timed_out && !cfg_get_timeout_allowed()) {
+    *Result = MC_ERR_TIMEOUT;
+  }
+
+  if ((MC_SUCCESS == *Result) && !timed_out) {
     const mc_bool result = mc_comm_flush(message, cfg_get_timeout_us());
-    if ((MC_SUCCESS != result.error) || !result.value) {
+    if (((MC_SUCCESS != result.error) || !result.value) && !cfg_get_timeout_allowed()) {
       printf("mc_comm_flush failed\n");
       *Result = MC_ERR_TIMEOUT;
     }

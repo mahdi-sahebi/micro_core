@@ -6,7 +6,7 @@
 #include "alg/mc_buffer.h"
 #include "io/io.h"
 
-typedef struct _mc_comm_t mc_comm;
+typedef struct mc_comm_impl mc_comm;
 
 typedef struct
 {
@@ -15,7 +15,7 @@ typedef struct
 }mc_comm_wnd;
 
 #define mc_comm_wnd(SIZE, CAPACITY)\
-  (mc_comm_wnd){.size = (SIZE), .capacity = (CAPACITY)}
+  (mc_comm_wnd){.size = (uint16_t)(SIZE), .capacity = (uint8_t)(CAPACITY)}
 
 typedef struct
 {

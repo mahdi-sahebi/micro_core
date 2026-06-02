@@ -11,7 +11,7 @@ not fragmentable
 #include <alg/mc_buffer.h>
 
 
-typedef struct _mc_memlin mc_memlin;
+typedef struct mc_memlin_impl mc_memlin;
 
 
 // TODO(MN): warn_unused_result attribute for alloc memory APIs

@@ -25,3 +25,7 @@ target_include_directories(${LIB}
 # Linking
 target_link_libraries(${LIB}
 )
+
+
+# Versioning
+MC_VERSIONED_NAME(${LIB})

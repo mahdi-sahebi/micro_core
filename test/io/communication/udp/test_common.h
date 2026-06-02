@@ -29,6 +29,8 @@ uint32_t cfg_get_recv_failed_counter();
 uint32_t cfg_get_send_failed_counter();
 void     cfg_set_timeout_us(uint32_t timeout_us);
 uint32_t cfg_get_timeout_us();
+void     cfg_set_timeout_allowed(bool allowed);
+bool     cfg_get_timeout_allowed();
 
 
 #endif /* MC_TEST_COMMUNICATION_UDP_COMMON_H_ */

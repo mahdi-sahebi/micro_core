@@ -7,16 +7,16 @@
 #include "mc_frame.h"
 
 
-struct _mc_comm_t
-{ 
+struct mc_comm_impl
+{
   mc_frame* rcv;// TODO(MN): Use array to reduce one pointer size
   mc_frame* snd;
   mc_io     io;
   uint32_t  send_delay_us;// TODO(MN): Use u16 with 100X us resolution
 };
 
-#define MAX_SEND_TIME_US    1000000
-#define MIN_SEND_TIME_US    100
+#define MAX_SEND_TIME_US    1000000U
+#define MIN_SEND_TIME_US    100U
 // TODO(MN): Move to math module
 #define MIN(A, B)           ((A) <= (B) ? (A) : (B))
 #define MAX(A, B)           ((A) >= (B) ? (A) : (B))

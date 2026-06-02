@@ -16,7 +16,7 @@ static int ServerSocket = -1;
 static uint32_t* Result = NULL;
 static mc_comm* message = NULL;
 static char TempBuffer[5 * 1024] = {0};
-static mc_buffer AllocBuffer = mc_buffer(TempBuffer, sizeof(TempBuffer));
+static mc_buffer AllocBuffer = {0};
 static mc_time_t BeginTime = 0;
 static mc_time_t EndTime = 0;
 
@@ -95,7 +95,9 @@ static bool init(void* data)
 
   server_create();
   flush_receive_buffer();
+  
   memset(TempBuffer, 0x00, sizeof(TempBuffer));
+  AllocBuffer = mc_buffer_char(TempBuffer, sizeof(TempBuffer));
 
   const mc_comm_cfg config = mc_comm_cfg(mc_io(server_read, server_write),
     mc_comm_wnd(1157, 3), mc_comm_wnd(59, 1));
@@ -164,12 +166,7 @@ static bool recv_data(void* data, uint32_t size)
 {
   const mc_u32 result = mc_comm_recv(message, data, size, cfg_get_timeout_us());
 
-  if((MC_SUCCESS != result.error) || (result.value != size)) {
-    *Result = MC_ERR_TIMEOUT;
-    return false;
-  }
-
-  return true;
+  return (MC_SUCCESS == result.error) && (result.value == size);
 }
 
 static bool recv_string(uint32_t seed)
@@ -178,16 +175,20 @@ static bool recv_string(uint32_t seed)
   cuint32_t size = sizeof(data);
   
   if (!recv_data(data, size)) {
-    printf("[ERR Data 1] Incomplete receiving\n");
+    if (!cfg_get_timeout_allowed()) {
+      printf("[ERR Data 1] Incomplete receiving\n");
+    }
     return false;
   }
 
   if (0 != memcmp(&data[0], "!p", 2)) {
+    *Result = MC_ERR_RUNTIME;
     printf("[ERR Data 1] wrong data received\n");
     return false;
   }
 
   if (0 != memcmp(&data[5], ".?I", 3)) {
+    *Result = MC_ERR_RUNTIME;
     printf("[ERR Data 1] wrong data received\n");
     return false;
   }
@@ -195,6 +196,7 @@ static bool recv_string(uint32_t seed)
   char num_text[4] = {0};
   sprintf(num_text, "%03u", seed % 1000);
   if (0 != memcmp(num_text, &data[2], 3)) {
+    *Result = MC_ERR_RUNTIME;
     printf("[ERR Data 1] wrong data received\n");
     return false;
   }
@@ -210,13 +212,17 @@ static bool recv_variadic_size(uint32_t seed)
   cuint32_t size = count * sizeof(*data);
 
   if (!recv_data(data, size)) {
-    printf("[ERR Data 2] Incomplete receiving\n");
+    if (!cfg_get_timeout_allowed()) {
+      printf("[ERR Data 2] Incomplete receiving\n");
+    }
     return false;
   }
 
   for (uint32_t index = 0; index < count; index++) {
-    cuint32_t expected = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
+    cuint32_t coeff = (index & 1) ? 2654435761u : 40503u;
+    cuint32_t expected = (coeff * (index + 1) * (seed + 1)) + index;
     if (data[index] != expected) {
+      *Result = MC_ERR_RUNTIME;
       printf("[ERR Data 2] Received: %u, Expected: %u\n", data[index], expected);
       return false;
     }
@@ -230,11 +236,14 @@ static bool recv_tiny_size(uint32_t seed)
   bool data = false;
 
   if (!recv_data(&data, sizeof(data))) {
-    printf("[ERR Data 3] Incomplete receiving\n");
+    if (!cfg_get_timeout_allowed()) {
+      printf("[ERR Data 3] Incomplete receiving\n");
+    }
     return false;
   }
 
   if ((seed & 1) != data) {
+    *Result = MC_ERR_RUNTIME;
     printf("[ERR Data 3] wrong data received\n");
     return false;
   }
@@ -248,31 +257,39 @@ void* rcv_start(void* data)
     return NULL;
   }
 
+  bool timed_out = false;
   for (uint32_t counter = 0; counter <= cfg_get_iterations(); counter++) {
     if (MC_SUCCESS != mc_comm_update(message)) {
       *Result = MC_ERR_TIMEOUT;
       break;
     }
 
-    if (!recv_string(counter)        || 
+    if (!recv_string(counter)        ||
         !recv_variadic_size(counter) || /* Smaller and larger than window size */
         !recv_tiny_size(counter)) {
-      *Result = MC_ERR_TIMEOUT;
+      timed_out = (MC_SUCCESS == *Result);
       break;
     }
-    
+
     print_progress(counter / (float)cfg_get_iterations());
   }
 
-  if (MC_SUCCESS == *Result) {
+  if (timed_out && !cfg_get_timeout_allowed()) {
+    *Result = MC_ERR_TIMEOUT;
+  }
+
+  if ((MC_SUCCESS == *Result) && !timed_out) {
     const mc_bool result = mc_comm_flush(message, cfg_get_timeout_us());
-    if ((MC_SUCCESS != result.error) || !result.value) {
+    if (((MC_SUCCESS != result.error) || !result.value) && !cfg_get_timeout_allowed()) {
       printf("mc_comm_flush failed\n");
       *Result = MC_ERR_TIMEOUT;
     }
   }
 
-  wait_for_sender();
+  EndTime = mc_now();
+  if ((MC_SUCCESS == *Result) && !timed_out) {
+    wait_for_sender();
+  }
   deinit();
   return NULL;
 }

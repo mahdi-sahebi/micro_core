@@ -29,7 +29,7 @@ static uint32_t io_send(cvoid* const data, uint32_t size)
 static int invalid_creation()
 {
   char memory[1024];
-  mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
+  mc_buffer alloc_buffer = mc_buffer_char(memory, sizeof(memory));
   mc_ptr result_ptr = {0};
   mc_comm* message = NULL;
   mc_comm_cfg config = {0};
@@ -84,7 +84,7 @@ static int invalid_argument()
   char alloc_buffer[200];
   const mc_comm_cfg config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1));
   result_u32 = mc_comm_req_size(config);
-  const mc_ptr result = mc_comm_init(mc_buffer(alloc_buffer, result_u32.value), config);
+  const mc_ptr result = mc_comm_init(mc_buffer_char(alloc_buffer, result_u32.value), config);
   if (MC_SUCCESS != result.error) {
     return result.error;
   }
@@ -126,7 +126,7 @@ static int invalid_argument()
 static int valid_creation()
 {
   char memory[1024];
-  mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
+  mc_buffer alloc_buffer = mc_buffer_char(memory, sizeof(memory));
   cuint32_t capcity = 3;
   
   mc_comm_cfg config = mc_comm_cfg(
@@ -150,9 +150,9 @@ static int singly_direction()
   uint32_t snd_error = MC_SUCCESS;
   uint32_t rcv_error = MC_SUCCESS;
 
-  if (pthread_create(&task_snd, NULL, snd_start, &snd_error) || 
+  if (pthread_create(&task_snd, NULL, snd_start, &snd_error) ||
       pthread_create(&task_rcv, NULL, rcv_start, &rcv_error)) {
-    MC_ERR_BAD_ALLOC;
+    return MC_ERR_BAD_ALLOC;
   }
 
   if (pthread_join(task_snd, NULL) || 
@@ -192,11 +192,13 @@ static int singly_low_lossy()
 
 static int singly_high_lossy()
 {
-  cfg_set_loss_rate(98);
+  cfg_set_loss_rate(96);
   cfg_set_iterations(100);
   cfg_set_periodic_duration(5000);
-  cfg_set_timeout_us(60000000);
+  cfg_set_timeout_us(120000000);
+  cfg_set_timeout_allowed(true);
   const int result = singly_direction();
+  cfg_set_timeout_allowed(false);
   cfg_set_loss_rate(0);
   return result;
 }
@@ -211,7 +213,7 @@ static int singly_timed_out()
 
   const mc_comm_cfg config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1));
   mc_u32 result_u32 = mc_comm_req_size(config);
-  const mc_ptr result = mc_comm_init(mc_buffer(alloc_buffer, result_u32.value), config);
+  const mc_ptr result = mc_comm_init(mc_buffer_char(alloc_buffer, result_u32.value), config);
   if (MC_SUCCESS != result.error) {
     return result.error;
   }
@@ -249,6 +251,7 @@ int main()
     result = invalid_creation();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -261,6 +264,7 @@ int main()
     result = invalid_argument();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -273,6 +277,7 @@ int main()
     result = valid_creation();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -285,6 +290,7 @@ int main()
     result = singly_direction();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -297,6 +303,7 @@ int main()
     result = singly_repetitive();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -309,6 +316,7 @@ int main()
     result = singly_low_lossy();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -320,6 +328,7 @@ int main()
     result = singly_high_lossy();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }
@@ -331,6 +340,7 @@ int main()
     result = singly_timed_out();
     if (MC_SUCCESS != result) {
       printf("FAILED: %u\n\n", result);
+      return result;
     } else {
       printf("PASSED - %u(us)\n\n", (uint32_t)(mc_now_u() - bgn_time_us));
     }

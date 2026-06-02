@@ -1,0 +1,125 @@
+name: Release build
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Build (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPROJECT_VERSION=${{ github.ref_name }} \
+            -DPROJECT_VERSION_SUFFIX=""
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests (x86_64 only — release gate)
+        if: matrix.arch == 'x86_64'
+        run: |
+          set -e
+          shopt -s nullglob
+          # Find every test_* executable anywhere under build/test, excluding
+          # the versioned copies (which contain '-' from name-arch-tag).
+          mapfile -d '' tests < <(find build/test -type f -name 'test_*' -executable -not -name '*-*' -print0)
+          if [ ${#tests[@]} -eq 0 ]; then
+            echo "No test executables found" >&2
+            exit 1
+          fi
+          fail=0
+          for t in "${tests[@]}"; do
+            name="$(basename "$t")"
+            echo "::group::$name"
+            if "$t"; then
+              echo "::endgroup::"
+              echo "PASS: $name"
+            else
+              echo "::endgroup::"
+              echo "::error::FAIL: $name"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Stage release artifacts
+        run: |
+          set -e
+          TAG="${{ github.ref_name }}"
+          ARCH="${{ matrix.arch }}"
+          ROOT="mcore-${ARCH}-${TAG}"
+          mkdir -p "$ROOT"
+
+          # CMake's MC_VERSIONED_NAME() produced files named
+          # lib<name>-<arch>-<tag>.a and test_<name>-<arch>-<tag> under
+          # build/src/<module>/ and build/test/<module>/. Preserve that
+          # tree under the per-arch root so each architecture ships as its
+          # own self-contained tarball.
+          (cd build && find src  -type f -name "lib*-*-${TAG}.a"  -exec cp --parents {} "../$ROOT/" \;)
+          (cd build && find test -type f -name "test_*-*-${TAG}"  -exec cp --parents {} "../$ROOT/" \;)
+
+          echo "Staged tree:"
+          find "$ROOT" -type f | sort
+
+          tar -czf "${ROOT}.tar.gz" "$ROOT"
+          echo "Archive:"
+          ls -la "${ROOT}.tar.gz"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcore-${{ matrix.arch }}-${{ github.ref_name }}
+          path: mcore-${{ matrix.arch }}-${{ github.ref_name }}.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: mcore-*
+          merge-multiple: true
+
+      - name: List release assets
+        run: |
+          echo "Release assets:"
+          find artifacts -type f | sort
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.tar.gz
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

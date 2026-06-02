@@ -135,7 +135,7 @@ static void on_large_received(mc_msg_id id, mc_buffer buffer)
   cuint32_t count = mc_buffer_get_size(buffer) / sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
-    cuint32_t expected = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (TestCounter + 1) + index;
+    cuint32_t expected = (uint32_t)(int64_t)(((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (TestCounter + 1) + index);
     if (data[index] != expected) {
       printf("[ERR Data Large] Received: %u, Expected: %u\n", data[index], expected);
       *Error = MC_ERR_RUNTIME;
@@ -203,7 +203,7 @@ static bool init(void* data)
     return false;
   }
 
-  const mc_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
+  const mc_ptr result = mc_msg_init(mc_buffer_char(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
     *Error = result.error;
     return false;
@@ -324,7 +324,9 @@ void* rcv_start(void* data)
     }
   }
 
-  wait_for_sender();
+  if (MC_SUCCESS == *Error) {
+    wait_for_sender();
+  }
   deinit();
   return NULL;
 }

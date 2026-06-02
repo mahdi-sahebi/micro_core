@@ -80,7 +80,7 @@ static bool init(void* data)
     return false;
   }
   
-  const mc_ptr result = mc_msg_init(mc_buffer(AllocBuffer, sizeof(AllocBuffer)), config);
+  const mc_ptr result = mc_msg_init(mc_buffer_char(AllocBuffer, sizeof(AllocBuffer)), config);
   if (MC_SUCCESS != result.error) {
     *Error = result.error;
     return false;
@@ -111,7 +111,7 @@ static bool send_string(uint32_t seed)
   cuint32_t size = sizeof(data);
   sprintf(data, "!p%03u.?I", seed % 1000);
 
-  return send_data(mc_buffer(data, size), 77);
+  return send_data(mc_buffer_char(data, size), 77);
 }
 
 static bool send_large_1(uint32_t seed)
@@ -120,16 +120,16 @@ static bool send_large_1(uint32_t seed)
   cuint32_t count = sizeof(data) / sizeof(*data);
 
   for (uint32_t index = 0; index < count; index++) {
-    data[index] = ((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index;
+    data[index] = (uint32_t)(int64_t)(((index & 1) ? -56374141.31 : +8644397.79) * (index + 1) * (seed + 1) + index);
   }
 
-  return send_data(mc_buffer(data, sizeof(data)), 101);
+  return send_data(mc_buffer_char(data, sizeof(data)), 101);
 }
 
 static bool send_large_2(uint32_t seed)
 {
   char data[189] = {0};
-  return send_data(mc_buffer(data, sizeof(data)), 436);
+  return send_data(mc_buffer_char(data, sizeof(data)), 436);
 }
 
 static bool send_tiny(uint32_t seed)
@@ -137,7 +137,7 @@ static bool send_tiny(uint32_t seed)
   bool data = (seed & 1);
   cuint32_t size = sizeof(data);
 
-  return send_data(mc_buffer(&data, size), 19);
+  return send_data(mc_buffer_char(&data, size), 19);
 }
 
 static bool send_signal()

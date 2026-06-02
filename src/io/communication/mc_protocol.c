@@ -16,29 +16,29 @@ static void send_ack(mc_comm* this, uint32_t id)
   pkt->header = HEADER;
   pkt->type   = PKT_ACK;
   pkt->id     = id;
-  pkt->crc    = 0x0000;
-  pkt->crc    = mc_alg_crc16_ccitt(mc_buffer(pkt, this->snd->pool.window_size)).value;
+  pkt->crc    = 0x0000U;
+  pkt->crc    = (uint16_t)mc_alg_crc16_ccitt(mc_buffer_char(pkt, this->snd->pool.window_size)).value;
 
-  io_send(this, pkt, this->snd->pool.window_size);
+  (void)io_send(this, pkt, this->snd->pool.window_size);
 }
 
 static void on_send_window_ready(const mc_buffer buffer, void* arg)
 {
   mc_comm* this = arg;
-  io_send(this, buffer.data, buffer.capacity);
+  (void)io_send(this, buffer.data, buffer.capacity);
 }
 
 static void send_stale_incomplete(mc_comm* const this)
 {
 #define WNDPOOL    this->snd->pool
   if (wndpool_has_incomplete(&WNDPOOL)) {
-    if (mc_now_m() > (WNDPOOL.update_time + FLUSH_TIMEOUT_MS)) {// TODO(MN): Update time is extra?
+    if (mc_now_m() > (WNDPOOL.update_time_ms + FLUSH_TIMEOUT_MS)) {// TODO(MN): Update time is extra?
       wnd_t* const window = wndpool_get_last(&WNDPOOL);// TODO(MN): [PR2]: Pass window, instead of get window. Called twice
       if (!window->is_sent) {
         wndpool_update_header(&WNDPOOL);
       }
 
-      io_send(this, &window->packet, WNDPOOL.window_size);
+      (void)io_send(this, &window->packet, WNDPOOL.window_size);
     }
   }
 #undef WNDPOOL
@@ -61,8 +61,9 @@ void protocol_recv(const mc_buffer buffer, void* arg)
     
     // TODO(MN): Not per ack
     cuint64_t elapsed_time = mc_now_u() - wndpool_get(&this->snd->pool, pkt->id)->sent_time_us;
-    this->send_delay_us = MIN(MAX(elapsed_time * 0.8, MIN_SEND_TIME_US), MAX_SEND_TIME_US);
-    wndpool_ack(&this->snd->pool, pkt->id);
+    /* 0.8 * elapsed, in integer arithmetic to avoid floating-point */
+    this->send_delay_us = (uint32_t)MIN(MAX((elapsed_time * 4U) / 5U, MIN_SEND_TIME_US), MAX_SEND_TIME_US);
+    (void)wndpool_ack(&this->snd->pool, pkt->id);
     return;
   }
 
@@ -71,7 +72,8 @@ void protocol_recv(const mc_buffer buffer, void* arg)
     return;// done
   }
 
-  if (wndpool_update(&this->rcv->pool, buffer, pkt->id)) {
+  if (wndpool_contains(&this->rcv->pool, pkt->id)) {
+    wndpool_update(&this->rcv->pool, buffer, pkt->id);
     send_ack(this, pkt->id);
   }
 }
@@ -99,5 +101,3 @@ void protocol_send_unacked(mc_comm* const this)
 
   send_stale_incomplete(this);
 }
-
-#undef AUTO_FLUSH_TIMEOUT_MS
