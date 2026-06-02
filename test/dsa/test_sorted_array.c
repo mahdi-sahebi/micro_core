@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include "core/error.h"
 #include "core/version.h"
@@ -10,23 +9,23 @@
 
 static float comparator_i16(cvoid* data_1, cvoid* data_2) 
 {
-  const int16_t a = *(int16_t*)data_1;
-  const int16_t b = *(int16_t*)data_2;
-  
-  return (a - b);
+  const int16_t a = *(const int16_t*)data_1;
+  const int16_t b = *(const int16_t*)data_2;
+
+  return (float)a - (float)b;
 }
 
-static float comparator_str(cvoid* a, cvoid* b) 
+static float comparator_str(cvoid* a, cvoid* b)
 {
-  return strcmp(a, b);
+  return (float)strcmp((const char*)a, (const char*)b);
 }
 
 static void fill_i16(mc_sarray array)
 {
-  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+  const uint8_t capacity = (uint8_t)mc_sarray_get_capacity(array).value;
 
-  for (uint16_t index = 0; index < capacity; index++) {
-    int16_t x = (index * 100) + 600;
+  for (uint16_t index = 0U; index < capacity; index++) {
+    int16_t x = (int16_t)((index * 100U) + 600U);
     mc_sarray_insert(array, &x);
   }
 }
@@ -72,15 +71,15 @@ static int test_required_size()
 static int test_invalid_creation()
 {
   char memory[20];
-  mc_buffer buffer = mc_buffer(memory, sizeof(memory));
+  mc_buffer buffer = mc_buffer_char(memory, sizeof(memory));
   mc_ptr result = {0};
   
-  result = mc_sarray_init(mc_buffer(NULL, 10), sizeof(int16_t), 5, comparator_i16);
+  result = mc_sarray_init(mc_buffer_char(NULL, 10), sizeof(int16_t), 5, comparator_i16);
   if (MC_ERR_INVALID_ARGUMENT != result.error) {
     return MC_ERR_RUNTIME;
   }
   
-  result = mc_sarray_init(mc_buffer(memory, 0), sizeof(int16_t), 5, comparator_i16);
+  result = mc_sarray_init(mc_buffer_char(memory, 0), sizeof(int16_t), 5, comparator_i16);
   if (MC_ERR_BAD_ALLOC != result.error) {
     return result.error;
   }
@@ -100,7 +99,7 @@ static int test_invalid_creation()
     return result.error;
   }
   
-  result = mc_sarray_init(mc_buffer(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16);
+  result = mc_sarray_init(mc_buffer_char(memory, sizeof(memory)), sizeof(int16_t), 10, comparator_i16);
   if ((MC_ERR_BAD_ALLOC != result.error) || (NULL != result.data)) {
     return result.error;
   }
@@ -113,7 +112,7 @@ static int test_correct_creation_i16()
   int16_t memory[25];
   
   mc_ptr result_ptr = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)),
+    mc_buffer_char(memory, sizeof(memory)),
     sizeof(int16_t), 
     10, 
     comparator_i16);
@@ -147,7 +146,7 @@ static int test_correct_creation_str()
   mc_u32 result_u32 = {0};
   
   result_ptr = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     10, 
     1, 
     comparator_str);
@@ -178,10 +177,9 @@ static int test_empty()
 {
   int16_t memory[25];
   mc_bool result_bool = {0};
-  mc_ptr result_ptr = {0};
-  
+
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
@@ -220,7 +218,7 @@ static int test_insert_on_empty()
   int16_t memory[25];
   
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
@@ -249,22 +247,22 @@ static int test_insert_ascending()
 {
   uint16_t memory[25];
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
 
-  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+  const uint8_t capacity = (uint8_t)mc_sarray_get_capacity(array).value;
 
-  for (uint16_t index = 0; index < capacity; index++) {
-    int16_t x = (index * 100) + 600;
+  for (uint16_t index = 0U; index < capacity; index++) {
+    int16_t x = (int16_t)((index * 100U) + 600U);
     
     mc_err result = mc_sarray_insert(array, &x);
     if (MC_SUCCESS != result) {
       return result;
     }
 
-    if ((index + 1) != mc_sarray_get_count(array).value) {
+    if ((uint32_t)(index + 1) != mc_sarray_get_count(array).value) {
       return MC_ERR_BAD_ALLOC;
     }
 
@@ -284,21 +282,21 @@ static int test_insert_descending()
 {
   uint16_t memory[25];
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
 
-  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+  const uint8_t capacity = (uint8_t)mc_sarray_get_capacity(array).value;
 
-  for (uint16_t index = 0; index < capacity; index++) {
-    int16_t x = -index * 10;
+  for (uint16_t index = 0U; index < capacity; index++) {
+    int16_t x = (int16_t)(-(int32_t)index * 10);
     mc_err result = mc_sarray_insert(array, &x);
     if (MC_SUCCESS != result) {
       return result;
     }
 
-    if ((index + 1) != mc_sarray_get_count(array).value) {
+    if ((uint32_t)(index + 1) != mc_sarray_get_count(array).value) {
       return MC_ERR_BAD_ALLOC;
     }
 
@@ -318,21 +316,21 @@ static int test_insert_not_ordered()
 {
   uint16_t memory[25];
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
 
-  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+  const uint8_t capacity = (uint8_t)mc_sarray_get_capacity(array).value;
   int16_t nums[] = {7, 19, 0, 9, -5, 67, 3, 4, -8, -8};
 
-  for (uint16_t index = 0; index < capacity; index++) {
+  for (uint16_t index = 0U; index < capacity; index++) {
     mc_err result = mc_sarray_insert(array, &nums[index]);
     if (MC_SUCCESS != result) {
       return result;
     }
 
-    if ((index + 1) != mc_sarray_get_count(array).value) {
+    if ((uint32_t)(index + 1) != mc_sarray_get_count(array).value) {
       return MC_ERR_BAD_ALLOC;
     }
 
@@ -353,7 +351,7 @@ static int test_insert_on_full()
   int16_t memory[25];
   
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
@@ -372,24 +370,23 @@ static int test_insert_on_full()
 
 static int test_get()
 {
-  mc_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
   uint16_t memory[25];
 
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
   fill_i16(array);  
-  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+  const uint8_t capacity = (uint8_t)mc_sarray_get_capacity(array).value;
 
-  for (uint8_t index = 0; index < capacity; index++) {
+  for (uint8_t index = 0U; index < capacity; index++) {
     const mc_ptr result = mc_sarray_get(array, index);
     if ((MC_SUCCESS != result.error) || (NULL == result.data)){
       return result.error;
     }
     
-    const int16_t x = (index * 100) + 600;
+    const int16_t x = (int16_t)((index * 100U) + 600U);
     if (x != *(int16_t*)result.data) {
       return MC_ERR_OUT_OF_RANGE;
     }
@@ -400,16 +397,15 @@ static int test_get()
 
 static int test_remove()
 {
-  mc_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
   uint16_t memory[25];
 
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
   fill_i16(array); 
-  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+  const uint8_t capacity = (uint8_t)mc_sarray_get_capacity(array).value;
 
   uint8_t index = capacity;
   while (index--) {
@@ -437,20 +433,19 @@ static int test_remove()
 
 static int test_find()
 {
-  mc_u32 size_res = mc_sarray_required_size(sizeof(int16_t), 10);
   uint16_t memory[25];
 
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
   fill_i16(array); 
-  const uint8_t capacity = mc_sarray_get_capacity(array).value;
+  const uint8_t capacity = (uint8_t)mc_sarray_get_capacity(array).value;
 
   uint8_t index = capacity;
   while (index--) {
-    int16_t x = (index * 100) + 600;
+    int16_t x = (int16_t)((index * 100U) + 600U);
     mc_ptr result_ptr = mc_sarray_find(array, &x);
     if ((MC_SUCCESS != result_ptr.error) || (NULL == result_ptr.data) || 
         (x != *((int16_t*)result_ptr.data))) {
@@ -479,7 +474,7 @@ static int test_clear_when_empty()
 {
   int16_t memory[25];
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
@@ -500,7 +495,7 @@ static int test_clear()
 {
   int16_t memory[25];
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
@@ -525,7 +520,7 @@ static int test_clear_when_full()
 {
   int16_t memory[25];
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
@@ -549,7 +544,7 @@ static int test_remove_when_empty()
   int16_t memory[25];
   
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
@@ -564,7 +559,7 @@ static int test_remove_when_empty()
     return result;
   }
 
-  result = mc_sarray_remove_at(array, -1);
+  result = mc_sarray_remove_at(array, UINT32_MAX);
   if (MC_ERR_OUT_OF_RANGE != result) {
     return result;
   }
@@ -581,13 +576,13 @@ static int test_remove_descending()
   int16_t memory[25];
   
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
   fill_i16(array);
 
-  uint8_t index = mc_sarray_get_capacity(array).value;
+  uint8_t index = (uint8_t)mc_sarray_get_capacity(array).value;
   while (index--) {
     mc_err result = mc_sarray_remove_at(array, index);
     if (MC_ERR_OUT_OF_RANGE != result) {
@@ -603,13 +598,13 @@ static int test_remove_ascending()
   int16_t memory[25];
   
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
   fill_i16(array);
 
-  uint8_t index = mc_sarray_get_capacity(array).value;
+  uint8_t index = (uint8_t)mc_sarray_get_capacity(array).value;
   while (index--) {
     mc_err result = mc_sarray_remove_at(array, 0);
     if (MC_ERR_OUT_OF_RANGE != result) {
@@ -625,13 +620,13 @@ static int test_remove_middle()
   int16_t memory[25];
   
   mc_sarray array = mc_sarray_init(
-    mc_buffer(memory, sizeof(memory)), 
+    mc_buffer_char(memory, sizeof(memory)), 
     sizeof(int16_t), 
     10, 
     comparator_i16).data;
   fill_i16(array);
 
-  uint8_t index = mc_sarray_get_capacity(array).value;
+  uint8_t index = (uint8_t)mc_sarray_get_capacity(array).value;
   while (index--) {
     cuint32_t mid = (mc_sarray_get_count(array).value - 1) / 2;
     mc_err result = mc_sarray_remove_at(array, mid);
@@ -643,11 +638,11 @@ static int test_remove_middle()
   return MC_SUCCESS;
 }
 
-int main()
+int main(void)
 {
   printf("[MICRO CORE - DSA - SORTED_ARRAY - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
-  uint32_t test_count = 0;
-  uint32_t test_failed_count = 0;
+  uint32_t test_count = 0U;
+  uint32_t test_failed_count = 0U;
 
   test_required_size();
 
@@ -911,10 +906,10 @@ int main()
     }
   }
 
-  if (0 != test_count) {
+  if (0U != test_count) {
     printf("%u Tests ran, %u tests failed\n", test_count, test_failed_count);
-    if (0 != test_failed_count) {
-      printf("#%d Tests failed\n", test_failed_count);
+    if (0U != test_failed_count) {
+      printf("#%u Tests failed\n", test_failed_count);
       return MC_ERR_RUNTIME;
     }
 

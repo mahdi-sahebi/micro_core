@@ -1,0 +1,68 @@
+# cppcheck suppression list for the micro_core ASIL-C MISRA gate.
+#
+# Every entry here is a FORMAL DEVIATION and MUST have a matching record in
+# doc/safety/deviation_records.md (ISO 26262-6 requires documented deviations
+# for any non-compliance against Required/Advisory rules; Mandatory rules may
+# NOT be deviated and must never appear here).
+#
+# Format (one per line):
+#   <cppcheck-id>:<file>:<line>      scoped suppression (preferred)
+#   <cppcheck-id>                    project-wide suppression (use sparingly)
+#
+# --- Infrastructure noise (not safety-relevant) -------------------------------
+# cppcheck cannot resolve every system header in all sandboxes.
+missingIncludeSystem
+# Unmatched suppressions must not fail the run (entries may not trigger on all TUs).
+unmatchedSuppression
+# checkersReport is informational only.
+checkersReport
+
+# --- Documented MISRA deviations ---------------------------------------------
+# See doc/safety/deviation_records.md for the rationale, risk assessment and
+# safety impact of each rule listed below. Add scoped entries as remediation
+# progresses; the goal is to drive this list to empty for Required rules.
+#
+# DEV-001 — Rule 5.5: result/aggregate constructor macros share their type's name.
+misra-c2012-5.5:include/core/error.h
+misra-c2012-5.5:include/alg/mc_buffer.h
+misra-c2012-5.5:include/io/communication/mc_communication.h
+misra-c2012-5.5:include/io/io.h
+misra-c2012-5.5:include/io/message/mc_message.h
+misra-c2012-5.5:include/pattern/mc_chain.h
+
+# DEV-002 — Rule 18.7: flexible array members for in-buffer element storage.
+misra-c2012-18.7:src/dsa/memory/memlin.c
+misra-c2012-18.7:src/dsa/sarray.c
+misra-c2012-18.7:src/dsa/rbtree.c
+misra-c2012-18.7:include/pattern/mc_chain.h
+misra-c2012-18.7:src/io/communication/mc_window.h
+misra-c2012-18.7:src/io/communication/mc_window_pool.h
+misra-c2012-18.7:src/io/message/mc_message.c
+
+# DEV-003 — Rule 5.6: repeated local dispatch-callback typedef.
+misra-c2012-5.6:src/dsa/memory/memlin.c
+
+# DEV-004 — Rule 11.3: cast of caller buffer to typed container header at init.
+misra-c2012-11.3:src/dsa/memory/memlin.c
+misra-c2012-11.3:src/dsa/sarray.c
+misra-c2012-11.3:src/dsa/rbtree.c
+misra-c2012-11.3:src/dsa/priority_queue.c
+misra-c2012-11.3:src/pattern/mc_chain.c
+misra-c2012-11.3:src/io/communication/mc_communication.c
+misra-c2012-11.3:src/io/communication/mc_frame.c
+misra-c2012-11.3:src/io/communication/mc_protocol.c
+misra-c2012-11.3:src/io/communication/mc_window_pool.c
+misra-c2012-11.3:src/io/message/mc_message.c
+
+# DEV-006 — Rule 11.9: cppcheck cannot always resolve <stddef.h> NULL inside
+# headers, mis-flagging correct `== NULL` comparisons as integer-constant nulls.
+misra-c2012-11.9:include/alg/mc_buffer.h
+misra-c2012-11.9:src/dsa/memory/memlin.c
+misra-c2012-11.9:src/io/message/mc_message.c
+
+# DEV-007 — Rule 21.1: defining the _DEFAULT_SOURCE feature-test macro (reserved)
+# is the documented, required way to expose POSIX declarations on glibc.
+misra-c2012-21.1:src/io/communication/mc_communication.c
+
+# Example (commented; uncomment + document before use):
+# misra-c2012-15.5:src/dsa/memory/memlin.c   # DEV-001 single-point-of-exit

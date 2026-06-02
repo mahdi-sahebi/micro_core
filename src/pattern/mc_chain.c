@@ -4,23 +4,23 @@
 
 mc_u32 mc_chain_get_alloc_size(uint8_t capacity)
 {
-  if (0 == capacity) {
-    return mc_u32(0, MC_ERR_INVALID_ARGUMENT);
+  if (0U == capacity) {
+    return mc_u32(0U, MC_ERR_INVALID_ARGUMENT);
   }
 
-  cuint32_t size = sizeof(mc_chain) + (sizeof(mc_chain_node) * capacity);
+  cuint32_t size = (uint32_t)(sizeof(mc_chain) + (sizeof(mc_chain_node) * capacity));
   return mc_u32(size, MC_SUCCESS);
 }
 
 mc_ptr mc_chain_init(mc_buffer alloc_buffer, uint8_t capacity)
 {
-  if (mc_buffer_is_null(alloc_buffer) || mc_buffer_is_empty(alloc_buffer) || (0 == capacity)) {
+  if (mc_buffer_is_null(alloc_buffer) || mc_buffer_is_empty(alloc_buffer) || (0U == capacity)) {
     return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
   }
 
   mc_chain* this = (mc_chain*)alloc_buffer.data;
   this->capacity = capacity;
-  this->count = 0;
+  this->count = 0U;
   return mc_ptr(this, MC_SUCCESS);
 }
 
@@ -30,7 +30,7 @@ mc_err mc_chain_clear(mc_chain* this)
     return MC_ERR_INVALID_ARGUMENT;
   }
 
-  this->count = 0;
+  this->count = 0U;
   return MC_SUCCESS;
 }
 
@@ -53,7 +53,7 @@ mc_err mc_chain_push(mc_chain* this, mc_cb_chain api, void* arg)
   return MC_SUCCESS;
 }
 
-mc_chain_data mc_chain_run(mc_chain* this, mc_buffer buffer)
+mc_chain_data mc_chain_run(const mc_chain* this, mc_buffer buffer)
 {
   if (NULL == this) {
     return mc_chain_data_error(MC_ERR_INVALID_ARGUMENT);
@@ -61,8 +61,8 @@ mc_chain_data mc_chain_run(mc_chain* this, mc_buffer buffer)
 
   mc_chain_data data = mc_chain_data(buffer, MC_SUCCESS);
 
-  for (uint8_t index = 0; (index < this->count) && (MC_SUCCESS == data.error); index++) {
-    mc_chain_node* const node = &this->nodes[index];
+  for (uint8_t index = 0U; (index < this->count) && (MC_SUCCESS == data.error); index++) {
+    const mc_chain_node* const node = &this->nodes[index];
     data = node->api(data.buffer, node->arg);
   }
 

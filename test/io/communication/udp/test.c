@@ -29,7 +29,7 @@ static uint32_t io_send(cvoid* const data, uint32_t size)
 static int invalid_creation()
 {
   char memory[1024];
-  mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
+  mc_buffer alloc_buffer = mc_buffer_char(memory, sizeof(memory));
   mc_ptr result_ptr = {0};
   mc_comm* message = NULL;
   mc_comm_cfg config = {0};
@@ -84,7 +84,7 @@ static int invalid_argument()
   char alloc_buffer[200];
   const mc_comm_cfg config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1));
   result_u32 = mc_comm_req_size(config);
-  const mc_ptr result = mc_comm_init(mc_buffer(alloc_buffer, result_u32.value), config);
+  const mc_ptr result = mc_comm_init(mc_buffer_char(alloc_buffer, result_u32.value), config);
   if (MC_SUCCESS != result.error) {
     return result.error;
   }
@@ -126,7 +126,7 @@ static int invalid_argument()
 static int valid_creation()
 {
   char memory[1024];
-  mc_buffer alloc_buffer = mc_buffer(memory, sizeof(memory));
+  mc_buffer alloc_buffer = mc_buffer_char(memory, sizeof(memory));
   cuint32_t capcity = 3;
   
   mc_comm_cfg config = mc_comm_cfg(
@@ -213,7 +213,7 @@ static int singly_timed_out()
 
   const mc_comm_cfg config = mc_comm_cfg(mc_io(io_recv, io_send), mc_comm_wnd(15, 1), mc_comm_wnd(15, 1));
   mc_u32 result_u32 = mc_comm_req_size(config);
-  const mc_ptr result = mc_comm_init(mc_buffer(alloc_buffer, result_u32.value), config);
+  const mc_ptr result = mc_comm_init(mc_buffer_char(alloc_buffer, result_u32.value), config);
   if (MC_SUCCESS != result.error) {
     return result.error;
   }

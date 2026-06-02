@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "core/error.h"
@@ -10,7 +9,7 @@ static int span_create()
 {
     mc_buffer span = mc_buffer_null();
 
-    if (&span == NULL) {
+    if (NULL != span.data) {
         return MC_ERR_BAD_ALLOC;
     }
 
@@ -48,7 +47,7 @@ static int span_fill_1()
     char buffer[SIZE];
     memset(buffer, CLEAR_MASK, sizeof(buffer));
 
-    mc_buffer span = mc_buffer(buffer + START_INDEX, 20);
+    mc_buffer span = mc_buffer_char(buffer + START_INDEX, 20);
 
     if (mc_buffer_is_null(span)) {
         return MC_ERR_BAD_ALLOC;
@@ -95,7 +94,7 @@ static int span_fill_2()
     char buffer[SIZE];
     memset(buffer, CLEAR_MASK, sizeof(buffer));
 
-    mc_buffer span = mc_buffer(buffer + START_INDEX, 7);
+    mc_buffer span = mc_buffer_char(buffer + START_INDEX, 7);
 
     if (mc_buffer_is_null(span)) {
         return MC_ERR_BAD_ALLOC;
@@ -133,7 +132,7 @@ static int span_fill_2()
 #undef SIZE
 }
 
-int main()
+int main(void)
 {
     printf("[MICRO CORE - DSA - SPAN - VERSION]: %u.%u.%u\n", MC_VERSION_MAJOR, MC_VERSION_MINOR, MC_VERSION_PATCH);
 

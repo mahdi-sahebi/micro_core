@@ -14,7 +14,7 @@ static int ClientSocket = -1;
 static mc_comm* message = NULL;
 static uint32_t* Result = NULL;
 static char TempBuffer[6 * 1024] = {0};
-static mc_buffer AllocBuffer = mc_buffer(TempBuffer, sizeof(TempBuffer));
+static mc_buffer AllocBuffer = {0};
 
 
 static void client_create()
@@ -60,7 +60,9 @@ static bool init(void* data)
   
   client_create();
   let_server_start();
+  
   memset(TempBuffer, 0x00, sizeof(TempBuffer));
+  AllocBuffer = mc_buffer_char(TempBuffer, sizeof(TempBuffer));
 
   const mc_comm_cfg config = mc_comm_cfg(mc_io(client_read, client_write), 
     mc_comm_wnd(59, 2), mc_comm_wnd(1157, 4));
