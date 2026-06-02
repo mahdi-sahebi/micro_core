@@ -2,11 +2,7 @@
 # original build output. Library targets get a `lib` prefix, executables
 # do not. Requires PROJECT_VERSION and PROJECT_VERSION_SUFFIX to be set.
 function(MC_VERSIONED_NAME TARGET)
-    if (PROJECT_VERSION STREQUAL "0.0.0")
-        set(_version_part "${PROJECT_VERSION_SUFFIX}")
-    else()
-        set(_version_part "-${PROJECT_VERSION}${PROJECT_VERSION_SUFFIX}")
-    endif()
+    set(_version_part "-${PROJECT_VERSION}${PROJECT_VERSION_SUFFIX}")
 
     get_target_property(_type ${TARGET} TYPE)
     if (_type STREQUAL "STATIC_LIBRARY" OR _type STREQUAL "SHARED_LIBRARY" OR _type STREQUAL "MODULE_LIBRARY")
