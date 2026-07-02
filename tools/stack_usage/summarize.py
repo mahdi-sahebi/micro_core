@@ -15,6 +15,21 @@ import os
 import sys
 
 
+def module_of(rel_path, root_prefix):
+    """Module directory under root_prefix, e.g. 'src/dsa' or 'src/io/message'.
+
+    Uses two path segments when the first segment (e.g. 'io') has its own
+    subdirectories with sources, so sibling modules like io/communication and
+    io/message are reported separately instead of merged under 'src/io'.
+    """
+    rest = rel_path[len(root_prefix):] if rel_path.startswith(root_prefix) else rel_path
+    parts = [p for p in rest.split("/") if p]
+    if not parts:
+        return root_prefix.rstrip("/")
+    depth = 2 if len(parts) > 2 else 1
+    return root_prefix.rstrip("/") + "/" + "/".join(parts[:depth])
+
+
 def parse_su_file(path, root):
     rows = []
     with open(path, "r", encoding="utf-8") as f:
@@ -107,6 +122,33 @@ def main():
     for r in all_rows[:20]:
         lines.append("| `%s` | %d | %s:%s |" % (r["function"], r["bytes"], r["file"], r["line"]))
     lines.append("")
+
+    if args.path_filter:
+        by_module = {}
+        for r in all_rows:
+            by_module.setdefault(module_of(r["file"], args.path_filter), []).append(r)
+
+        lines.append("## Per-module breakdown")
+        lines.append("")
+        lines.append("| Module | Functions | Largest frame |")
+        lines.append("|:--|--:|:--|")
+        for mod in sorted(by_module):
+            rows = by_module[mod]
+            top = rows[0]  # all_rows is already sorted by bytes desc; per-module slice keeps that order
+            lines.append("| `%s` | %d | `%s` - %d bytes (%s:%s) |" % (
+                mod, len(rows), top["function"], top["bytes"], top["file"], top["line"]))
+        lines.append("")
+
+        for mod in sorted(by_module):
+            rows = by_module[mod]
+            lines.append("### `%s` (%d functions)" % (mod, len(rows)))
+            lines.append("")
+            lines.append("| Function | Bytes | Qualifier | Location |")
+            lines.append("|:--|--:|:--|:--|")
+            for r in rows:
+                lines.append("| `%s` | %d | %s | %s:%s |" % (
+                    r["function"], r["bytes"], r["qualifier"], r["file"], r["line"]))
+            lines.append("")
 
     with open(args.summary, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
