@@ -25,6 +25,12 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage -
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -g0")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
+option(MC_STACK_USAGE "Emit per-function .su stack-usage files (-fstack-usage)" OFF)
+if (MC_STACK_USAGE)
+    add_compile_options(-fstack-usage)
+    message(STATUS "Stack usage: enabled (-fstack-usage)")
+endif()
+
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake/version.cmake)
 
