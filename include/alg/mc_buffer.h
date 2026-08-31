@@ -35,9 +35,6 @@ static inline mc_buffer mc_buffer_char(void* address, uint32_t size)
   return mc_buffer_make(address, size, 1U);
 }
 
-#define mc_buffer_raw(ADDRESS, SIZE, DATA_SIZE) \
-  mc_buffer_make((void*)(ADDRESS), (uint32_t)(SIZE), (uint32_t)(DATA_SIZE))
-
 static inline uint32_t mc_buffer_get_size(const mc_buffer buffer)
 {
     return buffer.capacity * buffer.data_size;
@@ -60,7 +57,12 @@ static inline char* mc_buffer_bgn(const mc_buffer buffer)
 
 static inline char* mc_buffer_end(const mc_buffer buffer)
 {
-  return buffer.data + mc_buffer_get_size(buffer);
+  return &buffer.data[mc_buffer_get_size(buffer)];
+}
+
+static inline void* mc_buffer_at(const mc_buffer buffer, uint32_t index)
+{
+  return &buffer.data[index * buffer.data_size];
 }
 
 static inline mc_buffer mc_buffer_null(void)
