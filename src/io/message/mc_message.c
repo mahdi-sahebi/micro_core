@@ -32,7 +32,10 @@ struct mc_msg_impl
   uint32_t  recv_pool_stored;
 };
 
-#define MIN(X, Y)     (((X) < (Y)) ? (X) : (Y)) // TODO(MN): Move to math
+static uint32_t msg_min_u32(uint32_t lhs, uint32_t rhs)
+{
+  return (lhs < rhs) ? lhs : rhs;
+}
 
 
 static float id_compare(cvoid* a, cvoid* b)
@@ -63,8 +66,11 @@ static mc_err drop_message(mc_msg* const this)
   cuint32_t expected_size = (uint32_t)(pkt->size + sizeof(pkt_hdr));
 
   if (mc_buffer_get_size(this->recv_pool) < expected_size) {// Droping message until the end because receive pool is smaller than message size
-    cuint32_t seg_size = (uint32_t)MIN(mc_buffer_get_size(this->recv_pool) - sizeof(pkt_hdr), expected_size - this->recv_pool_stored);// TODO(MN): Check minimum of sizeof(pkt_hdr)
-    mc_u32 res = mc_comm_recv(this->comm, this->recv_pool.data + sizeof(pkt_hdr), seg_size, 1000U);
+    cuint32_t seg_size = msg_min_u32(
+      (uint32_t)(mc_buffer_get_size(this->recv_pool) - sizeof(pkt_hdr)),
+      expected_size - this->recv_pool_stored);// TODO(MN): Check minimum of sizeof(pkt_hdr)
+    mc_u32 res = mc_comm_recv(this->comm,
+      &this->recv_pool.data[sizeof(pkt_hdr)], seg_size, 1000U);
     this->recv_pool_stored += res.value;
     if (this->recv_pool_stored == expected_size) {
       this->recv_pool_stored = 0U;
@@ -84,7 +90,8 @@ static bool is_message_stored(mc_msg* const this)
   if (this->recv_pool_stored != expected_size) {
     cuint32_t size = remaining_message_size(this, pkt);
 
-    const mc_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000U);
+    const mc_u32 result = mc_comm_recv(this->comm,
+      &this->recv_pool.data[this->recv_pool_stored], size, 10000U);
     this->recv_pool_stored += result.value;
   }
 
@@ -99,7 +106,8 @@ static bool is_message_stored(mc_msg* const this)
 static bool read_message_header(mc_msg* this)
 {
   cuint32_t size = remaining_header_size(this);
-  const mc_u32 result = mc_comm_recv(this->comm, this->recv_pool.data + this->recv_pool_stored, size, 10000U);
+  const mc_u32 result = mc_comm_recv(this->comm,
+    &this->recv_pool.data[this->recv_pool_stored], size, 10000U);
 
   this->recv_pool_stored += result.value;
   return (this->recv_pool_stored >= sizeof(pkt_hdr));
@@ -113,7 +121,8 @@ static void dispatch_received(const mc_msg* this, const pkt_hdr* const pkt)
   if (mc_is_ok(result) && (NULL != result.data)) {
     const id_node* const node = result.data;
     if (temp_node.id == node->id) {
-      node->on_receive(node->id, mc_buffer_char(this->recv_pool.data + sizeof(pkt_hdr), pkt->size));
+      node->on_receive(node->id,
+        mc_buffer_char(&this->recv_pool.data[sizeof(pkt_hdr)], pkt->size));
     }
   }
 }
@@ -156,7 +165,7 @@ mc_ptr mc_msg_init(mc_buffer alloc_buffer, mc_msg_cfg config)
 
   mc_comm_cfg* comm_config = (mc_comm_cfg*)&config;
   const mc_buffer comm_buffer = mc_buffer_char(
-    alloc_buffer.data + sizeof(mc_msg), mc_comm_req_size(*comm_config).value);
+    &alloc_buffer.data[sizeof(mc_msg)], mc_comm_req_size(*comm_config).value);
   this->comm = mc_comm_init(comm_buffer, *comm_config).data;
 
   this->recv_pool = mc_buffer_char(mc_buffer_end(comm_buffer), config.pool_size);
@@ -281,6 +290,3 @@ mc_bool mc_msg_flush(mc_msg* this, uint32_t timeout_us)
 
   return mc_comm_flush(this->comm, timeout_us);
 }
-
-
-#undef MIN
