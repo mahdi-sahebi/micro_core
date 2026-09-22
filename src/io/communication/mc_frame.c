@@ -30,7 +30,7 @@ void frame_init(mc_frame* this, uint16_t window_size, uint8_t capacity)
 {
   wndpool_init(&this->pool, window_size, capacity);
   this->temp_stored = 0U;
-  this->temp_window = (mc_pkt*)((char*)this->pool.windows + WNDPOOL_GET_WINDOWS_SIZE(window_size, capacity));
+  this->temp_window = (mc_pkt*)&((char*)this->pool.windows)[WNDPOOL_GET_WINDOWS_SIZE(window_size, capacity)];
 }
 
 void frame_recv(mc_frame* this, mc_cb_data_ready data_ready, void* arg)
@@ -61,4 +61,3 @@ mc_buffer frame_send(mc_frame* this, mc_buffer buffer, mc_cb_data_ready data_rea
   cuint32_t size = wndpool_write(&this->pool, buffer, data_ready, arg);
   return mc_buffer_char(buffer.data, size);
 }
-

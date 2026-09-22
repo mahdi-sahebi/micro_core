@@ -23,7 +23,7 @@ static inline wnd_t* get_window(const wndpool_t* this, const mc_wnd_idx index)
   /* DEV-005: internal accessor returns the window storage held in the pool;
    * the const is cast away here only, callers preserve const-correctness. */
   /* cppcheck-suppress misra-c2012-11.8 */
-  return (wnd_t*)((char*)(this->windows) + ((size_t)index * wnd_get_size(this->window_size)));// TODO(MN): Rcv/snd
+  return (wnd_t*)&((char*)this->windows)[(size_t)index * wnd_get_size(this->window_size)];// TODO(MN): Rcv/snd
 }
 
 static inline bool is_first_acked(const wndpool_t* this)
@@ -154,7 +154,7 @@ uint32_t wndpool_read(wndpool_t* this, mc_buffer buffer)
   // Separate the wnd(s) meta data and data buffers
   wnd_t* const window = wndpool_get(this, this->bgn_id);
   cuint16_t read_size = (uint16_t)min_u32(wnd_get_data_size(window) - this->stored_size, buffer.capacity);
-  (void)memcpy(buffer.data, wnd_get_data(window) + this->stored_size, read_size);
+  (void)memcpy(buffer.data, &wnd_get_data(window)[this->stored_size], read_size);
 
   this->stored_size = (uint16_t)(this->stored_size + read_size);
 

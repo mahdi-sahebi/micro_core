@@ -17,9 +17,21 @@ struct mc_comm_impl
 
 #define MAX_SEND_TIME_US    1000000U
 #define MIN_SEND_TIME_US    100U
-// TODO(MN): Move to math module
-#define MIN(A, B)           ((A) <= (B) ? (A) : (B))
-#define MAX(A, B)           ((A) >= (B) ? (A) : (B))
+
+static inline uint32_t comm_min_u32(uint32_t lhs, uint32_t rhs)
+{
+  return (lhs <= rhs) ? lhs : rhs;
+}
+
+static inline uint64_t comm_max_u64(uint64_t lhs, uint64_t rhs)
+{
+  return (lhs >= rhs) ? lhs : rhs;
+}
+
+static inline uint64_t comm_min_u64(uint64_t lhs, uint64_t rhs)
+{
+  return (lhs <= rhs) ? lhs : rhs;
+}
 
 
 #endif /* MC_IO_COMMUNICATION_BASE_H_ */
