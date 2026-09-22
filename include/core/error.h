@@ -55,12 +55,9 @@ typedef struct
 
 // TOOD(MN): Move to types.h
 typedef const void     cvoid;
-typedef const char     cchar;
-typedef const uint8_t  cuint8_t;
 typedef const uint16_t cuint16_t;
 typedef const uint32_t cuint32_t;
 typedef const uint64_t cuint64_t;
 
 
 #endif /* MC_ERROR_H_ */
-

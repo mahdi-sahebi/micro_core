@@ -13,7 +13,7 @@ void io_recv(mc_comm* this, io_cb_data_ready data_ready, void* arg)
 {
   (void)arg;// the receive context is this, supplied to frame_recv directly
   cuint32_t required_size = (uint32_t)this->rcv->pool.window_size - (uint32_t)this->rcv->temp_stored;
-  void* const temp_buffer = (char*)(this->rcv->temp_window) + this->rcv->temp_stored;
+  void* const temp_buffer = &((char*)this->rcv->temp_window)[this->rcv->temp_stored];
   cuint32_t read_size = this->io.recv(temp_buffer, required_size);
 
   if (0U != read_size) {

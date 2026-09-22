@@ -20,9 +20,9 @@ struct mc_sarray_impl
   char           data[];
 };
 
-static inline char* get_data(const mc_sarray this, uint32_t index)// TODO(MN): Opt
+static inline char* sarray_get_data(const mc_sarray this, uint32_t index)// TODO(MN): Opt
 {
-  return this->data + ((uint32_t)this->data_size * index);
+  return &this->data[(uint32_t)this->data_size * index];
 }
 
 
@@ -103,7 +103,7 @@ mc_ptr mc_sarray_get(const mc_sarray this, uint32_t index)
     return mc_ptr(NULL, MC_ERR_OUT_OF_RANGE);
   }
 
-  return mc_ptr(get_data(this, index), MC_SUCCESS);
+  return mc_ptr(sarray_get_data(this, index), MC_SUCCESS);
 }
 
 mc_ptr mc_sarray_find(const mc_sarray this, cvoid* const data)
@@ -121,7 +121,7 @@ mc_ptr mc_sarray_find(const mc_sarray this, cvoid* const data)
     data,
     this->distance);
 
-  void* itr = (result.value == this->count) ? NULL : get_data(this, result.value);
+  void* itr = (result.value == this->count) ? NULL : sarray_get_data(this, result.value);
   return mc_ptr(itr, MC_SUCCESS);
 }
 
@@ -136,10 +136,10 @@ mc_err mc_sarray_insert(mc_sarray this, cvoid* data)
 
   cuint32_t index = mc_alg_lower_bound(mc_buffer_make(this->data, (uint32_t)this->data_size * this->count, this->data_size), data, this->distance).value;
   if (index < this->count) {
-    (void)memmove(get_data(this, index + 1U), get_data(this, index), (size_t)this->data_size * (this->count - index));
+    (void)memmove(sarray_get_data(this, index + 1U), sarray_get_data(this, index), (size_t)this->data_size * (this->count - index));
   }
 
-  (void)memcpy(get_data(this, index), data, this->data_size);
+  (void)memcpy(sarray_get_data(this, index), data, this->data_size);
 
   this->count++;
   return MC_SUCCESS;
@@ -154,7 +154,7 @@ mc_err mc_sarray_remove_at(mc_sarray this, uint32_t index)
     return MC_ERR_OUT_OF_RANGE;
   }
 
-  (void)memmove(get_data(this, index), get_data(this, index + 1U), (size_t)this->data_size * (this->count - index));
+  (void)memmove(sarray_get_data(this, index), sarray_get_data(this, index + 1U), (size_t)this->data_size * (this->count - index));
 
   this->count--;
   return MC_SUCCESS;
@@ -174,11 +174,12 @@ mc_err mc_sarray_remove(mc_sarray this, cvoid* data)
     return result.error;
   }
 
-  const ptrdiff_t byte_diff = (char*)result.data - this->data;
-  const size_t byte_offset = (size_t)byte_diff;
-  cuint32_t data_index = (uint32_t)(byte_offset / (size_t)this->data_size);
-  (void)memmove(get_data(this, data_index),
-          get_data(this, data_index + 1U),
+  uint32_t data_index = 0U;
+  while ((data_index < this->count) && (result.data != sarray_get_data(this, data_index))) {
+    data_index++;
+  }
+  (void)memmove(sarray_get_data(this, data_index),
+          sarray_get_data(this, data_index + 1U),
           (size_t)this->data_size * (this->count - (data_index + 1U)));
 
   this->count--;

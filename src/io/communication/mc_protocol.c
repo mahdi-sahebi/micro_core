@@ -30,18 +30,17 @@ static void on_send_window_ready(const mc_buffer buffer, void* arg)
 
 static void send_stale_incomplete(mc_comm* const this)
 {
-#define WNDPOOL    this->snd->pool
-  if (wndpool_has_incomplete(&WNDPOOL)) {
-    if (mc_now_m() > (WNDPOOL.update_time_ms + FLUSH_TIMEOUT_MS)) {// TODO(MN): Update time is extra?
-      wnd_t* const window = wndpool_get_last(&WNDPOOL);// TODO(MN): [PR2]: Pass window, instead of get window. Called twice
+  wndpool_t* const pool = &this->snd->pool;
+  if (wndpool_has_incomplete(pool)) {
+    if (mc_now_m() > (pool->update_time_ms + FLUSH_TIMEOUT_MS)) {// TODO(MN): Update time is extra?
+      wnd_t* const window = wndpool_get_last(pool);// TODO(MN): [PR2]: Pass window, instead of get window. Called twice
       if (!window->is_sent) {
-        wndpool_update_header(&WNDPOOL);
+        wndpool_update_header(pool);
       }
 
-      (void)io_send(this, &window->packet, WNDPOOL.window_size);
+      (void)io_send(this, &window->packet, pool->window_size);
     }
   }
-#undef WNDPOOL
 }
 
 void protocol_init(mc_comm* this)
@@ -62,7 +61,9 @@ void protocol_recv(const mc_buffer buffer, void* arg)
     // TODO(MN): Not per ack
     cuint64_t elapsed_time = mc_now_u() - wndpool_get(&this->snd->pool, pkt->id)->sent_time_us;
     /* 0.8 * elapsed, in integer arithmetic to avoid floating-point */
-    this->send_delay_us = (uint32_t)MIN(MAX((elapsed_time * 4U) / 5U, MIN_SEND_TIME_US), MAX_SEND_TIME_US);
+    this->send_delay_us = (uint32_t)comm_min_u64(
+      comm_max_u64((elapsed_time * 4U) / 5U, MIN_SEND_TIME_US),
+      MAX_SEND_TIME_US);
     (void)wndpool_ack(&this->snd->pool, pkt->id);
     return;
   }
@@ -80,8 +81,8 @@ void protocol_recv(const mc_buffer buffer, void* arg)
 
 mc_buffer protocol_send(mc_comm* this, mc_buffer buffer)
 {
-  buffer = frame_send(this->snd, buffer, on_send_window_ready, this);
-  return buffer;
+  const mc_buffer sent_buffer = frame_send(this->snd, buffer, on_send_window_ready, this);
+  return sent_buffer;
 }
 
 void protocol_send_unacked(mc_comm* const this) 

@@ -45,8 +45,11 @@
 
 
 
-#define FRAME_GET_SIZE(WINDOW_SIZE, CAPACITY)\
-  (sizeof(mc_frame) + (WINDOW_SIZE) + WNDPOOL_GET_WINDOWS_SIZE(WINDOW_SIZE, CAPACITY))
+static uint32_t frame_required_size(uint16_t window_size, uint8_t capacity)
+{
+  return (uint32_t)(sizeof(mc_frame) + window_size +
+                    WNDPOOL_GET_WINDOWS_SIZE(window_size, capacity));
+}
 
 mc_u32 mc_comm_req_size(mc_comm_cfg config)
 {
@@ -62,8 +65,8 @@ mc_u32 mc_comm_req_size(mc_comm_cfg config)
     return mc_u32(0U, MC_ERR_BAD_ALLOC);
   }
 
-  cuint32_t recv_frame_size = (uint32_t)FRAME_GET_SIZE(config.recv.size, config.recv.capacity);
-  cuint32_t send_frame_size = (uint32_t)FRAME_GET_SIZE(config.send.size, config.send.capacity);
+  cuint32_t recv_frame_size = frame_required_size(config.recv.size, config.recv.capacity);
+  cuint32_t send_frame_size = frame_required_size(config.send.size, config.send.capacity);
   cuint32_t frames_size = recv_frame_size + send_frame_size;
   cuint32_t size = (uint32_t)(sizeof(mc_comm) + frames_size);
   return mc_u32(size, MC_SUCCESS);
@@ -79,10 +82,10 @@ mc_ptr mc_comm_init(mc_buffer alloc_buffer, mc_comm_cfg config)
   mc_comm* const this = (mc_comm*)alloc_buffer.data;
   io_init(&this->io, config.io);
 
-  this->rcv = (mc_frame*)((char*)this + sizeof(mc_comm));// TODO(MN): Can be removed and use[0]
+  this->rcv = (mc_frame*)&((char*)this)[sizeof(mc_comm)];// TODO(MN): Can be removed and use[0]
   frame_init(this->rcv, config.recv.size, config.recv.capacity);// TODO(MN): Pass mc_comm_wnd
 
-  this->snd = (mc_frame*)((char*)(this->rcv) + FRAME_GET_SIZE(config.recv.size, config.recv.capacity));
+  this->snd = (mc_frame*)&((char*)this->rcv)[frame_required_size(config.recv.size, config.recv.capacity)];
   frame_init(this->snd, config.send.size, config.send.capacity);
   
   protocol_init(this);
@@ -109,19 +112,21 @@ mc_u32 mc_comm_recv(mc_comm* this, void* dst_data, uint32_t size, uint32_t timeo
   }
 
   uint32_t read_size = 0U;
+  uint32_t remaining_size = size;
   mc_err error = MC_SUCCESS;
   const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0U;
 
-  while (0U != size) {
+  while (0U != remaining_size) {
     if ((MC_TIMEOUT_MAX != timeout_us) && (mc_now_u() > end_time)) {
       error = MC_ERR_TIMEOUT;
       break;
     }
 
-    cuint32_t seg_size = wndpool_read(&this->rcv->pool, mc_buffer_char((char*)dst_data + read_size, size));
+    cuint32_t seg_size = wndpool_read(&this->rcv->pool,
+      mc_buffer_char(&((char*)dst_data)[read_size], remaining_size));
 
     if (0U != seg_size) {
-      size      -= seg_size;
+      remaining_size -= seg_size;
       read_size += seg_size;
     } else {
       (void)mc_comm_update(this);
@@ -139,19 +144,21 @@ mc_u32 mc_comm_send(mc_comm* this, cvoid* src_data, uint32_t size, uint32_t time
   }
 
   uint32_t sent_size = 0U;
+  uint32_t remaining_size = size;
   mc_err error = MC_SUCCESS;
   const mc_time_t end_time = (MC_TIMEOUT_MAX != timeout_us) ? (mc_now_u() + timeout_us) : 0U;
 
   // TODO(MN): This loop is repetitive in the wndpool_write
-  while (0U != size) {
-    cuint32_t seg_size = (uint32_t)MIN(size, this->snd->pool.window_size - sizeof(mc_pkt));
+  while (0U != remaining_size) {
+    cuint32_t seg_size = comm_min_u32(remaining_size,
+      (uint32_t)(this->snd->pool.window_size - sizeof(mc_pkt)));
     /* DEV-004: mc_buffer carries a non-const char*; the source data here is
      * only read by protocol_send, so dropping const is safe. */
     /* cppcheck-suppress misra-c2012-11.8 */
-    const mc_buffer buffer = protocol_send(this, mc_buffer_char((char*)src_data + sent_size, seg_size));
+    const mc_buffer buffer = protocol_send(this, mc_buffer_char(&((char*)src_data)[sent_size], seg_size));
 
     if (0U != buffer.capacity) {
-      size -= seg_size;
+      remaining_size -= seg_size;
       sent_size += seg_size;
     } else {
       (void)mc_comm_update(this);
@@ -187,9 +194,3 @@ mc_bool mc_comm_flush(mc_comm* this, uint32_t timeout_us)
   
   return mc_bool(true, MC_SUCCESS);
 }
-
-#undef FRAME_GET_SIZE
-#undef MAX_SEND_TIME_US
-#undef MIN_SEND_TIME_US
-#undef MIN
-#undef MAX
