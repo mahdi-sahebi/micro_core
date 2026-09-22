@@ -2,6 +2,9 @@
 
 _Generated with `tools/misra/run_misra.sh` using cppcheck and its MISRA addon._
 
+The detailed whole-project results, module breakdown, raw observation inventory,
+and execution commands are maintained in [`../misra_reports.md`](../misra_reports.md).
+
 ## Gate result
 
 ```text
@@ -35,3 +38,9 @@ tools/misra/run_misra.sh build
 ```
 
 Generated evidence is written to `build/misra/`.
+
+To inspect the gate decision directly:
+
+```sh
+cat build/misra/summary.md
+```
