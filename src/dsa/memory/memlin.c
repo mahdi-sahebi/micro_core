@@ -53,7 +53,7 @@ typedef struct __attribute__((packed))
 
 
 
-static inline word_type get_word_type(uint32_t num)
+static inline word_type memlin_get_word_type(uint32_t num)
 {
     word_type word = WORD_08_BITS;
 
@@ -68,7 +68,7 @@ static inline word_type get_word_type(uint32_t num)
     return word;
 }
 
-static inline word_type get_word_size(const struct mc_memlin_impl* this)
+static inline word_type memlin_get_word_size(const struct mc_memlin_impl* this)
 {
     return (word_type)this->word_size;
 }
@@ -106,7 +106,7 @@ static uint32_t get_capacity_32(cvoid* const this)
     return ((const meta_32*)this)->capacity;
 }
 
-static uint32_t get_capacity(cvoid* this)
+static uint32_t memlin_get_capacity(cvoid* this)
 {
     typedef uint32_t (*cb_getter)(cvoid* const);
     const cb_getter getter[WORD_COUNT] = {
@@ -115,7 +115,7 @@ static uint32_t get_capacity(cvoid* this)
         [WORD_32_BITS] = get_capacity_32,
     };
 
-    return getter[get_word_size(this)](this);
+    return getter[memlin_get_word_size(this)](this);
 }
 
 static uint32_t get_size_08(cvoid* const this)
@@ -133,7 +133,7 @@ static uint32_t get_size_32(cvoid* const this)
     return ((const meta_32*)this)->size;
 }
 
-static uint32_t get_size(cvoid* this)
+static uint32_t memlin_get_size(cvoid* this)
 {
     typedef uint32_t (*cb_getter)(cvoid* const);
     const cb_getter getter[WORD_COUNT] = {
@@ -142,7 +142,7 @@ static uint32_t get_size(cvoid* this)
         [WORD_32_BITS] = get_size_32,
     };
 
-    return getter[get_word_size(this)](this);
+    return getter[memlin_get_word_size(this)](this);
 }
 
 static void set_size_08(void* const this, uint32_t size)
@@ -160,7 +160,7 @@ static void set_size_32(void* const this, uint32_t size)
     ((meta_32*)this)->size = size;
 }
 
-static void set_size(void* this, uint32_t size)
+static void memlin_set_size(void* this, uint32_t size)
 {
     typedef void (*cb_getter)(void* const, uint32_t);
     const cb_getter getter[WORD_COUNT] = {
@@ -169,37 +169,34 @@ static void set_size(void* this, uint32_t size)
         [WORD_32_BITS] = set_size_32,
     };
 
-    getter[get_word_size(this)](this, size);
+    getter[memlin_get_word_size(this)](this, size);
 }
 
 static void* get_data_08(void* const this, uint32_t index)
 {
-    (void)index;
-    return ((meta_08*)this)->data;
+    return &((meta_08*)this)->data[index];
 }
 
 static void* get_data_16(void* const this, uint32_t index)
 {
-    (void)index;
-    return ((meta_16*)this)->data;
+    return &((meta_16*)this)->data[index];
 }
 
 static void* get_data_32(void* const this, uint32_t index)
 {
-    (void)index;
-    return ((meta_32*)this)->data;
+    return &((meta_32*)this)->data[index];
 }
 
-static void* get_data(void* const this, uint32_t index)
+static void* memlin_get_data(void* const this, uint32_t index)
 {
-    typedef void* (*cb_getter)(void* const, uint32_t index);
+    typedef void* (*cb_getter)(void* const, uint32_t);
     const cb_getter getter[WORD_COUNT] = {
         [WORD_08_BITS] = get_data_08,
         [WORD_16_BITS] = get_data_16,
         [WORD_32_BITS] = get_data_32,
     };
 
-    return getter[get_word_size(this)](this, index);
+    return getter[memlin_get_word_size(this)](this, index);
 }
 
 mc_ptr mc_memlin_create(const mc_buffer buffer)
@@ -214,7 +211,7 @@ mc_ptr mc_memlin_create(const mc_buffer buffer)
     };
 
     mc_memlin* const memory = (mc_memlin*)buffer.data;// remove
-    const word_type word = get_word_type(buffer.capacity);
+    const word_type word = memlin_get_word_type(buffer.capacity);
     memory->word_size = word;
     inits[word](memory, buffer.capacity);
 
@@ -237,13 +234,13 @@ mc_ptr mc_memlin_alloc(mc_memlin* this, uint32_t size)
         return mc_ptr(NULL, MC_ERR_INVALID_ARGUMENT);
     }
 
-    cuint32_t cur_size = get_size(this);
-    if ((cur_size + size) > get_capacity(this)) {
+    cuint32_t cur_size = memlin_get_size(this);
+    if ((cur_size + size) > memlin_get_capacity(this)) {
         return mc_ptr(NULL, MC_ERR_BAD_ALLOC);
     }
 
-    void* const data = get_data(this, cur_size);
-    set_size(this, cur_size + size);
+    void* const data = memlin_get_data(this, cur_size);
+    memlin_set_size(this, cur_size + size);
     return mc_ptr(data, MC_SUCCESS);
 }
 
@@ -253,7 +250,7 @@ mc_err mc_memlin_clear(mc_memlin* this)
         return MC_ERR_INVALID_ARGUMENT;
     }
 
-    set_size(this, 0U);
+    memlin_set_size(this, 0U);
     return MC_SUCCESS;
 }
 
@@ -263,7 +260,7 @@ mc_bool mc_memlin_is_empty(const mc_memlin* this)
         return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_bool(0U == get_size(this), MC_SUCCESS);
+    return mc_bool(0U == memlin_get_size(this), MC_SUCCESS);
 }
 
 mc_bool mc_memlin_is_full(const mc_memlin* this)
@@ -272,7 +269,7 @@ mc_bool mc_memlin_is_full(const mc_memlin* this)
         return mc_bool(false, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_bool(get_capacity(this) == get_size(this), MC_SUCCESS);
+    return mc_bool(memlin_get_capacity(this) == memlin_get_size(this), MC_SUCCESS);
 }
 
 mc_u32 mc_memlin_get_capacity(const mc_memlin* this)
@@ -281,7 +278,7 @@ mc_u32 mc_memlin_get_capacity(const mc_memlin* this)
         return mc_u32(0U, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_u32(get_capacity(this), MC_SUCCESS);
+    return mc_u32(memlin_get_capacity(this), MC_SUCCESS);
 }
 
 mc_u32 mc_memlin_get_size(const mc_memlin* this)
@@ -290,7 +287,7 @@ mc_u32 mc_memlin_get_size(const mc_memlin* this)
         return mc_u32(0U, MC_ERR_INVALID_ARGUMENT);
     }
 
-    return mc_u32(get_size(this), MC_SUCCESS);
+    return mc_u32(memlin_get_size(this), MC_SUCCESS);
 }
 
 mc_u32 mc_memlin_get_meta_size(const mc_memlin* this)
