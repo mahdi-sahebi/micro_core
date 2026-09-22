@@ -64,5 +64,9 @@ misra-c2012-11.9:src/io/message/mc_message.c
 # is the documented, required way to expose POSIX declarations on glibc.
 misra-c2012-21.1:src/io/communication/mc_communication.c
 
+# DEV-008 — Rule 8.7: public library APIs appear TU-local when tests and external
+# consumers are excluded by the production-source analysis filter.
+misra-c2012-8.7:src/core/time/time_linux.c
+
 # Example (commented; uncomment + document before use):
 # misra-c2012-15.5:src/dsa/memory/memlin.c   # DEV-001 single-point-of-exit
