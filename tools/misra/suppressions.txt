@@ -74,12 +74,18 @@ misra-c2012-8.7:src/pattern/mc_chain.c
 # DEV-009 — Rule 11.5: generic caller-owned storage is converted to typed
 # internal headers at validated module boundaries.
 misra-c2012-11.5:src/dsa/memory/memlin.c
+misra-c2012-11.5:src/io/communication/mc_communication.c
+misra-c2012-11.5:src/io/communication/mc_protocol.c
 
 # DEV-010 — Rule 15.5: guard-clause exits keep validation and error propagation
 # explicit and do not bypass cleanup (these modules own no acquired resources).
 misra-c2012-15.5:src/dsa/memory/memlin.c
 misra-c2012-15.5:src/dsa/sarray.c
 misra-c2012-15.5:src/pattern/mc_chain.c
+misra-c2012-15.5:src/io/communication/mc_communication.c
+misra-c2012-15.5:src/io/communication/mc_frame.c
+misra-c2012-15.5:src/io/communication/mc_protocol.c
+misra-c2012-15.5:src/io/communication/mc_window_pool.c
 
 # Example (commented; uncomment + document before use):
 # misra-c2012-15.5:src/dsa/memory/memlin.c   # DEV-001 single-point-of-exit

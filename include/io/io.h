@@ -8,7 +8,6 @@
 
 typedef uint32_t (*mc_io_fn_recv)(void* const data, uint32_t size);
 typedef uint32_t (*mc_io_fn_send)(cvoid* const data, uint32_t size);
-typedef void (*mc_io_cb_receive)(cvoid* const data, uint32_t size);
 // TODO(MN): Update arg in the IO base. merge
 typedef void (*mc_cb_data_ready)(const mc_buffer buffer, void* arg);
 
